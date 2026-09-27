@@ -4,6 +4,7 @@ import Link from "next/link"
 
 import { PageHeader } from "@/components/layout/page-header"
 import { EmptyState } from "@/components/shared/empty-state"
+import { FilterChips } from "@/components/shared/filter-chips"
 import { ListFilters } from "@/components/shared/list-filters"
 import { SimpleTable } from "@/components/shared/simple-table"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ import {
   ASSIGNMENT_TYPE_LABELS,
   ASSIGNMENT_TYPES,
   type AssignmentStatus,
+  type WorkStatus,
 } from "@/features/assignments/status"
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
@@ -31,6 +33,20 @@ import { getT } from "@/i18n/server"
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
   return { title: t("Assignments") }
+}
+
+// Student and parent tabs, by the status of the latest attempt.
+const WORK_TABS = ["all", "todo", "submitted", "graded"] as const
+const WORK_TAB_LABELS: Record<(typeof WORK_TABS)[number], string> = {
+  all: "All",
+  todo: "Not handed in",
+  submitted: "Handed in",
+  graded: "Graded",
+}
+const WORK_TAB_STATUSES: Record<Exclude<(typeof WORK_TABS)[number], "all">, WorkStatus[]> = {
+  todo: ["not_started", "in_progress", "missing"],
+  submitted: ["submitted", "late"],
+  graded: ["returned"],
 }
 
 const STATUS_FILTERS = ["current", "draft", "scheduled", "published", "closed", "archived"] as const
@@ -48,13 +64,24 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
   if (!can(user.permissions, "assignments.read", ["all", "assigned"])) {
     const isParent = can(user.permissions, "assignments.read", ["children"])
     const rows = await listStudentAssignments(db, "family")
+    const tab = enumParam(await searchParams, "tab", WORK_TABS) ?? "all"
+    const shown = rows.filter((r) => tab === "all" || WORK_TAB_STATUSES[tab].includes(r.status))
     return (
       <>
         <PageHeader
           title={tr("Assignments")}
           description={isParent ? tr("Your children's assignments, what is handed in and returned grades.") : tr("Your assignments and returned grades.")}
         />
-        <StudentWorkTable rows={rows} showStudent={isParent} />
+        <FilterChips
+          label={tr("Filter by status")}
+          chips={WORK_TABS.map((key) => ({
+            href: key === "all" ? routes.assignments : `${routes.assignments}?tab=${key}`,
+            label: tr(WORK_TAB_LABELS[key]),
+            active: tab === key,
+            count: key === "all" ? rows.length : rows.filter((r) => WORK_TAB_STATUSES[key].includes(r.status)).length,
+          }))}
+        />
+        <StudentWorkTable rows={shown} showStudent={isParent} canWork={!isParent} />
       </>
     )
   }

@@ -31,8 +31,12 @@ export function UserMenu({ name, email, roleLabel, avatarUrl }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("Open user menu")}>
+        <Button variant="ghost" className="h-auto gap-2 rounded-full px-1 py-1 md:pr-3" aria-label={t("Open user menu")}>
           <UserAvatar name={displayName} avatarUrl={avatarUrl} className="size-8" />
+          <span className="hidden text-left leading-tight md:grid">
+            <span className="max-w-40 truncate text-sm font-medium">{displayName}</span>
+            <span className="text-muted-foreground text-xs font-normal">{t(roleLabel)}</span>
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

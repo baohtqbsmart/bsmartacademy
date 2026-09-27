@@ -22,7 +22,7 @@ export async function listClasses(
     .from("classes")
     .select(
       `id, code, name, status, start_date, end_date, room, delivery_mode, capacity, deleted_at,
-       course:courses(id, name, subject:subjects(name), level:levels(name)),
+       course:courses(id, name, subject:subjects(id, name, icon, image_path), level:levels(name)),
        class_members(member_role, teacher:teachers(id, full_name)),
        class_schedule_slots(id, weekday, starts_at, ends_at, room),
        enrollments(status)`

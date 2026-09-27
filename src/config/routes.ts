@@ -100,6 +100,11 @@ export const routes = {
   receipt: "/tuition/payments/[id]/receipt",
   tuitionReports: "/tuition/reports",
   users: "/admin/users",
+  website: "/admin/website",
+  programs: "/programs",
+  program: "/programs/[code]",
+  about: "/about",
+  contact: "/contact",
   profile: "/settings/profile",
 } as const
 
@@ -156,9 +161,13 @@ export const reportPath = (key: string) => `/reports/${key}`
 export const aiDraftPath = (id: string) => `/ai/${id}`
 export const invoicePath = (id: string) => `/tuition/invoices/${id}`
 export const receiptPath = (id: string) => `/tuition/payments/${id}/receipt`
+export const programPath = (code: string) => `/programs/${encodeURIComponent(code)}`
 
 /** Routes reachable without a session. Everything else requires sign-in. */
 export const publicRoutes: readonly string[] = [
+  routes.programs,
+  routes.about,
+  routes.contact,
   routes.login,
   routes.forgotPassword,
   routes.authConfirm,
@@ -166,6 +175,8 @@ export const publicRoutes: readonly string[] = [
 ]
 
 export function isPublicRoute(pathname: string) {
+  // The home page is the public website.
+  if (pathname === routes.home) return true
   return publicRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   )

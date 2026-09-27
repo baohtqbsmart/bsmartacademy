@@ -45,6 +45,6 @@ function redirectWithCookies(url: URL, from: NextResponse) {
 export const config = {
   matcher: [
     // Skip Next.js internals, static files and robots.txt (crawlers have no session).
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt$|sitemap.xml$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 }

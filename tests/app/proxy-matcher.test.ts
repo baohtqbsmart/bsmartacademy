@@ -13,8 +13,8 @@ describe("proxy matcher", () => {
     }
   })
 
-  it("skips static assets and robots.txt, which crawlers fetch without a session", () => {
-    for (const path of ["/robots.txt", "/favicon.ico", "/_next/static/chunks/a.js", "/logo.svg"]) {
+  it("skips static assets, robots.txt and sitemap.xml, which crawlers fetch without a session", () => {
+    for (const path of ["/robots.txt", "/sitemap.xml", "/favicon.ico", "/_next/static/chunks/a.js", "/logo.svg"]) {
       expect(matches(path), path).toBe(false)
     }
   })

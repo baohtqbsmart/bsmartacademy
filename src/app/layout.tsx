@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist_Mono, Inter, Playfair_Display } from "next/font/google"
 
 import { Providers } from "@/components/providers"
 import { siteConfig } from "@/config/site"
@@ -7,9 +7,15 @@ import { getLocale, getT } from "@/i18n/server"
 
 import "./globals.css"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   // Vietnamese names and content need the vietnamese subset (ạ, ế, ữ, …).
+  subsets: ["latin", "latin-ext", "vietnamese"],
+})
+
+// Headings (brand typography); Inter carries body text and UI.
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin", "latin-ext", "vietnamese"],
 })
 
@@ -34,7 +40,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfair.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <Providers locale={locale}>{children}</Providers>

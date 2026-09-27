@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CLASS_STATUS, DELIVERY_MODE_LABELS } from "@/config/labels"
 import { classPath, routes } from "@/config/routes"
+import { StudentCourses } from "@/features/classes/components/student-courses"
 import { CLASS_STATUSES } from "@/features/classes/schemas"
 import { listClasses, type ClassStatusFilter } from "@/features/classes/server/class-service"
 import { listCourses } from "@/features/courses/server/course-service"
@@ -17,6 +18,7 @@ import { listAssignableTeachers } from "@/features/teachers/server/teacher-servi
 import { WeeklySlots } from "@/features/timetable/components/weekly-slots"
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
+import { todayInAcademy } from "@/lib/dates"
 import { formatDateRange } from "@/lib/format"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
@@ -32,6 +34,17 @@ const STATUS_FILTERS = ["current", "all", ...CLASS_STATUSES] as const
 export default async function ClassesPage({ searchParams }: PageProps<"/classes">) {
   const tr = await getT()
   const user = await requireRouteAccess(routes.classes)
+  if (user.roleCode === "student") {
+    // Students see their own classes as course cards.
+    const subject = uuidParam(await searchParams, "subject")
+    const classes = await listClasses(await createClient(), { status: "current" })
+    return (
+      <>
+        <PageHeader title={tr("My courses")} description={tr("The courses you are enrolled in, with your class, teacher and calendar.")} />
+        <StudentCourses classes={classes} subjectId={subject} today={todayInAcademy()} />
+      </>
+    )
+  }
   const canWrite = can(user.permissions, "classes.write")
   const seesAll = can(user.permissions, "classes.read", ["all"])
   const params = await searchParams

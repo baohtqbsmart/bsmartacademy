@@ -912,3 +912,32 @@ browser in **Settings → My profile → Language** (and on the sign-in page). T
 
 **Tests:** `tests/app/i18n.test.ts` fails when a string passed to `t()` or `<Trans>` has no
 Vietnamese entry, or when a translation uses a placeholder the English text does not provide.
+
+## 32. Public website and brand design
+
+- **Pages** (`src/app/(public)`, no sign-in): home `/`, courses `/programs` and `/programs/[code]`,
+  `/about`, `/contact`. They are listed in `publicRoutes`, indexed (`robots.ts`, `sitemap.ts`)
+  and everything behind sign-in stays `noindex`.
+- **Data, not copy:** the catalogue comes from `website_subjects()` / `website_courses()`
+  (security definer, presentation fields of live subjects and active courses only). Contact
+  details and the hero picture are `site_settings` (one row, readable by anyone); testimonials are
+  `testimonials` (only published rows are public). Nothing is hard-coded; empty sections hide.
+- **Editing:** Administration → Website (`/admin/website`, permission `site.write`): contact
+  details, hero picture, each subject's audience/icon/picture/visibility
+  (`set_subject_website`) and testimonials. Pictures go to the public `site-media` bucket.
+- **Logo:** used exactly as supplied (`public/brand`); the header lockup places the unchanged
+  mark and wordmark side by side. No filters or recolouring; dark surfaces use the cream tile.
+- **Look:** Playfair Display for headings, Inter for text; brown primary, cream surfaces, navy
+  accents (sidebar), green for learning progress. Default pictures are brand SVG illustrations
+  (`components/brand`) until real photos are uploaded.
+- **Motion** (`motion` library, `components/motion`): page fade/slide (`(app)/template.tsx`),
+  sticky shrinking header, staggered hero and cards, scroll reveal (once), progress bars that
+  fill, animated active states in the sidebar and phone tab bar. `MotionConfig
+  reducedMotion="user"` and a CSS `prefers-reduced-motion` rule turn it all off on request.
+- **Students** get a task-first menu (`learnerNavigation`), a home screen built from their own
+  data (`features/dashboard`), course cards on `/classes`, status tabs on `/assignments`, and
+  a bottom tab bar on phones.
+
+**Tests:** `tests/db/site.test.ts` (visitors read only the catalogue functions, settings and
+published testimonials; only `site.write` edits), `tests/db/idor.test.ts` (anonymous callers
+read no table except `site_settings`), `src/config/routes.test.ts` (public routes).

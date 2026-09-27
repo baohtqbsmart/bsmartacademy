@@ -103,7 +103,7 @@ describe("per-user tables return only the caller's rows", () => {
     }
   })
 
-  it("anonymous callers read nothing anywhere", async () => {
+  it("anonymous callers read nothing but the public website settings", async () => {
     const tables = (await db.query<{ t: string }>(`select relname as t from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and relkind in ('r', 'v') order by 1`)).rows.map((r) => r.t)
     const readable = await as(db, null, async (tx) => {
       const found: string[] = []
@@ -118,6 +118,7 @@ describe("per-user tables return only the caller's rows", () => {
       }
       return found
     })
-    expect(readable).toEqual([])
+    // The website's contact details are public by design (testimonials: published only, none seeded).
+    expect(readable).toEqual(["site_settings"])
   })
 })

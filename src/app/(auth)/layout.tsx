@@ -1,4 +1,7 @@
+import Link from "next/link"
+
 import { BrandLogo } from "@/components/layout/brand"
+import { routes } from "@/config/routes"
 import { LanguageSwitcher } from "@/i18n/language-switcher"
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -9,7 +12,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div aria-hidden className="bg-brand-navy absolute inset-x-0 top-1.5 h-0.5" />
       <LanguageSwitcher className="absolute top-4 right-4 w-36 bg-background" />
       <div className="flex w-full max-w-sm flex-col gap-6">
-        <BrandLogo className="w-36 self-center" />
+        <Link href={routes.home} className="self-center" aria-label="BSmart Academy">
+          <BrandLogo className="w-36" />
+        </Link>
         <div className="[&>[data-slot=card]]:border-t-brand-navy [&>[data-slot=card]]:border-t-4">{children}</div>
       </div>
     </main>

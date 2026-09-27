@@ -31,9 +31,11 @@ import {
   MegaphoneIcon,
   MessagesSquareIcon,
   ShieldCheckIcon,
-  UserRoundIcon,
   UsersIcon,
   UsersRoundIcon,
+  BellIcon,
+  GlobeIcon,
+  SettingsIcon,
   type LucideIcon,
 } from "lucide-react"
 
@@ -122,16 +124,66 @@ export const navigation: NavSection[] = [
   },
   {
     label: "Administration",
-    items: [{ title: "Users & roles", href: routes.users, icon: ShieldCheckIcon }],
+    items: [
+      { title: "Users & roles", href: routes.users, icon: ShieldCheckIcon },
+      { title: "Website", href: routes.website, icon: GlobeIcon },
+    ],
   },
   {
     label: "Account",
-    items: [{ title: "My profile", href: routes.profile, icon: UserRoundIcon }],
+    items: [
+      { title: "Notifications", href: routes.notifications, icon: BellIcon },
+      { title: "Settings", href: routes.profile, icon: SettingsIcon },
+    ],
   },
 ]
 
-export function navigationFor(grants: PermissionGrants): NavSection[] {
-  return navigation
+/**
+ * Students get a shorter, task-first menu (the brand mock-ups): learning first,
+ * then what they follow up on. Every entry still goes through config/access.ts.
+ */
+export const learnerNavigation: NavSection[] = [
+  {
+    label: "Learning",
+    items: [
+      { title: "Dashboard", href: routes.dashboard, icon: LayoutDashboardIcon },
+      { title: "My courses", href: routes.classes, icon: BookOpenIcon },
+      { title: "Assignments", href: routes.assignments, icon: ClipboardListIcon },
+      { title: "Tests", href: routes.tests, icon: FileCheckIcon },
+      { title: "Timetable", href: routes.timetable, icon: CalendarDaysIcon },
+      { title: "Online classes", href: routes.online, icon: VideoIcon },
+      { title: "Materials", href: routes.library, icon: FolderOpenIcon },
+    ],
+  },
+  {
+    label: "English",
+    items: [
+      { title: "English dashboard", href: routes.english, icon: LanguagesIcon },
+      { title: "Vocabulary", href: routes.vocabulary, icon: BookAIcon },
+      { title: "Lessons", href: routes.lessons, icon: NotebookTextIcon },
+      { title: "Writing & speaking", href: routes.assessments, icon: PenLineIcon },
+    ],
+  },
+  {
+    label: "My progress",
+    items: [
+      { title: "Learning progress", href: routes.analytics, icon: TrendingUpIcon },
+      { title: "Attendance", href: routes.attendance, icon: CalendarCheckIcon },
+      { title: "Tuition", href: routes.tuition, icon: WalletIcon },
+      { title: "Announcements", href: routes.announcements, icon: MegaphoneIcon },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { title: "Notifications", href: routes.notifications, icon: BellIcon },
+      { title: "Settings", href: routes.profile, icon: SettingsIcon },
+    ],
+  },
+]
+
+export function navigationFor(grants: PermissionGrants, roleCode?: string): NavSection[] {
+  return (roleCode === "student" ? learnerNavigation : navigation)
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => canAccessRoute(grants, item.href)),

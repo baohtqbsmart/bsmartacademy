@@ -93,6 +93,7 @@ describe("permission matrix", () => {
           "question_bank.read": "all",
           "question_bank.write": "all",
           "reports.read": "all",
+          "site.write": "all",
           "students.read": "all",
           "students.write": "all",
           "teachers.read": "all",
@@ -190,6 +191,7 @@ describe("permission matrix", () => {
           "question_bank.write": "all",
           "reports.read": "all",
           "roles.manage": "all",
+          "site.write": "all",
           "students.delete": "all",
           "students.read": "all",
           "students.write": "all",
@@ -336,6 +338,7 @@ describe("direct URL access per role", () => {
     routes.subjects,
     routes.subjectDetail,
     routes.users,
+    routes.website,
     // Finance
     routes.tuition,
     routes.receipt,
@@ -387,7 +390,13 @@ describe("direct URL access per role", () => {
       ...new Set(navigationFor(grantsByRole[role]).flatMap((section) => section.items.map((item) => item.href.split("?")[0]))),
     ]
     const sidebarPages = expected[role].filter((route) => !notInSidebar.has(route))
-    expect(hrefs.sort()).toEqual([...sidebarPages, routes.dashboard, routes.profile].sort())
+    expect(hrefs.sort()).toEqual([...sidebarPages, routes.dashboard, routes.notifications, routes.profile].sort())
+  })
+
+  it("the student menu lists only pages students can open", () => {
+    const hrefs = navigationFor(grantsByRole.student, "student").flatMap((section) => section.items.map((item) => item.href))
+    for (const href of hrefs) expect(canAccessRoute(grantsByRole.student, href), href).toBe(true)
+    expect(hrefs).toEqual(expect.arrayContaining([routes.dashboard, routes.classes, routes.assignments, routes.timetable, routes.library, routes.analytics, routes.tuition, routes.notifications, routes.profile]))
   })
 
   it("a user with no permissions (deactivated) can open no protected page", () => {

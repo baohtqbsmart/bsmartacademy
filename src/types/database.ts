@@ -317,7 +317,17 @@ export type Database = {
         ]
       }
       subjects: {
-        Row: { id: string; code: string; name: string; description: string; deleted_at: string | null } & Timestamps
+        Row: {
+          id: string
+          code: string
+          name: string
+          description: string
+          deleted_at: string | null
+          audience: string
+          icon: string
+          image_path: string | null
+          show_on_website: boolean
+        } & Timestamps
         Insert: {
           id?: string
           code: string
@@ -332,6 +342,57 @@ export type Database = {
           description?: string
           deleted_at?: string | null
         } & TimestampsInsert
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          id: boolean
+          contact_email: string | null
+          contact_phone: string | null
+          address: string | null
+          facebook_url: string | null
+          zalo_url: string | null
+          hero_image_path: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: never
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          address?: string | null
+          facebook_url?: string | null
+          zalo_url?: string | null
+          hero_image_path?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          id: string
+          author_name: string
+          author_role: string
+          quote: string
+          is_published: boolean
+          sort_order: number
+          created_by: string | null
+        } & Timestamps
+        Insert: {
+          id?: string
+          author_name: string
+          author_role?: string
+          quote: string
+          is_published?: boolean
+          sort_order?: number
+        }
+        Update: {
+          author_name?: string
+          author_role?: string
+          quote?: string
+          is_published?: boolean
+          sort_order?: number
+        }
         Relationships: []
       }
       levels: {
@@ -2911,6 +2972,38 @@ export type Database = {
       transfer_enrollment: {
         Args: { target_enrollment_id: string; new_class_id: string }
         Returns: string
+      }
+      website_subjects: {
+        Args: never
+        Returns: {
+          id: string
+          code: string
+          name: string
+          description: string
+          audience: string
+          icon: string
+          image_path: string | null
+          course_count: number
+        }[]
+      }
+      website_courses: {
+        Args: never
+        Returns: {
+          id: string
+          code: string
+          name: string
+          description: string
+          subject_id: string
+          subject_name: string
+          level_name: string | null
+          session_count: number | null
+          session_minutes: number | null
+          duration_weeks: number | null
+        }[]
+      }
+      set_subject_website: {
+        Args: { target_subject: string; new_audience: string; new_icon: string; new_image_path: string | null; new_show: boolean }
+        Returns: undefined
       }
       my_permissions: {
         Args: never

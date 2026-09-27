@@ -13,6 +13,7 @@ export type AccessRule = {
  * decides which rows each user sees on the page.
  */
 export const routeAccess = {
+  [routes.website]: { permission: "site.write" },
   [routes.students]: { permission: "students.read", scopes: ["all", "assigned", "children"] },
   [routes.studentNew]: { permission: "students.write" },
   // Any scope: students open their own profile; RLS returns 404 for anyone else's.
