@@ -26,6 +26,7 @@ import {
 } from "@/features/assessments/scoring"
 import { CEFR_LABELS, CEFR_LEVELS } from "@/features/tests/questions"
 import type { FieldErrors } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 const NONE = "__none"
 
@@ -45,12 +46,13 @@ export function TaskForm({
   locked: boolean
   cancelHref: string
 }) {
+  const t = useT()
   const [v, setV] = useState(initial)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [isPending, startTransition] = useTransition()
   const set = <K extends keyof TaskFormInput>(key: K, value: TaskFormInput[K]) => setV((c) => ({ ...c, [key]: value }))
-  const fieldError = (name: string) => fieldErrors[name]?.[0] && <p className="text-destructive text-sm">{fieldErrors[name]![0]}</p>
+  const fieldError = (name: string) => fieldErrors[name]?.[0] && <p className="text-destructive text-sm">{t(fieldErrors[name]![0])}</p>
   const writing = v.kind === "writing"
   const criteria = v.criteria as { name: string; description: string; maxPoints: string }[]
 
@@ -85,104 +87,104 @@ export function TaskForm({
       <FormAlert message={error} />
       <Card>
         <CardHeader>
-          <CardTitle>Task</CardTitle>
-          <CardDescription>Saved as a draft; publish it from the task page.</CardDescription>
+          <CardTitle>{t("Task")}</CardTitle>
+          <CardDescription>{t("Saved as a draft; publish it from the task page.")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field id="t-title" label="Title">
+          <Field id="t-title" label={t("Title")}>
             <Input id="t-title" value={v.title} onChange={(e) => set("title", e.target.value)} />
             {fieldError("title")}
           </Field>
-          <Field id="t-class" label="Class">
-            <OptionSelect id="t-class" value={v.classId} onChange={(value) => set("classId", value)} options={classes.map((c) => ({ id: c.id, label: c.name }))} placeholder="Choose a class" />
+          <Field id="t-class" label={t("Class")}>
+            <OptionSelect id="t-class" value={v.classId} onChange={(value) => set("classId", value)} options={classes.map((c) => ({ id: c.id, label: c.name }))} placeholder={t("Choose a class")} />
             {fieldError("classId")}
           </Field>
-          <Field id="t-level" label="Level">
+          <Field id="t-level" label={t("Level")}>
             <OptionSelect
               id="t-level"
               value={v.cefrLevel || NONE}
               onChange={(value) => set("cefrLevel", (value === NONE ? "" : value) as TaskFormInput["cefrLevel"])}
               options={[{ id: NONE, label: "Not set" }, ...CEFR_LEVELS.map((l) => ({ id: l, label: CEFR_LABELS[l] }))]}
-              placeholder="Level"
+              placeholder={t("Level")}
             />
           </Field>
-          <Field id="t-mode" label="Students answer by">
+          <Field id="t-mode" label={t("Students answer by")}>
             <OptionSelect
               id="t-mode"
               value={v.responseMode}
               onChange={(value) => set("responseMode", value as TaskFormInput["responseMode"])}
               options={(writing ? WRITING_RESPONSES : SPEAKING_RESPONSES).map((m) => ({ id: m, label: RESPONSE_LABELS[m] }))}
-              placeholder="Choose"
+              placeholder={t("Choose")}
             />
             {fieldError("responseMode")}
           </Field>
           <div className="sm:col-span-2">
-            <Field id="t-task" label={writing ? "Writing task" : "Speaking prompt"}>
+            <Field id="t-task" label={writing ? t("Writing task") : t("Speaking prompt")}>
               <Textarea id="t-task" rows={4} value={v.task} onChange={(e) => set("task", e.target.value)} />
               {fieldError("task")}
             </Field>
           </div>
           <div className="sm:col-span-2">
-            <Field id="t-instr" label="Instructions">
+            <Field id="t-instr" label={t("Instructions")}>
               <Textarea id="t-instr" rows={3} value={v.instructions ?? ""} onChange={(e) => set("instructions", e.target.value)} />
             </Field>
           </div>
           {writing ? (
             <>
-              <Field id="t-min" label="Minimum words">
+              <Field id="t-min" label={t("Minimum words")}>
                 <Input id="t-min" inputMode="numeric" value={v.minWords} onChange={(e) => set("minWords", e.target.value)} />
               </Field>
-              <Field id="t-max" label="Maximum words">
+              <Field id="t-max" label={t("Maximum words")}>
                 <Input id="t-max" inputMode="numeric" value={v.maxWords} onChange={(e) => set("maxWords", e.target.value)} />
                 {fieldError("maxWords")}
               </Field>
             </>
           ) : (
-            <Field id="t-dur" label="Recording length (seconds, guide)">
+            <Field id="t-dur" label={t("Recording length (seconds, guide)")}>
               <Input id="t-dur" inputMode="numeric" value={v.maxDurationSeconds} onChange={(e) => set("maxDurationSeconds", e.target.value)} />
             </Field>
           )}
-          <Field id="t-due" label="Due (Vietnam time)">
+          <Field id="t-due" label={t("Due (Vietnam time)")}>
             <Input id="t-due" type="datetime-local" value={v.dueAt} onChange={(e) => set("dueAt", e.target.value)} />
           </Field>
-          <Field id="t-attempts" label="Attempts allowed">
+          <Field id="t-attempts" label={t("Attempts allowed")}>
             <Input id="t-attempts" inputMode="numeric" value={v.maxAttempts} onChange={(e) => set("maxAttempts", e.target.value)} />
           </Field>
           <label className="flex items-center gap-2 self-end text-sm">
             <Checkbox checked={v.allowLate} onCheckedChange={(checked) => set("allowLate", checked === true)} />
-            Accept late work (marked late)
+            {t("Accept late work (marked late)")}
           </label>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Rubric · maximum {total}</CardTitle>
+          <CardTitle>{t("Rubric · maximum {total}", { total })}</CardTitle>
           <CardDescription>
             {locked
-              ? "Students have handed in work, so the rubric can no longer change."
-              : "Start from a template, then adjust. The task keeps its own copy."}
+              ? t("Students have handed in work, so the rubric can no longer change.")
+              : t("Start from a template, then adjust. The task keeps its own copy.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           {!locked && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field id="t-template" label="Template">
+              <Field id="t-template" label={t("Template")}>
                 <OptionSelect
                   id="t-template"
                   value={v.rubricId ?? ""}
                   onChange={applyTemplate}
                   options={rubrics.filter((r) => r.kind === v.kind).map((r) => ({ id: r.id, label: r.name }))}
-                  placeholder="Choose a template"
+                  placeholder={t("Choose a template")}
                 />
               </Field>
-              <Field id="t-scoring" label="Scoring">
+              <Field id="t-scoring" label={t("Scoring")}>
                 <OptionSelect
                   id="t-scoring"
                   value={v.scoring}
                   onChange={(value) => set("scoring", value as Scoring)}
                   options={(["points", "ielts_band"] as const).map((s) => ({ id: s, label: SCORING_LABELS[s] }))}
-                  placeholder="Scoring"
+                  placeholder={t("Scoring")}
                 />
               </Field>
             </div>
@@ -204,9 +206,9 @@ export function TaskForm({
       </Card>
 
       <div className="flex gap-2">
-        <SubmitButton pending={isPending}>Save task</SubmitButton>
+        <SubmitButton pending={isPending}>{t("Save task")}</SubmitButton>
         <Button variant="outline" asChild>
-          <Link href={cancelHref}>Cancel</Link>
+          <Link href={cancelHref}>{t("Cancel")}</Link>
         </Button>
       </div>
     </form>

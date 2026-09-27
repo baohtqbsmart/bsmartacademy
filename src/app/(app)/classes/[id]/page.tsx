@@ -32,12 +32,17 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatTime, WEEKDAYS } from "@/lib/dates"
 import { formatDate, formatDateRange } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Class" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Class") }
+}
 
 const SEATED = new Set(["pending", "active"])
 
 export default async function ClassPage({ params }: PageProps<"/classes/[id]">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.classDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -72,42 +77,42 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
   return (
     <>
       <Link href={routes.classes} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Classes
+        <ArrowLeftIcon className="size-4" aria-hidden /> {tr("Classes")}
       </Link>
       <PageHeader
         title={klass.name}
         description={klass.code}
         actions={
           <>
-            <Badge variant={CLASS_STATUS[klass.status].variant}>{CLASS_STATUS[klass.status].label}</Badge>
-            {klass.deleted_at && <Badge variant="destructive">Archived</Badge>}
+            <Badge variant={CLASS_STATUS[klass.status].variant}>{tr(CLASS_STATUS[klass.status].label)}</Badge>
+            {klass.deleted_at && <Badge variant="destructive">{tr("Archived")}</Badge>}
             {canWrite && (
               <>
                 <Button variant="outline" size="sm" asChild>
                   <Link href={classEditPath(klass.id)}>
-                    <PencilIcon aria-hidden /> Edit
+                    <PencilIcon aria-hidden /> {tr("Edit")}
                   </Link>
                 </Button>
                 {klass.deleted_at ? (
                   <ConfirmActionButton
-                    title="Restore class?"
-                    description="The class returns to lists and timetables (clashes are re-checked)."
-                    confirmLabel="Restore"
-                    successMessage="Class restored."
+                    title={tr("Restore class?")}
+                    description={tr("The class returns to lists and timetables (clashes are re-checked).")}
+                    confirmLabel={tr("Restore")}
+                    successMessage={tr("Class restored.")}
                     action={restoreClassAction.bind(null, { classId: klass.id })}
                   >
-                    <ArchiveRestoreIcon aria-hidden /> Restore
+                    <ArchiveRestoreIcon aria-hidden /> {tr("Restore")}
                   </ConfirmActionButton>
                 ) : (
                   <ConfirmActionButton
-                    title="Archive class?"
-                    description="Archived classes disappear from timetables and from teachers', students' and parents' views."
-                    confirmLabel="Archive"
-                    successMessage="Class archived."
+                    title={tr("Archive class?")}
+                    description={tr("Archived classes disappear from timetables and from teachers', students' and parents' views.")}
+                    confirmLabel={tr("Archive")}
+                    successMessage={tr("Class archived.")}
                     destructive
                     action={archiveClassAction.bind(null, { classId: klass.id })}
                   >
-                    <ArchiveIcon aria-hidden /> Archive
+                    <ArchiveIcon aria-hidden /> {tr("Archive")}
                   </ConfirmActionButton>
                 )}
               </>
@@ -118,26 +123,26 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
 
       <Card>
         <CardContent className="grid gap-4 sm:grid-cols-3">
-          <Detail label="Course">
+          <Detail label={tr("Course")}>
             {klass.course ? (
               <Link href={coursePath(klass.course.id)} className="hover:underline">
                 {klass.course.name}
               </Link>
             ) : null}
           </Detail>
-          <Detail label="Subject">{klass.course?.subject?.name}</Detail>
-          <Detail label="Level">{klass.course?.level?.name}</Detail>
-          <Detail label="Dates">{formatDateRange(klass.start_date, klass.end_date)}</Detail>
-          <Detail label="Delivery">
-            {DELIVERY_MODE_LABELS[klass.delivery_mode]}
-            {klass.delivery_mode !== "online" && klass.room && ` · Room ${klass.room}`}
+          <Detail label={tr("Subject")}>{klass.course?.subject?.name}</Detail>
+          <Detail label={tr("Level")}>{klass.course?.level?.name}</Detail>
+          <Detail label={tr("Dates")}>{formatDateRange(klass.start_date, klass.end_date)}</Detail>
+          <Detail label={tr("Delivery")}>
+            {tr(DELIVERY_MODE_LABELS[klass.delivery_mode])}
+            {klass.delivery_mode !== "online" && klass.room && tr(" · Room {room}", { room: klass.room })}
           </Detail>
-          <Detail label="Students">
+          <Detail label={tr("Students")}>
             {seated.length}
             {klass.capacity && ` / ${klass.capacity}`}
           </Detail>
           {klass.meeting_url && klass.delivery_mode !== "in_person" && (
-            <Detail label="Meeting link">
+            <Detail label={tr("Meeting link")}>
               <a href={klass.meeting_url} target="_blank" rel="noreferrer" className="break-all underline">
                 {klass.meeting_url}
               </a>
@@ -149,7 +154,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Teachers</CardTitle>
+            <CardTitle>{tr("Teachers")}</CardTitle>
             {canWrite && (
               <CardAction>
                 <AssignTeacherDialog
@@ -164,7 +169,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
           </CardHeader>
           <CardContent>
             {members.length === 0 ? (
-              <EmptyState icon={UsersIcon} title="No teacher assigned" />
+              <EmptyState icon={UsersIcon} title={tr("No teacher assigned")} />
             ) : (
               <ul className="grid gap-3">
                 {members.map((member) =>
@@ -175,7 +180,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                           {member.teacher.full_name}
                         </Link>
                         <span className="text-muted-foreground">
-                          {CLASS_MEMBER_ROLE_LABELS[member.member_role]} · since {formatDate(member.assigned_on)}
+                          {tr("{value} · since {date}", { value: CLASS_MEMBER_ROLE_LABELS[member.member_role], date: formatDate(member.assigned_on) })}
                         </span>
                       </div>
                       {canWrite && (
@@ -184,11 +189,11 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                           <ConfirmActionButton
                             variant="ghost"
                             size="icon"
-                            aria-label={`Remove ${member.teacher.full_name}`}
-                            title="Remove teacher from class?"
-                            description={`${member.teacher.full_name} will no longer see this class or its students.`}
-                            confirmLabel="Remove"
-                            successMessage="Teacher removed."
+                            aria-label={tr("Remove {full_name}", { full_name: member.teacher.full_name })}
+                            title={tr("Remove teacher from class?")}
+                            description={tr("{full_name} will no longer see this class or its students.", { full_name: member.teacher.full_name })}
+                            confirmLabel={tr("Remove")}
+                            successMessage={tr("Teacher removed.")}
                             destructive
                             action={removeTeacherAction.bind(null, { classId: klass.id, teacherId: member.teacher.id })}
                           >
@@ -206,7 +211,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
 
         <Card>
           <CardHeader>
-            <CardTitle>Weekly timetable</CardTitle>
+            <CardTitle>{tr("Weekly timetable")}</CardTitle>
             {canWrite && (
               <CardAction>
                 <SlotDialog classId={klass.id} />
@@ -215,13 +220,13 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
           </CardHeader>
           <CardContent>
             {slots.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No time slots yet.</p>
+              <p className="text-muted-foreground text-sm">{tr("No time slots yet.")}</p>
             ) : (
               <ul className="grid gap-2">
                 {slots.map((slot) => (
                   <li key={slot.id} className="flex items-center justify-between gap-2 text-sm">
                     <span>
-                      <span className="inline-block w-24 font-medium">{WEEKDAYS[slot.weekday - 1].label}</span>
+                      <span className="inline-block w-24 font-medium">{tr(WEEKDAYS[slot.weekday - 1].label)}</span>
                       <span className="tabular-nums">
                         {formatTime(slot.starts_at)}–{formatTime(slot.ends_at)}
                       </span>
@@ -244,11 +249,11 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                         <ConfirmActionButton
                           variant="ghost"
                           size="icon"
-                          aria-label="Delete time slot"
-                          title="Delete time slot?"
-                          description="It will disappear from everyone's timetable."
-                          confirmLabel="Delete"
-                          successMessage="Time slot deleted."
+                          aria-label={tr("Delete time slot")}
+                          title={tr("Delete time slot?")}
+                          description={tr("It will disappear from everyone's timetable.")}
+                          confirmLabel={tr("Delete")}
+                          successMessage={tr("Time slot deleted.")}
                           destructive
                           action={deleteSlotAction.bind(null, { slotId: slot.id })}
                         >
@@ -267,17 +272,17 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
       {canReadAttendance && (
         <Card>
           <CardHeader>
-            <CardTitle>Attendance</CardTitle>
+            <CardTitle>{tr("Attendance")}</CardTitle>
             <CardAction className="flex gap-2">
               {can(user.permissions, "attendance.read", ["all", "assigned"]) && (
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href={`${routes.attendance}?class=${klass.id}`}>Report</Link>
+                  <Link href={`${routes.attendance}?class=${klass.id}`}>{tr("Report")}</Link>
                 </Button>
               )}
               {canTakeAttendance && !klass.deleted_at && (
                 <Button size="sm" asChild>
                   <Link href={classAttendancePath(klass.id)}>
-                    <CalendarCheckIcon aria-hidden /> Take attendance
+                    <CalendarCheckIcon aria-hidden /> {tr("Take attendance")}
                   </Link>
                 </Button>
               )}
@@ -285,7 +290,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
           </CardHeader>
           <CardContent>
             {registers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No registers taken yet.</p>
+              <p className="text-muted-foreground text-sm">{tr("No registers taken yet.")}</p>
             ) : (
               <ul className="grid gap-1 text-sm sm:grid-cols-2 lg:grid-cols-5">
                 {registers.map((r) => (
@@ -298,7 +303,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                       <span className="font-medium">{formatDate(r.session_date)}</span>
                     )}
                     <span className="text-muted-foreground tabular-nums">
-                      {formatRate(r.rate)} attended{r.counts.absent > 0 && ` · ${r.counts.absent} absent`}
+                      {tr("{rate} attended", { rate: formatRate(r.rate) })}{r.counts.absent > 0 && tr(" · {absent} absent", { absent: r.counts.absent })}
                     </span>
                   </li>
                 ))}
@@ -310,7 +315,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
 
       <section className="grid gap-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Students</h2>
+          <h2 className="font-semibold">{tr("Students")}</h2>
           {canEnroll && (
             <EnrollDialog
               classId={klass.id}
@@ -323,7 +328,7 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
         <SimpleTable
           rows={enrollments}
           rowKey={(e) => e.id}
-          empty={<EmptyState icon={UsersIcon} title="No students in this class" />}
+          empty={<EmptyState icon={UsersIcon} title={tr("No students in this class")} />}
           columns={[
             {
               header: "Student",
@@ -353,19 +358,19 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
                     {SEATED.has(e.status) && (
                       <ConfirmActionButton
                         variant="ghost"
-                        title="Remove student from class?"
-                        description="The enrolment is marked withdrawn; history is kept and they can be re-added."
-                        confirmLabel="Remove"
-                        successMessage="Student removed."
+                        title={tr("Remove student from class?")}
+                        description={tr("The enrolment is marked withdrawn; history is kept and they can be re-added.")}
+                        confirmLabel={tr("Remove")}
+                        successMessage={tr("Student removed.")}
                         destructive
                         action={setEnrollmentStatusAction.bind(null, { enrollmentId: e.id, status: "withdrawn" })}
                       >
-                        Remove
+                        {tr("Remove")}
                       </ConfirmActionButton>
                     )}
                   </div>
                 ) : (
-                  <Badge variant={ENROLLMENT_STATUS[e.status].variant}>{ENROLLMENT_STATUS[e.status].label}</Badge>
+                  <Badge variant={ENROLLMENT_STATUS[e.status].variant}>{tr(ENROLLMENT_STATUS[e.status].label)}</Badge>
                 ),
             },
           ]}
@@ -375,10 +380,11 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
   )
 }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+async function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  const t = await getT()
   return (
     <div className="grid gap-0.5">
-      <span className="text-muted-foreground text-xs">{label}</span>
+      <span className="text-muted-foreground text-xs">{t(label)}</span>
       <span className="text-sm">{children || "—"}</span>
     </div>
   )

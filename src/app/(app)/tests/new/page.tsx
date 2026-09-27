@@ -7,16 +7,21 @@ import { listTestClasses } from "@/features/tests/server/test-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "New test" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("New test") }
+}
 
 export default async function NewTestPage({ searchParams }: PageProps<"/tests/new">) {
+  const t = await getT()
   await requireRouteAccess(routes.testNew)
   const classes = await listTestClasses(await createClient())
   const requested = uuidParam(await searchParams, "class")
   return (
     <>
-      <PageHeader title="New test" description="Saved as a draft. Add questions from the bank, then publish." />
+      <PageHeader title={t("New test")} description={t("Saved as a draft. Add questions from the bank, then publish.")} />
       <TestForm
         classes={classes}
         cancelHref={routes.tests}

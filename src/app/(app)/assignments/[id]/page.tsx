@@ -36,10 +36,15 @@ import { formatDateTime } from "@/lib/format"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
 import { UPLOAD_RULES } from "@/lib/uploads"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Assignment" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Assignment") }
+}
 
 export default async function AssignmentPage({ params, searchParams }: PageProps<"/assignments/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.assignmentDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -57,7 +62,7 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
   return (
     <>
       <Link href={routes.assignments} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Assignments
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Assignments")}
       </Link>
       <PageHeader
         title={assignment.title}
@@ -68,7 +73,7 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
             {isEditor && assignment.state !== "archived" && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={assignmentEditPath(assignment.id)}>
-                  <PencilIcon aria-hidden /> Edit
+                  <PencilIcon aria-hidden /> {t("Edit")}
                 </Link>
               </Button>
             )}
@@ -85,7 +90,7 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
             canDelete={assignment.state === "draft" && assignment.published_at === null}
           />
           {assignment.state === "scheduled" && (
-            <p className="text-muted-foreground text-sm">Students will see it from {formatDateTime(assignment.publish_at)}.</p>
+            <p className="text-muted-foreground text-sm">{t("Students will see it from {dateTime}.", { dateTime: formatDateTime(assignment.publish_at) })}</p>
           )}
         </div>
       )}
@@ -94,23 +99,23 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
 
       <Card>
         <CardHeader>
-          <CardTitle>Instructions</CardTitle>
+          <CardTitle>{t("Instructions")}</CardTitle>
           {assignment.description && <CardDescription className="whitespace-pre-wrap">{assignment.description}</CardDescription>}
         </CardHeader>
         <CardContent className="grid gap-4">
-          <p className="text-sm whitespace-pre-wrap">{assignment.instructions || "No instructions."}</p>
+          <p className="text-sm whitespace-pre-wrap">{assignment.instructions || t("No instructions.")}</p>
           <div className="grid gap-2">
-            <span className="text-sm font-medium">Attachments</span>
+            <span className="text-sm font-medium">{t("Attachments")}</span>
             <FileList
               files={assignment.attachments}
               removable={isEditor && assignment.state !== "archived" ? "attachment" : undefined}
-              empty="No attachments."
+              empty={t("No attachments.")}
             />
             {isEditor && assignment.state !== "archived" && (
               <FileUploader
                 target={{ kind: "assignment", assignmentId: assignment.id }}
                 remaining={UPLOAD_RULES.maxAttachmentsPerAssignment - assignment.attachments.length}
-                label="Attach files"
+                label={t("Attach files")}
               />
             )}
           </div>
@@ -128,7 +133,8 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
   )
 }
 
-function Details({ assignment }: { assignment: AssignmentDetail }) {
+async function Details({ assignment }: { assignment: AssignmentDetail }) {
+  const t = await getT()
   const items = [
     ["Type", ASSIGNMENT_TYPE_LABELS[assignment.assignment_type]],
     ["Skill", assignment.skill ? SKILL_LABELS[assignment.skill] : "—"],
@@ -144,7 +150,7 @@ function Details({ assignment }: { assignment: AssignmentDetail }) {
       <CardContent className="grid gap-4 sm:grid-cols-4">
         {items.map(([label, value]) => (
           <div key={label} className="grid gap-0.5">
-            <span className="text-muted-foreground text-xs">{label}</span>
+            <span className="text-muted-foreground text-xs">{t(label)}</span>
             <span className="text-sm">{value}</span>
           </div>
         ))}
@@ -158,6 +164,7 @@ function Details({ assignment }: { assignment: AssignmentDetail }) {
 // ---------------------------------------------------------------------------
 
 async function TeacherSections({ assignmentId, assignment }: { assignmentId: string; assignment: AssignmentDetail }) {
+  const t = await getT()
   const db = await createClient()
   const [keys, roster, started] = await Promise.all([
     getAnswerKeys(db, assignment.questions.map((q) => q.id)),
@@ -172,11 +179,11 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Questions</CardTitle>
+          <CardTitle>{t("Questions")}</CardTitle>
           <CardDescription>
             {locked
-              ? "Students have started, so questions can no longer change."
-              : "Optional. Multiple-choice and short answers are auto-marked as a suggestion; you always set the score."}
+              ? t("Students have started, so questions can no longer change.")
+              : t("Optional. Multiple-choice and short answers are auto-marked as a suggestion; you always set the score.")}
           </CardDescription>
           {!locked && (
             <CardAction>
@@ -186,7 +193,7 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
         </CardHeader>
         <CardContent>
           {assignment.questions.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No questions: students answer in writing and/or with files.</p>
+            <p className="text-muted-foreground text-sm">{t("No questions: students answer in writing and/or with files.")}</p>
           ) : (
             <ol className="grid gap-4">
               {assignment.questions.map((q, index) => {
@@ -198,7 +205,7 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
                         {index + 1}. {q.prompt}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {QUESTION_KIND_LABELS[q.kind]} · {Number(q.points)} pt
+                        {t("{value} · {number} pt", { value: QUESTION_KIND_LABELS[q.kind], number: Number(q.points) })}
                       </p>
                       {q.options && (
                         <ul className="grid gap-0.5">
@@ -206,16 +213,16 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
                             <li key={i} className={key?.correct_option === i ? "font-medium" : undefined}>
                               {String.fromCharCode(65 + i)}. {option}
                               {key?.correct_option === i && (
-                                <CircleCheckIcon className="ml-1 inline size-3.5 text-[#006300] dark:text-[#0ca30c]" aria-label="Correct answer" />
+                                <CircleCheckIcon className="ml-1 inline size-3.5 text-[#006300] dark:text-[#0ca30c]" aria-label={t("Correct answer")} />
                               )}
                             </li>
                           ))}
                         </ul>
                       )}
                       {q.kind === "short_answer" && key?.accepted_answers && (
-                        <p className="text-muted-foreground">Accepted: {key.accepted_answers.join(" / ")}</p>
+                        <p className="text-muted-foreground">{t("Accepted: {accepted_answers}", { accepted_answers: key.accepted_answers.join(" / ") })}</p>
                       )}
-                      {key?.explanation && <p className="text-muted-foreground">Notes: {key.explanation}</p>}
+                      {key?.explanation && <p className="text-muted-foreground">{t("Notes: {explanation}", { explanation: key.explanation })}</p>}
                     </div>
                     {!locked && (
                       <div className="flex shrink-0 gap-1">
@@ -245,23 +252,23 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
 
       <section className="grid gap-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold">Submissions</h2>
+          <h2 className="font-semibold">{t("Submissions")}</h2>
           {graded > 0 && (
             <ConfirmActionButton
-              title={`Return ${graded} grade${graded === 1 ? "" : "s"}?`}
-              description="Students and parents will see the scores and feedback."
-              confirmLabel="Return grades"
-              successMessage="Grades returned."
+              title={t("Return {graded} grade{value}?", { graded, value: graded === 1 ? "" : "s" })}
+              description={t("Students and parents will see the scores and feedback.")}
+              confirmLabel={t("Return grades")}
+              successMessage={t("Grades returned.")}
               action={returnGradesAction.bind(null, { assignmentId })}
             >
-              <SendIcon aria-hidden /> Return all graded ({graded})
+              <SendIcon aria-hidden /> {t("Return all graded ({graded})", { graded })}
             </ConfirmActionButton>
           )}
         </div>
         <SimpleTable
           rows={roster}
           rowKey={(r) => r.student.id}
-          empty={<EmptyState icon={UsersIcon} title="No students in this class" />}
+          empty={<EmptyState icon={UsersIcon} title={t("No students in this class")} />}
           columns={[
             { header: "Student", cell: (r) => <span className="font-medium">{r.student.full_name}</span> },
             { header: "Status", cell: (r) => <WorkStatusBadge status={workStatus(r.attempt, assignment.due_at, "staff")} /> },
@@ -273,7 +280,7 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
                 r.grade ? (
                   <span className="tabular-nums">
                     {formatScore(r.grade.score, assignment.max_score)}
-                    {!r.grade.returned_at && <span className="text-muted-foreground"> · not returned</span>}
+                    {!r.grade.returned_at && <span className="text-muted-foreground"> {t("· not returned")}</span>}
                   </span>
                 ) : (
                   "—"
@@ -285,7 +292,7 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
               cell: (r) =>
                 r.attempt && r.attempt.status !== "in_progress" ? (
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={submissionPath(assignmentId, r.attempt.id)}>{r.attempt.status === "submitted" ? "Grade" : "Open"}</Link>
+                    <Link href={submissionPath(assignmentId, r.attempt.id)}>{r.attempt.status === "submitted" ? t("Grade") : t("Open")}</Link>
                   </Button>
                 ) : null,
             },
@@ -301,6 +308,7 @@ async function TeacherSections({ assignmentId, assignment }: { assignmentId: str
 // ---------------------------------------------------------------------------
 
 async function StudentSection({ assignment, submittedId }: { assignment: AssignmentDetail; submittedId?: string }) {
+  const t = await getT()
   const attempts = await listAttempts(await createClient(), assignment.id)
   const latest = attempts.at(-1) ?? null
   const status = workStatus(latest, assignment.due_at, "family")
@@ -312,19 +320,19 @@ async function StudentSection({ assignment, submittedId }: { assignment: Assignm
   if (latest?.status === "in_progress") {
     action = (
       <Button asChild>
-        <Link href={assignmentWorkPath(assignment.id)}>Continue working</Link>
+        <Link href={assignmentWorkPath(assignment.id)}>{t("Continue working")}</Link>
       </Button>
     )
   } else if (!open) {
-    action = <p className="text-muted-foreground text-sm">This assignment is closed.</p>
+    action = <p className="text-muted-foreground text-sm">{t("This assignment is closed.")}</p>
   } else if (!latest) {
     action = tooLate ? (
-      <p className="text-muted-foreground text-sm">The due date has passed and late work is not accepted.</p>
+      <p className="text-muted-foreground text-sm">{t("The due date has passed and late work is not accepted.")}</p>
     ) : (
-      <StartWorkButton assignmentId={assignment.id} label="Start" />
+      <StartWorkButton assignmentId={assignment.id} label={t("Start")} />
     )
   } else if (latest.resubmission_allowed) {
-    action = <StartWorkButton assignmentId={assignment.id} label="Start a new attempt" />
+    action = <StartWorkButton assignmentId={assignment.id} label={t("Start a new attempt")} />
   }
 
   return (
@@ -332,22 +340,22 @@ async function StudentSection({ assignment, submittedId }: { assignment: Assignm
       {confirmed && (
         <Alert>
           <CircleCheckIcon />
-          <AlertTitle>Submitted</AlertTitle>
+          <AlertTitle>{t("Submitted")}</AlertTitle>
           <AlertDescription>
-            Your work was handed in on {formatDateTime(confirmed.submitted_at)}
-            {confirmed.is_late && " (after the due date)"}. Reference: {confirmed.id.slice(0, 8).toUpperCase()}.
+            {t("Your work was handed in on {dateTime}", { dateTime: formatDateTime(confirmed.submitted_at) })}
+            {confirmed.is_late && t(" (after the due date)")}{t(". Reference: {value}.", { value: confirmed.id.slice(0, 8).toUpperCase() })}
           </AlertDescription>
         </Alert>
       )}
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
-            Your work <WorkStatusBadge status={status} />
+            {t("Your work")} <WorkStatusBadge status={status} />
           </CardTitle>
           {latest?.submitted_at && (
             <CardDescription>
-              Handed in {formatDateTime(latest.submitted_at)}
-              {latest.status !== "returned" && " · you cannot change it unless your teacher allows a resubmission"}
+              {t("Handed in {dateTime}", { dateTime: formatDateTime(latest.submitted_at) })}
+              {latest.status !== "returned" && t(" · you cannot change it unless your teacher allows a resubmission")}
             </CardDescription>
           )}
         </CardHeader>
@@ -368,6 +376,7 @@ async function StudentSection({ assignment, submittedId }: { assignment: Assignm
 // ---------------------------------------------------------------------------
 
 async function FamilySection({ assignment }: { assignment: AssignmentDetail }) {
+  const t = await getT()
   const attempts = await listAttempts(await createClient(), assignment.id)
   const byStudent = new Map<string, Attempt[]>()
   for (const a of attempts) byStudent.set(a.student_id, [...(byStudent.get(a.student_id) ?? []), a])
@@ -376,7 +385,7 @@ async function FamilySection({ assignment }: { assignment: AssignmentDetail }) {
     return (
       <Card>
         <CardContent>
-          <EmptyState icon={UsersIcon} title="Nothing handed in yet" />
+          <EmptyState icon={UsersIcon} title={t("Nothing handed in yet")} />
         </CardContent>
       </Card>
     )
@@ -402,7 +411,8 @@ async function FamilySection({ assignment }: { assignment: AssignmentDetail }) {
 }
 
 /** The most recent returned grade (RLS only returns grades that were returned). */
-function ReturnedGrade({ attempts, maxScore }: { attempts: Attempt[]; maxScore: number }) {
+async function ReturnedGrade({ attempts, maxScore }: { attempts: Attempt[]; maxScore: number }) {
+  const t = await getT()
   const graded = [...attempts].reverse().find((a) => a.submission_grades?.returned_at)
   if (!graded?.submission_grades) return null
   const grade = graded.submission_grades
@@ -410,17 +420,17 @@ function ReturnedGrade({ attempts, maxScore }: { attempts: Attempt[]; maxScore: 
     <div className="grid gap-1 rounded-md border p-3">
       <div className="flex flex-wrap items-baseline gap-2">
         <span className="text-2xl font-semibold tabular-nums">{formatScore(grade.score, maxScore)}</span>
-        <Badge variant="secondary">Attempt {graded.attempt}</Badge>
+        <Badge variant="secondary">{t("Attempt {attempt}", { attempt: graded.attempt })}</Badge>
       </div>
       {grade.feedback && <p className="text-sm whitespace-pre-wrap">{grade.feedback}</p>}
       <p className="text-muted-foreground text-xs">
-        {grade.graded_by_name} · returned {formatDateTime(grade.returned_at)}
+        {t("{graded_by_name} · returned {dateTime}", { graded_by_name: grade.graded_by_name, dateTime: formatDateTime(grade.returned_at) })}
       </p>
     </div>
   )
 }
 
-function AttemptsReview({
+async function AttemptsReview({
   attempts,
   assignment,
   viewer,
@@ -429,6 +439,7 @@ function AttemptsReview({
   assignment: AssignmentDetail
   viewer: "staff" | "family"
 }) {
+  const t = await getT()
   return (
     <>
       <SubmissionHistory attempts={attempts} dueAt={assignment.due_at} maxScore={assignment.max_score} viewer={viewer} />
@@ -437,7 +448,7 @@ function AttemptsReview({
         .reverse()
         .map((attempt) => (
           <details key={attempt.id} className="rounded-md border p-3">
-            <summary className="cursor-pointer text-sm font-medium">What was handed in — attempt {attempt.attempt}</summary>
+            <summary className="cursor-pointer text-sm font-medium">{t("What was handed in — attempt {attempt}", { attempt: attempt.attempt })}</summary>
             <div className="mt-3">
               <AttemptAnswers attempt={attempt} questions={assignment.questions} />
             </div>

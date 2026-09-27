@@ -18,8 +18,12 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatVnd } from "@/lib/money"
 import { enumParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Tuition plans" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Tuition plans") }
+}
 
 function installments(schedule: string, months: number) {
   if (schedule === "one_time") return 1
@@ -28,6 +32,7 @@ function installments(schedule: string, months: number) {
 }
 
 export default async function TuitionPlansPage({ searchParams }: PageProps<"/tuition/plans">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.tuitionPlans)
   const canWrite = can(user.permissions, "tuition.write")
   const show = enumParam(await searchParams, "show", ["archived"] as const)
@@ -44,8 +49,8 @@ export default async function TuitionPlansPage({ searchParams }: PageProps<"/tui
   return (
     <>
       <PageHeader
-        title="Tuition plans"
-        description="Prices per course with their duration and payment schedule."
+        title={t("Tuition plans")}
+        description={t("Prices per course with their duration and payment schedule.")}
         actions={canWrite && <PlanDialog courses={courseOptions} />}
       />
       <ListFilters
@@ -56,7 +61,7 @@ export default async function TuitionPlansPage({ searchParams }: PageProps<"/tui
       <SimpleTable
         rows={plans}
         rowKey={(p) => p.id}
-        empty={<EmptyState icon={TagsIcon} title="No tuition plans" />}
+        empty={<EmptyState icon={TagsIcon} title={t("No tuition plans")} />}
         columns={[
           { header: "Code", cell: (p) => <span className="font-mono text-xs">{p.code}</span> },
           {
@@ -76,7 +81,7 @@ export default async function TuitionPlansPage({ searchParams }: PageProps<"/tui
           },
           {
             header: "Status",
-            cell: (p) => (p.is_active ? <Badge>Available</Badge> : <Badge variant="outline">Not offered</Badge>),
+            cell: (p) => (p.is_active ? <Badge>{t("Available")}</Badge> : <Badge variant="outline">{t("Not offered")}</Badge>),
           },
           ...(canWrite
             ? [
@@ -102,13 +107,13 @@ export default async function TuitionPlansPage({ searchParams }: PageProps<"/tui
                       />
                       <ConfirmActionButton
                         variant="ghost"
-                        title={p.deleted_at ? "Restore plan?" : "Archive plan?"}
-                        description="Tuition already assigned from this plan is not affected."
-                        confirmLabel={p.deleted_at ? "Restore" : "Archive"}
-                        successMessage={p.deleted_at ? "Plan restored." : "Plan archived."}
+                        title={p.deleted_at ? t("Restore plan?") : t("Archive plan?")}
+                        description={t("Tuition already assigned from this plan is not affected.")}
+                        confirmLabel={p.deleted_at ? t("Restore") : t("Archive")}
+                        successMessage={p.deleted_at ? t("Plan restored.") : t("Plan archived.")}
                         action={(p.deleted_at ? restorePlanAction : archivePlanAction).bind(null, { planId: p.id })}
                       >
-                        {p.deleted_at ? "Restore" : "Archive"}
+                        {p.deleted_at ? t("Restore") : t("Archive")}
                       </ConfirmActionButton>
                     </div>
                   ),
@@ -121,20 +126,20 @@ export default async function TuitionPlansPage({ searchParams }: PageProps<"/tui
       <section className="grid gap-2">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-semibold">Discount rules</h2>
-            <p className="text-muted-foreground text-sm">Chosen per student when tuition is assigned.</p>
+            <h2 className="font-semibold">{t("Discount rules")}</h2>
+            <p className="text-muted-foreground text-sm">{t("Chosen per student when tuition is assigned.")}</p>
           </div>
           {canWrite && <DiscountRuleDialog plans={planOptions} />}
         </div>
         <SimpleTable
           rows={rules}
           rowKey={(r) => r.id}
-          empty="No discount rules yet."
+          empty={t("No discount rules yet.")}
           columns={[
             { header: "Rule", cell: (r) => <span className="font-medium">{r.name}</span> },
             { header: "Discount", cell: (r) => (r.kind === "percent" ? `${r.value}%` : formatVnd(r.value)) },
             { header: "Applies to", cell: (r) => r.plan?.name ?? "Any plan" },
-            { header: "Status", cell: (r) => (r.is_active ? <Badge>Active</Badge> : <Badge variant="outline">Inactive</Badge>) },
+            { header: "Status", cell: (r) => (r.is_active ? <Badge>{t("Active")}</Badge> : <Badge variant="outline">{t("Inactive")}</Badge>) },
             ...(canWrite
               ? [
                   {

@@ -17,10 +17,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "English work" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("English work") }
+}
 
 export default async function SubmissionPage({ params, searchParams }: PageProps<"/english/submissions/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.lessonSubmission)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -42,23 +47,23 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
         <ArrowLeftIcon className="size-4" aria-hidden /> {submission.lesson.title}
       </Link>
       <PageHeader
-        title={`${submission.student?.full_name ?? ""} · ${submission.lesson.title}`}
-        description={`Attempt ${submission.attempt} · handed in ${formatDateTime(submission.submitted_at)}`}
-        actions={<Badge variant="outline">{SKILL_LABELS[submission.lesson.skill]}</Badge>}
+        title={t("{value} · {title}", { value: submission.student?.full_name ?? "", title: submission.lesson.title })}
+        description={t("Attempt {attempt} · handed in {dateTime}", { attempt: submission.attempt, dateTime: formatDateTime(submission.submitted_at) })}
+        actions={<Badge variant="outline">{t(SKILL_LABELS[submission.lesson.skill])}</Badge>}
       />
       {justSubmitted && (
         <Alert>
           <CircleCheckIcon />
-          <AlertTitle>Handed in</AlertTitle>
-          <AlertDescription>Your teacher will give you feedback. Reference: {submission.id.slice(0, 8).toUpperCase()}.</AlertDescription>
+          <AlertTitle>{t("Handed in")}</AlertTitle>
+          <AlertDescription>{t("Your teacher will give you feedback. Reference: {value}.", { value: submission.id.slice(0, 8).toUpperCase() })}</AlertDescription>
         </Alert>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Work</CardTitle>
-            {submission.text_response && submission.lesson.skill === "writing" && <CardDescription className="tabular-nums">{words} words</CardDescription>}
+            <CardTitle>{t("Work")}</CardTitle>
+            {submission.text_response && submission.lesson.skill === "writing" && <CardDescription className="tabular-nums">{t("{words} words", { words })}</CardDescription>}
           </CardHeader>
           <CardContent className="grid gap-3">
             {submission.fileUrl &&
@@ -73,7 +78,7 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
 
         <Card className="content-start">
           <CardHeader>
-            <CardTitle>Feedback</CardTitle>
+            <CardTitle>{t("Feedback")}</CardTitle>
             {submission.status === "reviewed" && (
               <CardDescription>
                 {submission.reviewed_by_name} · {formatDateTime(submission.reviewed_at)}
@@ -101,7 +106,7 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
                 <p className="text-sm whitespace-pre-wrap">{submission.feedback}</p>
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">Waiting for the teacher&apos;s feedback.</p>
+              <p className="text-muted-foreground text-sm">{t("Waiting for the teacher's feedback.")}</p>
             )}
             {canReview && (
               <div className="border-t pt-4">

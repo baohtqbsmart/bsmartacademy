@@ -19,8 +19,10 @@ import { Input } from "@/components/ui/input"
 import { requestPasswordResetAction } from "@/features/auth/actions"
 import { forgotPasswordSchema } from "@/features/auth/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 export function ForgotPasswordForm() {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
@@ -47,7 +49,7 @@ export function ForgotPasswordForm() {
     return (
       <FormAlert
         variant="success"
-        message="If an account exists for that email, a password reset link is on its way."
+        message={t("If an account exists for that email, a password reset link is on its way.")}
       />
     )
   }
@@ -61,7 +63,7 @@ export function ForgotPasswordForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t("Email")}</FormLabel>
               <FormControl>
                 <Input type="email" autoComplete="email" autoFocus {...field} />
               </FormControl>
@@ -70,7 +72,7 @@ export function ForgotPasswordForm() {
           )}
         />
         <SubmitButton pending={isPending} className="w-full">
-          Send reset link
+          {t("Send reset link")}
         </SubmitButton>
       </form>
     </Form>

@@ -7,8 +7,12 @@ import { DesignEditor } from "@/features/designer/components/design-editor"
 import { getDesign } from "@/features/designer/server/design-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Lesson designer" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Lesson designer") }
+}
 
 export default async function DesignEditorPage({ params }: PageProps<"/designs/[id]">) {
   await requireRouteAccess(routes.designEditor)

@@ -4,9 +4,10 @@ import Link from "next/link"
 import { DeleteFolderButton, FolderDialog } from "@/features/library/components/folder-controls"
 import { buildTree, descendantsOf, folderPaths, type FolderNode, type FolderTree } from "@/features/library/folders"
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
 /** Folder navigation for staff: "My folders" and "Academy folders". */
-export function FolderSidebar({
+export async function FolderSidebar({
   folders,
   current,
   hrefFor,
@@ -19,6 +20,7 @@ export function FolderSidebar({
   userId: string
   canManageAcademy: boolean
 }) {
+  const t = await getT()
   const mine = folders.filter((f) => f.scope === "personal" && f.ownerId === userId)
   const academy = folders.filter((f) => f.scope === "academy")
   const others = folders.filter((f) => f.scope === "personal" && f.ownerId !== userId)
@@ -49,26 +51,27 @@ export function FolderSidebar({
   }
 
   return (
-    <nav aria-label="Folders" className="grid gap-4">
+    <nav aria-label={t("Folders")} className="grid gap-4">
       <Link href={hrefFor(undefined)} aria-current={current === undefined ? "page" : undefined} className={cn("flex items-center gap-1.5 rounded-md px-2 py-1 text-sm", current === undefined && "bg-muted")}>
-        <InboxIcon className="text-muted-foreground size-4" aria-hidden /> All folders
+        <InboxIcon className="text-muted-foreground size-4" aria-hidden /> {t("All folders")}
       </Link>
       <Link href={hrefFor("root")} aria-current={current === "root" ? "page" : undefined} className={cn("-mt-3 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm", current === "root" && "bg-muted")}>
-        <FolderIcon className="text-muted-foreground size-4" aria-hidden /> Not in a folder
+        <FolderIcon className="text-muted-foreground size-4" aria-hidden /> {t("Not in a folder")}
       </Link>
-      <Section title="My folders" tree={buildTree(mine)} item={item} empty="No folders yet." />
-      <Section title="Academy folders" tree={buildTree(academy)} item={item} empty="None yet." />
-      {others.length > 0 && <Section title="Teachers' folders" tree={buildTree(others)} item={item} empty="" />}
+      <Section title={t("My folders")} tree={buildTree(mine)} item={item} empty={t("No folders yet.")} />
+      <Section title={t("Academy folders")} tree={buildTree(academy)} item={item} empty={t("None yet.")} />
+      {others.length > 0 && <Section title={t("Teachers' folders")} tree={buildTree(others)} item={item} empty="" />}
       <FolderDialog scope="personal" parents={paths} canManageAcademy={canManageAcademy} />
     </nav>
   )
 }
 
-function Section({ title, tree, item, empty }: { title: string; tree: FolderTree[]; item: (n: FolderTree) => React.ReactNode; empty: string }) {
+async function Section({ title, tree, item, empty }: { title: string; tree: FolderTree[]; item: (n: FolderTree) => React.ReactNode; empty: string }) {
+  const t = await getT()
   return (
     <div className="grid gap-1">
       <h2 className="text-muted-foreground px-2 text-xs font-semibold tracking-wide uppercase">{title}</h2>
-      {tree.length === 0 ? <p className="text-muted-foreground px-2 text-xs">{empty}</p> : <ul>{tree.map(item)}</ul>}
+      {tree.length === 0 ? <p className="text-muted-foreground px-2 text-xs">{t(empty)}</p> : <ul>{tree.map(item)}</ul>}
     </div>
   )
 }

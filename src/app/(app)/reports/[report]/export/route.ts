@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { canRunReport, csvFileName, isReportKey, toCsv } from "@/features/reports/catalog"
 import { parseReportFilters } from "@/features/reports/filters"
 import { runReport } from "@/features/reports/server/report-service"
+import { getT } from "@/i18n/server"
 import { can } from "@/lib/auth/permissions"
 import { getCurrentUser } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
@@ -13,14 +14,15 @@ import { createClient } from "@/lib/supabase/server"
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ report: string }> }) {
   const user = await getCurrentUser()
-  if (!user) return new NextResponse("Sign in first.", { status: 401 })
+  const t = await getT()
+  if (!user) return new NextResponse(t("Sign in first."), { status: 401 })
   const { report } = await params
   if (!isReportKey(report) || !can(user.permissions, "reports.read") || !canRunReport(user.permissions, report)) {
-    return new NextResponse("Not found.", { status: 404 })
+    return new NextResponse(t("Not found."), { status: 404 })
   }
   const filters = parseReportFilters(report, request.nextUrl.searchParams)
   const result = await runReport(await createClient(), report, filters)
-  return new NextResponse(toCsv(result.columns, result.rows), {
+  return new NextResponse(toCsv(result.columns, result.rows, t), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${csvFileName(report, filters.from, filters.to)}"`,

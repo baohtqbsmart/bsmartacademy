@@ -6,10 +6,12 @@ import { toast } from "sonner"
 import { Checkbox } from "@/components/ui/checkbox"
 import { preferenceAction } from "@/features/communication/actions"
 import { KIND_INFO, NOTIFICATION_KINDS } from "@/features/communication/schemas"
+import { useT } from "@/i18n/client"
 
 type Kind = (typeof NOTIFICATION_KINDS)[number]
 
 export function PreferencesForm({ initial, kinds }: { initial: Record<string, boolean>; kinds: Kind[] }) {
+  const t = useT()
   const [enabled, setEnabled] = useState(initial)
   const [isPending, startTransition] = useTransition()
 
@@ -17,7 +19,7 @@ export function PreferencesForm({ initial, kinds }: { initial: Record<string, bo
     setEnabled((e) => ({ ...e, [kind]: on }))
     startTransition(async () => {
       const result = await preferenceAction({ kind, enabled: on })
-      if (result.ok) toast.success(`${KIND_INFO[kind].label}: ${on ? "on" : "off"}`)
+      if (result.ok) toast.success(t("{label}: {value}", { label: KIND_INFO[kind].label, value: on ? "on" : "off" }))
       else {
         setEnabled((e) => ({ ...e, [kind]: !on }))
         toast.error(result.error.message)
@@ -37,8 +39,8 @@ export function PreferencesForm({ initial, kinds }: { initial: Record<string, bo
               onCheckedChange={(v) => toggle(kind, v === true)}
             />
             <span className="grid gap-0.5">
-              <span className="text-sm font-medium">{KIND_INFO[kind].label}</span>
-              <span className="text-muted-foreground text-xs">{KIND_INFO[kind].description}</span>
+              <span className="text-sm font-medium">{t(KIND_INFO[kind].label)}</span>
+              <span className="text-muted-foreground text-xs">{t(KIND_INFO[kind].description)}</span>
             </span>
           </label>
         </li>

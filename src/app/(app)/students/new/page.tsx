@@ -6,18 +6,23 @@ import { StudentForm } from "@/features/students/components/student-form"
 import { listEnglishLevels } from "@/features/students/server/student-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Add student" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Add student") }
+}
 
 export default async function NewStudentPage() {
+  const t = await getT()
   await requireRouteAccess(routes.studentNew)
   const levels = await listEnglishLevels(await createClient())
 
   return (
     <>
       <PageHeader
-        title="Add student"
-        description="A student ID is generated automatically. Link parents and enrol in classes from the profile."
+        title={t("Add student")}
+        description={t("A student ID is generated automatically. Link parents and enrol in classes from the profile.")}
       />
       <StudentForm
         levels={levels}

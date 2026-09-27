@@ -6,8 +6,19 @@ const email = z
   .toLowerCase()
   .pipe(z.email("Enter a valid email address."))
 
+/**
+ * Sign-in also accepts academy login names without a public domain (e.g.
+ * "hungpd@bsmart"): staff create those accounts directly, so they only need
+ * the shape local@name, not a deliverable address.
+ */
+const loginName = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[^\s@]+@[^\s@]+$/, "Enter your email or login name.")
+
 export const signInSchema = z.object({
-  email,
+  email: loginName,
   password: z.string().min(1, "Enter your password."),
 })
 

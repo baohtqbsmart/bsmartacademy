@@ -9,10 +9,15 @@ import { getTest, listAttempts, listTestClasses } from "@/features/tests/server/
 import { requireRouteAccess } from "@/lib/auth/session"
 import { isoToAcademyInput } from "@/lib/dates"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit test" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit test") }
+}
 
 export default async function EditTestPage({ params }: PageProps<"/tests/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.testEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -25,7 +30,7 @@ export default async function EditTestPage({ params }: PageProps<"/tests/[id]/ed
 
   return (
     <>
-      <PageHeader title="Edit test" description={test.title} />
+      <PageHeader title={t("Edit test")} description={test.title} />
       <TestForm
         testId={test.id}
         classes={options}

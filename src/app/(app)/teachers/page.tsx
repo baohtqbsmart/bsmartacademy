@@ -17,10 +17,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Teachers" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Teachers") }
+}
 
 export default async function TeachersPage({ searchParams }: PageProps<"/teachers">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.teachers)
   const canWrite = can(user.permissions, "teachers.write")
   const seesAll = can(user.permissions, "teachers.read", ["all"])
@@ -42,13 +47,13 @@ export default async function TeachersPage({ searchParams }: PageProps<"/teacher
   return (
     <>
       <PageHeader
-        title="Teachers"
-        description={seesAll ? "All teaching staff." : "Teachers of your classes."}
+        title={tr("Teachers")}
+        description={seesAll ? tr("All teaching staff.") : tr("Teachers of your classes.")}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={routes.teacherNew}>
-                <PlusIcon aria-hidden /> Add teacher
+                <PlusIcon aria-hidden /> {tr("Add teacher")}
               </Link>
             </Button>
           )
@@ -58,7 +63,7 @@ export default async function TeachersPage({ searchParams }: PageProps<"/teacher
         <ListFilters
           basePath={routes.teachers}
           values={filters}
-          searchPlaceholder="Search name, code, email"
+          searchPlaceholder={tr("Search name, code, email")}
           filters={[
             { param: "subject", allLabel: "All subjects", options: subjects.map((s) => ({ value: s.id, label: s.name })) },
             {
@@ -75,7 +80,7 @@ export default async function TeachersPage({ searchParams }: PageProps<"/teacher
       <SimpleTable
         rows={teachers}
         rowKey={(t) => t.id}
-        empty={<EmptyState icon={UsersIcon} title={filtered ? "No teachers match your filters" : "No teachers to show"} />}
+        empty={<EmptyState icon={UsersIcon} title={filtered ? tr("No teachers match your filters") : tr("No teachers to show")} />}
         columns={[
           { header: "Code", cell: (t) => <span className="font-mono text-xs">{t.teacher_code}</span> },
           {
@@ -92,7 +97,7 @@ export default async function TeachersPage({ searchParams }: PageProps<"/teacher
           { header: "Current classes", cell: (t) => t.currentClassCount },
           {
             header: "Status",
-            cell: (t) => <Badge variant={STAFF_STATUS[t.status].variant}>{STAFF_STATUS[t.status].label}</Badge>,
+            cell: (t) => <Badge variant={STAFF_STATUS[t.status].variant}>{tr(STAFF_STATUS[t.status].label)}</Badge>,
           },
         ]}
       />

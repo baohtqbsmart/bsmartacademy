@@ -21,10 +21,15 @@ import { formatDate } from "@/lib/format"
 import { formatVnd } from "@/lib/money"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Tuition" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Tuition") }
+}
 
 export default async function TuitionPage({ searchParams }: PageProps<"/tuition">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.tuition)
   const db = await createClient()
 
@@ -35,8 +40,8 @@ export default async function TuitionPage({ searchParams }: PageProps<"/tuition"
     return (
       <>
         <PageHeader
-          title="Tuition"
-          description={isParent ? "Your children's tuition, invoices and receipts." : "Your tuition, invoices and receipts."}
+          title={t("Tuition")}
+          description={isParent ? t("Your children's tuition, invoices and receipts.") : t("Your tuition, invoices and receipts.")}
         />
         <TuitionOverview {...overview} showStudent={isParent} />
       </>
@@ -54,11 +59,11 @@ export default async function TuitionPage({ searchParams }: PageProps<"/tuition"
   return (
     <>
       <PageHeader
-        title="Tuition"
-        description="Revenue expected from invoices due, money collected, and what is still owed."
+        title={t("Tuition")}
+        description={t("Revenue expected from invoices due, money collected, and what is still owed.")}
         actions={
           <Button variant="outline" asChild>
-            <Link href={`${routes.tuitionReports}?year=${year}`}>Full report</Link>
+            <Link href={`${routes.tuitionReports}?year=${year}`}>{t("Full report")}</Link>
           </Button>
         }
       />
@@ -90,25 +95,25 @@ export default async function TuitionPage({ searchParams }: PageProps<"/tuition"
       />
       <Card>
         <CardHeader>
-          <CardTitle>Expected vs collected, {year}</CardTitle>
-          <CardDescription>By month: invoices falling due vs payments received.</CardDescription>
+          <CardTitle>{t("Expected vs collected, {year}", { year })}</CardTitle>
+          <CardDescription>{t("By month: invoices falling due vs payments received.")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <MonthlyRevenueChart data={report.monthly} />
           <details>
-            <summary className="text-muted-foreground cursor-pointer text-sm">Show as table</summary>
+            <summary className="text-muted-foreground cursor-pointer text-sm">{t("Show as table")}</summary>
             <table className="mt-2 w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground text-left">
-                  <th className="py-1 font-normal">Month</th>
-                  <th className="py-1 text-right font-normal">Expected</th>
-                  <th className="py-1 text-right font-normal">Collected</th>
+                  <th className="py-1 font-normal">{t("Month")}</th>
+                  <th className="py-1 text-right font-normal">{t("Expected")}</th>
+                  <th className="py-1 text-right font-normal">{t("Collected")}</th>
                 </tr>
               </thead>
               <tbody className="tabular-nums">
                 {report.monthly.map((m) => (
                   <tr key={m.month} className="border-t">
-                    <td className="py-1">{m.label}</td>
+                    <td className="py-1">{t(m.label)}</td>
                     <td className="py-1 text-right">{formatVnd(m.expected)}</td>
                     <td className="py-1 text-right">{formatVnd(m.collected)}</td>
                   </tr>
@@ -120,15 +125,15 @@ export default async function TuitionPage({ searchParams }: PageProps<"/tuition"
       </Card>
       <section className="grid gap-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Most overdue</h2>
+          <h2 className="font-semibold">{t("Most overdue")}</h2>
           <Button variant="link" asChild>
-            <Link href={`${routes.invoices}?status=overdue`}>All overdue invoices</Link>
+            <Link href={`${routes.invoices}?status=overdue`}>{t("All overdue invoices")}</Link>
           </Button>
         </div>
         <SimpleTable
           rows={worstOverdue}
           rowKey={(i) => i.id}
-          empty="Nothing is overdue."
+          empty={t("Nothing is overdue.")}
           columns={[
             {
               header: "Invoice",

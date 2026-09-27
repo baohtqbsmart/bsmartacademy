@@ -7,10 +7,15 @@ import { listAssessmentClasses, listRubrics } from "@/features/assessments/serve
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "New writing or speaking task" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("New writing or speaking task") }
+}
 
 export default async function NewTaskPage({ searchParams }: PageProps<"/assessments/new">) {
+  const t = await getT()
   await requireRouteAccess(routes.assessmentNew)
   const kind = enumParam(await searchParams, "kind", ["writing", "speaking"] as const) ?? "writing"
   const db = await createClient()
@@ -20,11 +25,11 @@ export default async function NewTaskPage({ searchParams }: PageProps<"/assessme
   return (
     <>
       <PageHeader
-        title={`New ${kind} task`}
-        description={kind === "writing" ? "Or create a speaking task instead." : "Or create a writing task instead."}
+        title={t("New {kind} task", { kind })}
+        description={kind === "writing" ? t("Or create a speaking task instead.") : t("Or create a writing task instead.")}
         actions={
           <a href={`${routes.assessmentNew}?kind=${kind === "writing" ? "speaking" : "writing"}`} className="text-sm underline">
-            Switch to {kind === "writing" ? "speaking" : "writing"}
+            {t("Switch to {value}", { value: kind === "writing" ? "speaking" : "writing" })}
           </a>
         }
       />

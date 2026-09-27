@@ -20,10 +20,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { todayInAcademy } from "@/lib/dates"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Word set" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Word set") }
+}
 
 export default async function WordSetPage({ params }: PageProps<"/english/vocabulary/sets/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.wordSet)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -44,15 +49,15 @@ export default async function WordSetPage({ params }: PageProps<"/english/vocabu
   return (
     <>
       <Link href={routes.vocabulary} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Vocabulary
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Vocabulary")}
       </Link>
       <PageHeader
         title={set.title}
         description={set.description ?? undefined}
         actions={
           <>
-            {set.cefr_level && <Badge variant="secondary">{CEFR_LABELS[set.cefr_level]}</Badge>}
-            {set.status !== "published" && <Badge variant="outline">{STATUS_LABELS[set.status]}</Badge>}
+            {set.cefr_level && <Badge variant="secondary">{t(CEFR_LABELS[set.cefr_level])}</Badge>}
+            {set.status !== "published" && <Badge variant="outline">{t(STATUS_LABELS[set.status])}</Badge>}
             {canEdit && (
               <>
                 <SetDialog
@@ -64,17 +69,17 @@ export default async function WordSetPage({ params }: PageProps<"/english/vocabu
                   words={bank.map((w) => ({ id: w.id, word: w.word, meaning_vi: w.meaning_vi, topic: w.topic, cefr_level: w.cefr_level }))}
                 />
                 {set.status === "published" ? (
-                  <ConfirmActionButton size="sm" title="Unpublish this set?" description="Students no longer see it; their history is kept." confirmLabel="Unpublish" successMessage="Set unpublished." action={setSetStatusAction.bind(null, { setId: set.id, status: "draft" })}>
-                    <EyeOffIcon aria-hidden /> Unpublish
+                  <ConfirmActionButton size="sm" title={t("Unpublish this set?")} description={t("Students no longer see it; their history is kept.")} confirmLabel={t("Unpublish")} successMessage={t("Set unpublished.")} action={setSetStatusAction.bind(null, { setId: set.id, status: "draft" })}>
+                    <EyeOffIcon aria-hidden /> {t("Unpublish")}
                   </ConfirmActionButton>
                 ) : (
-                  <ConfirmActionButton size="sm" variant="default" title="Publish this set?" description="Every student can practise it." confirmLabel="Publish" successMessage="Set published." action={setSetStatusAction.bind(null, { setId: set.id, status: "published" })}>
-                    <SendIcon aria-hidden /> Publish
+                  <ConfirmActionButton size="sm" variant="default" title={t("Publish this set?")} description={t("Every student can practise it.")} confirmLabel={t("Publish")} successMessage={t("Set published.")} action={setSetStatusAction.bind(null, { setId: set.id, status: "published" })}>
+                    <SendIcon aria-hidden /> {t("Publish")}
                   </ConfirmActionButton>
                 )}
                 {set.status !== "archived" && (
-                  <ConfirmActionButton size="sm" title="Archive this set?" description="It leaves the vocabulary page; practice history is kept." confirmLabel="Archive" successMessage="Set archived." action={setSetStatusAction.bind(null, { setId: set.id, status: "archived" })}>
-                    <ArchiveIcon aria-hidden /> Archive
+                  <ConfirmActionButton size="sm" title={t("Archive this set?")} description={t("It leaves the vocabulary page; practice history is kept.")} confirmLabel={t("Archive")} successMessage={t("Set archived.")} action={setSetStatusAction.bind(null, { setId: set.id, status: "archived" })}>
+                    <ArchiveIcon aria-hidden /> {t("Archive")}
                   </ConfirmActionButton>
                 )}
               </>
@@ -86,16 +91,16 @@ export default async function WordSetPage({ params }: PageProps<"/english/vocabu
       {isStudent && set.status === "published" && (
         <Card>
           <CardHeader>
-            <CardTitle>Practise</CardTitle>
+            <CardTitle>{t("Practise")}</CardTitle>
             <CardDescription>
-              {learnt} of {set.words.length} words learnt well{due > 0 && ` · ${due} to review today`}.
+              {t("{learnt} of {length} words learnt well", { learnt, length: set.words.length })}{due > 0 && t(" · {due} to review today", { due })}.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ACTIVITIES.map((a) => (
               <Link key={a} href={wordSetPracticePath(set.id, a)} className="hover:border-primary grid gap-1 rounded-md border p-3">
-                <span className="font-medium">{ACTIVITY_LABELS[a].title}</span>
-                <span className="text-muted-foreground text-sm">{ACTIVITY_LABELS[a].description}</span>
+                <span className="font-medium">{t(ACTIVITY_LABELS[a].title)}</span>
+                <span className="text-muted-foreground text-sm">{t(ACTIVITY_LABELS[a].description)}</span>
               </Link>
             ))}
           </CardContent>
@@ -113,13 +118,13 @@ export default async function WordSetPage({ params }: PageProps<"/english/vocabu
                     <div className="grid">
                       <span className="text-lg font-semibold">{w.word}</span>
                       <span className="text-muted-foreground text-sm">
-                        {w.ipa} <span className="italic">{PART_OF_SPEECH_LABELS[w.part_of_speech]}</span>
+                        {w.ipa} <span className="italic">{t(PART_OF_SPEECH_LABELS[w.part_of_speech])}</span>
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {p && (
-                        <Badge variant="outline" title={`Box ${p.box} of 5`}>
-                          {p.box >= MASTERED_BOX ? "Learnt" : p.next_review_on <= today ? "Review today" : `Box ${p.box}/5`}
+                        <Badge variant="outline" title={t("Box {box} of 5", { box: p.box })}>
+                          {p.box >= MASTERED_BOX ? t("Learnt") : p.next_review_on <= today ? t("Review today") : t("Box {box}/5", { box: p.box })}
                         </Badge>
                       )}
                       <SpeakButton text={w.word} audioUrl={w.audioUrl} size="icon" />
@@ -134,9 +139,9 @@ export default async function WordSetPage({ params }: PageProps<"/english/vocabu
                   {w.example && <p className="text-sm italic">“{w.example}”</p>}
                   {(w.collocations.length > 0 || w.synonyms.length > 0 || w.antonyms.length > 0) && (
                     <p className="text-muted-foreground text-xs">
-                      {w.collocations.length > 0 && `Collocations: ${w.collocations.join(", ")}. `}
-                      {w.synonyms.length > 0 && `Synonyms: ${w.synonyms.join(", ")}. `}
-                      {w.antonyms.length > 0 && `Opposites: ${w.antonyms.join(", ")}.`}
+                      {w.collocations.length > 0 && t("Collocations: {collocations}. ", { collocations: w.collocations.join(", ") })}
+                      {w.synonyms.length > 0 && t("Synonyms: {synonyms}. ", { synonyms: w.synonyms.join(", ") })}
+                      {w.antonyms.length > 0 && t("Opposites: {antonyms}.", { antonyms: w.antonyms.join(", ") })}
                     </p>
                   )}
                 </CardContent>

@@ -17,8 +17,12 @@ import { formatDate } from "@/lib/format"
 import { formatVnd } from "@/lib/money"
 import { enumParam, firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Payments" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Payments") }
+}
 
 const PERIODS = ["30d", "month", "year", "all"] as const
 const PERIOD_LABELS: Record<(typeof PERIODS)[number], string> = {
@@ -38,6 +42,7 @@ function periodStart(period: (typeof PERIODS)[number], today: string) {
 }
 
 export default async function PaymentsPage({ searchParams }: PageProps<"/tuition/payments">) {
+  const t = await getT()
   await requireRouteAccess(routes.payments)
   const params = await searchParams
   const period = enumParam(params, "period", PERIODS) ?? "30d"
@@ -57,11 +62,11 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/tuition
 
   return (
     <>
-      <PageHeader title="Payments" description="Payment history. Voided payments stay listed with their reason." />
+      <PageHeader title={t("Payments")} description={t("Payment history. Voided payments stay listed with their reason.")} />
       <ListFilters
         basePath={routes.payments}
         values={{ q, period: period === "30d" ? undefined : period, method }}
-        searchPlaceholder="Receipt, student, reference"
+        searchPlaceholder={t("Receipt, student, reference")}
         filters={[
           { param: "period", allLabel: "Period", defaultValue: "30d", options: PERIODS.map((p) => ({ value: p, label: PERIOD_LABELS[p] })) },
           { param: "method", allLabel: "All methods", options: PAYMENT_METHOD_VALUES.map((m) => ({ value: m, label: PAYMENT_METHOD_LABELS[m] })) },
@@ -70,11 +75,11 @@ export default async function PaymentsPage({ searchParams }: PageProps<"/tuition
       <SimpleTable
         rows={payments}
         rowKey={(p) => p.id}
-        empty={<EmptyState icon={ReceiptIcon} title="No payments in this period" />}
+        empty={<EmptyState icon={ReceiptIcon} title={t("No payments in this period")} />}
         footer={
           payments.length > 0 && (
             <p className="text-muted-foreground text-sm tabular-nums">
-              {payments.length} payments · collected {formatVnd(total)} (excluding voided)
+              {t("{length} payments · collected {vnd} (excluding voided)", { length: payments.length, vnd: formatVnd(total) })}
             </p>
           )
         }

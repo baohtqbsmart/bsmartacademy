@@ -17,6 +17,8 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-sidebar-label: var(--sidebar-label);
+  --color-brand-navy: var(--brand-navy);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -47,79 +49,90 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Brand palette, taken from the BSmart Academy logo: the logo brown (#7b3f00) is the
+ * primary colour on a warm cream surface; navy is the accent (secondary actions,
+ * focus rings, section labels). The --series-* chart slots are left as validated.
+ */
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --brand-brown: #7b3f00;
+  --brand-cream: #f7f6f2;
+  --brand-navy: #1f2f55;
+  --background: #faf8f4;
+  --foreground: #2a1d12;
+  --card: #ffffff;
+  --card-foreground: #2a1d12;
+  --popover: #ffffff;
+  --popover-foreground: #2a1d12;
+  --primary: #7b3f00;
+  --primary-foreground: #fbf7f1;
+  --secondary: #e7ecf5;
+  --secondary-foreground: #1f2f55;
+  --muted: #f1ece4;
+  --muted-foreground: #6b5d51;
+  --accent: #f3e7d8;
+  --accent-foreground: #5a2e00;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
+  --border: #e6ded3;
+  --input: #dcd2c5;
+  --ring: #2c3f6e;
   /* Validated categorical series slots (dataviz reference palette; light). */
   --series-1: #2a78d6;
   --series-2: #eb6834;
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --chart-1: #7b3f00;
+  --chart-2: #1f2f55;
+  --chart-3: #b06a2c;
+  --chart-4: #4a6199;
+  --chart-5: #d9b48a;
+  --sidebar: #f4efe7;
+  --sidebar-foreground: #3b2a1c;
+  --sidebar-primary: #7b3f00;
+  --sidebar-primary-foreground: #fbf7f1;
+  --sidebar-accent: #ebdfcf;
+  --sidebar-accent-foreground: #4a2600;
+  --sidebar-border: #e4d9ca;
+  --sidebar-ring: #2c3f6e;
+  --sidebar-label: #1f2f55;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --brand-navy: #9db2e0;
+  --background: #17120e;
+  --foreground: #f3ece3;
+  --card: #211a14;
+  --card-foreground: #f3ece3;
+  --popover: #211a14;
+  --popover-foreground: #f3ece3;
+  --primary: #d4924f;
+  --primary-foreground: #1e1208;
+  --secondary: #1f2b47;
+  --secondary-foreground: #d6e0f5;
+  --muted: #2a221b;
+  --muted-foreground: #b3a596;
+  --accent: #33271c;
+  --accent-foreground: #f3ece3;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: rgb(255 240 220 / 10%);
+  --input: rgb(255 240 220 / 16%);
+  --ring: #7f9bd6;
   /* Same hues stepped for the dark surface (validated separately). */
   --series-1: #3987e5;
   --series-2: #d95926;
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --chart-1: #d4924f;
+  --chart-2: #7f9bd6;
+  --chart-3: #e8b98a;
+  --chart-4: #4a6199;
+  --chart-5: #8a5a2e;
+  --sidebar: #120e0b;
+  --sidebar-foreground: #e9e0d5;
+  --sidebar-primary: #d4924f;
+  --sidebar-primary-foreground: #1e1208;
+  --sidebar-accent: #2a2018;
+  --sidebar-accent-foreground: #f3ece3;
+  --sidebar-border: #2a2018;
+  --sidebar-ring: #7f9bd6;
+  --sidebar-label: #9db2e0;
 }
 
 @layer base {

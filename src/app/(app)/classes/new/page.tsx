@@ -6,16 +6,21 @@ import { ClassForm } from "@/features/classes/components/class-form"
 import { listActiveCourseOptions } from "@/features/courses/server/course-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "New class" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("New class") }
+}
 
 export default async function NewClassPage() {
+  const t = await getT()
   await requireRouteAccess(routes.classNew)
   const courses = await listActiveCourseOptions(await createClient())
 
   return (
     <>
-      <PageHeader title="New class" description="Then assign teachers, add time slots and enrol students." />
+      <PageHeader title={t("New class")} description={t("Then assign teachers, add time slots and enrol students.")} />
       <ClassForm
         courses={courses}
         cancelHref={routes.classes}

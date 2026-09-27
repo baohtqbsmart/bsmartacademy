@@ -16,6 +16,7 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { todayInAcademy } from "@/lib/dates"
 import { formatDate, formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
 export async function generateMetadata({ params }: PageProps<"/reports/[report]">): Promise<Metadata> {
   const { report } = await params
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: PageProps<"/reports/[report]"
 }
 
 export default async function ReportPage({ params, searchParams }: PageProps<"/reports/[report]">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.report)
   const { report } = await params
   // Unknown reports and reports this role may not run look the same: 404.
@@ -38,17 +40,17 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/r
   return (
     <>
       <Link href={routes.reports} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm print:hidden">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Reports
+        <ArrowLeftIcon className="size-4" aria-hidden /> {tr("Reports")}
       </Link>
       <PageHeader
-        title={def.title}
-        description={`${formatDate(filters.from)} – ${formatDate(filters.to)} · ${def.description}`}
+        title={tr(def.title)}
+        description={tr("{date} – {date2} · {description}", { date: formatDate(filters.from), date2: formatDate(filters.to), description: def.description })}
         actions={
           <div className="flex gap-2 print:hidden">
             <PrintButton />
             <Button asChild>
               <a href={`${reportPath(report)}/export?${query}`} download>
-                <DownloadIcon aria-hidden /> Export CSV
+                <DownloadIcon aria-hidden /> {tr("Export CSV")}
               </a>
             </Button>
           </div>
@@ -60,7 +62,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/r
         <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {result.totals.map((t) => (
             <div key={t.label} className="rounded-lg border p-3">
-              <dt className="text-muted-foreground text-xs">{t.label}</dt>
+              <dt className="text-muted-foreground text-xs">{tr(t.label)}</dt>
               <dd className="text-xl font-semibold tabular-nums">{t.value}</dd>
             </div>
           ))}
@@ -70,7 +72,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/r
       {result.chart && (
         <Card className="break-inside-avoid">
           <CardHeader>
-            <CardTitle className="text-base">{result.chart.title}</CardTitle>
+            <CardTitle className="text-base">{tr(result.chart.title)}</CardTitle>
           </CardHeader>
           <CardContent>
             <ReportChart kind={result.chart.kind} data={result.chart.data} />
@@ -81,7 +83,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/r
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {result.rows.length} row{result.rows.length === 1 ? "" : "s"}
+            {tr("{length} row{value}", { length: result.rows.length, value: result.rows.length === 1 ? "" : "s" })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -99,7 +101,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/r
           <p key={n}>{n}</p>
         ))}
         <p>
-          Generated {formatDateTime(new Date().toISOString())} by {user.fullName || user.email} from live data you are allowed to see.
+          {tr("Generated {dateTime} by {value} from live data you are allowed to see.", { dateTime: formatDateTime(new Date().toISOString()), value: user.fullName || user.email })}
         </p>
       </div>
     </>

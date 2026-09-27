@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { ENGLISH_FRAMEWORK_LABELS } from "@/config/labels"
 import type { Enums } from "@/types/database"
+import { useT } from "@/i18n/client"
 
 export type EnglishLevelOption = {
   code: string
@@ -31,17 +32,18 @@ type EnglishLevelSelectProps = {
 
 /** Levels grouped by framework (CEFR, Pre-IELTS, IELTS, Cambridge). "" means none. */
 export function EnglishLevelSelect({ id, value, onChange, levels, placeholder }: EnglishLevelSelectProps) {
+  const t = useT()
   const frameworks = Object.keys(ENGLISH_FRAMEWORK_LABELS) as Enums<"english_framework">[]
   return (
     <Select value={value || NONE} onValueChange={(next) => onChange(next === NONE ? "" : next)}>
       <SelectTrigger id={id} className="w-full">
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={t(placeholder)} />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={NONE}>Not set</SelectItem>
+        <SelectItem value={NONE}>{t("Not set")}</SelectItem>
         {frameworks.map((framework) => (
           <SelectGroup key={framework}>
-            <SelectLabel>{ENGLISH_FRAMEWORK_LABELS[framework]}</SelectLabel>
+            <SelectLabel>{t(ENGLISH_FRAMEWORK_LABELS[framework])}</SelectLabel>
             {levels
               .filter((level) => level.framework === framework)
               .map((level) => (

@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { formatVnd } from "@/lib/money"
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
 export type StatTile = {
   label: string
@@ -20,13 +21,14 @@ function formatValue(tile: StatTile) {
 }
 
 /** Headline figures: the number is the chart. */
-export function StatTiles({ tiles }: { tiles: StatTile[] }) {
+export async function StatTiles({ tiles }: { tiles: StatTile[] }) {
+  const t = await getT()
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       {tiles.map((tile) => (
         <Card key={tile.label} className="gap-1 py-4">
           <CardContent className="grid gap-1 px-4">
-            <span className="text-muted-foreground text-xs">{tile.label}</span>
+            <span className="text-muted-foreground text-xs">{t(tile.label)}</span>
             <span
               className={cn(
                 "text-xl font-semibold tabular-nums",
@@ -35,7 +37,7 @@ export function StatTiles({ tiles }: { tiles: StatTile[] }) {
             >
               {formatValue(tile)}
             </span>
-            {tile.hint && <span className="text-muted-foreground text-xs">{tile.hint}</span>}
+            {tile.hint && <span className="text-muted-foreground text-xs">{t(tile.hint)}</span>}
           </CardContent>
         </Card>
       ))}

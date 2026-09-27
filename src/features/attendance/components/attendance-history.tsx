@@ -5,9 +5,11 @@ import { SimpleTable, type Column } from "@/components/shared/simple-table"
 import { AttendanceStatusBadge } from "@/features/attendance/components/attendance-badges"
 import type { AttendanceHistoryRow } from "@/features/attendance/server/attendance-service"
 import { formatDate } from "@/lib/format"
+import { getT } from "@/i18n/server"
 
 /** Records newest first: date, (student), class, status and the teacher's note. */
-export function AttendanceHistory({ rows, showStudent = false }: { rows: AttendanceHistoryRow[]; showStudent?: boolean }) {
+export async function AttendanceHistory({ rows, showStudent = false }: { rows: AttendanceHistoryRow[]; showStudent?: boolean }) {
+  const t = await getT()
   const columns: Column<AttendanceHistoryRow>[] = [
     { header: "Date", cell: (r) => <span className="tabular-nums">{formatDate(r.session_date)}</span> },
     ...(showStudent ? [{ header: "Student", cell: (r: AttendanceHistoryRow) => r.student?.full_name ?? "—" }] : []),
@@ -23,7 +25,7 @@ export function AttendanceHistory({ rows, showStudent = false }: { rows: Attenda
       rows={rows}
       rowKey={(r) => r.id}
       columns={columns}
-      empty={<EmptyState icon={CalendarCheckIcon} title="No attendance recorded in this period" />}
+      empty={<EmptyState icon={CalendarCheckIcon} title={t("No attendance recorded in this period")} />}
     />
   )
 }

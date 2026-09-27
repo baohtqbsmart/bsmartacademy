@@ -29,6 +29,7 @@ import type { QuestionKind } from "@/features/assignments/status"
 import { assignmentPath } from "@/config/routes"
 import { formatDateTime } from "@/lib/format"
 import { UPLOAD_RULES } from "@/lib/uploads"
+import { useT } from "@/i18n/client"
 
 type Answer = { choice?: number; text?: string }
 
@@ -47,6 +48,7 @@ type WorkFormProps = {
 }
 
 export function WorkForm({ assignmentId, submission, questions, files, requiresFile }: WorkFormProps) {
+  const t = useT()
   const router = useRouter()
   const [answers, setAnswers] = useState<Record<string, Answer>>(submission.answers)
   const [responseText, setResponseText] = useState(submission.response_text ?? "")
@@ -72,7 +74,7 @@ export function WorkForm({ assignmentId, submission, questions, files, requiresF
     setError(null)
     startTransition(async () => {
       const result = await save()
-      if (result.ok) toast.success("Your work is saved. You can come back and finish it later.")
+      if (result.ok) toast.success(t("Your work is saved. You can come back and finish it later."))
       else setError(result.error.message)
     })
   }
@@ -102,8 +104,8 @@ export function WorkForm({ assignmentId, submission, questions, files, requiresF
         <p className="flex items-center gap-2 text-sm" aria-live="polite">
           <TimerIcon className="size-4" aria-hidden />
           {timeUp
-            ? "Time is up. Your saved answers can still be handed in."
-            : `Hand in by ${formatDateTime(submission.deadline_at)} (${Math.ceil((timeLeft ?? 0) / 60000)} min left).`}
+            ? t("Time is up. Your saved answers can still be handed in.")
+            : t("Hand in by {dateTime} ({Math} min left).", { dateTime: formatDateTime(submission.deadline_at), Math: Math.ceil((timeLeft ?? 0) / 60000) })}
         </p>
       )}
 
@@ -118,7 +120,7 @@ export function WorkForm({ assignmentId, submission, questions, files, requiresF
                       {index + 1}. {q.prompt}
                     </p>
                     <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                      {Number(q.points)} pt{Number(q.points) === 1 ? "" : "s"}
+                      {t("{number} pt{value}", { number: Number(q.points), value: Number(q.points) === 1 ? "" : "s" })}
                     </span>
                   </div>
                   {q.kind === "multiple_choice" ? (
@@ -163,7 +165,7 @@ export function WorkForm({ assignmentId, submission, questions, files, requiresF
       )}
 
       <div className="grid gap-2">
-        <Label htmlFor="response-text">{questions.length > 0 ? "Anything else for your teacher (optional)" : "Your answer"}</Label>
+        <Label htmlFor="response-text">{questions.length > 0 ? t("Anything else for your teacher (optional)") : t("Your answer")}</Label>
         <Textarea
           id="response-text"
           rows={questions.length > 0 ? 3 : 8}
@@ -175,8 +177,8 @@ export function WorkForm({ assignmentId, submission, questions, files, requiresF
       </div>
 
       <div className="grid gap-2">
-        <span className="text-sm font-medium">Files{requiresFile && " (required)"}</span>
-        <FileList files={files} removable="submission" empty={requiresFile ? "Upload at least one file." : "No files yet."} />
+        <span className="text-sm font-medium">{t("Files")}{requiresFile && t(" (required)")}</span>
+        <FileList files={files} removable="submission" empty={requiresFile ? t("Upload at least one file.") : t("No files yet.")} />
         <FileUploader
           target={{ kind: "submission", submissionId: submission.id }}
           remaining={UPLOAD_RULES.maxFilesPerSubmission - files.length}
@@ -186,29 +188,29 @@ export function WorkForm({ assignmentId, submission, questions, files, requiresF
       <FormAlert message={error} />
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" onClick={saveDraft} disabled={isPending || timeUp}>
-          <SaveIcon aria-hidden /> Save draft
+          <SaveIcon aria-hidden /> {t("Save draft")}
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button type="button" disabled={isPending}>
-              <SendIcon aria-hidden /> Submit
+              <SendIcon aria-hidden /> {t("Submit")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Hand in your work?</AlertDialogTitle>
+              <AlertDialogTitle>{t("Hand in your work?")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {questions.length > 0 && `You have answered ${answered} of ${questions.length} questions. `}
-                After submitting you cannot change your work unless your teacher allows a resubmission.
+                {questions.length > 0 && t("You have answered {answered} of {length} questions. ", { answered, length: questions.length })}
+                {t("After submitting you cannot change your work unless your teacher allows a resubmission.")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Keep working</AlertDialogCancel>
-              <AlertDialogAction onClick={handIn}>Submit</AlertDialogAction>
+              <AlertDialogCancel>{t("Keep working")}</AlertDialogCancel>
+              <AlertDialogAction onClick={handIn}>{t("Submit")}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <span className="text-muted-foreground text-sm">Attempt {submission.attempt}</span>
+        <span className="text-muted-foreground text-sm">{t("Attempt {attempt}", { attempt: submission.attempt })}</span>
       </div>
     </div>
   )

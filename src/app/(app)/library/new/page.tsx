@@ -9,10 +9,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Upload material" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Upload material") }
+}
 
 export default async function NewMaterialPage({ searchParams }: PageProps<"/library/new">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.libraryNew)
   const db = await createClient()
   const [options, folderRows] = await Promise.all([listCatalogOptions(db), listFolders(db)])
@@ -25,7 +30,7 @@ export default async function NewMaterialPage({ searchParams }: PageProps<"/libr
 
   return (
     <>
-      <PageHeader title="Upload material" description="Add a file to the library; assign it to classes or share it with students afterwards." />
+      <PageHeader title={t("Upload material")} description={t("Add a file to the library; assign it to classes or share it with students afterwards.")} />
       <MaterialForm
         userId={user.id}
         canManageAcademy={canManageAcademy}

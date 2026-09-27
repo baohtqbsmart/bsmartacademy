@@ -25,6 +25,7 @@ import {
   type StudentListQuery,
 } from "@/features/students/list-query"
 import type { Enums } from "@/types/database"
+import { useT } from "@/i18n/client"
 
 const ALL = "all"
 
@@ -37,6 +38,7 @@ type StudentListToolbarProps = {
 
 /** Search box and filters. Every change updates the URL; the server re-queries. */
 export function StudentListToolbar({ query, levels, classes, canSeeArchived }: StudentListToolbarProps) {
+  const t = useT()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState(query.q)
@@ -70,35 +72,35 @@ export function StudentListToolbar({ query, levels, classes, canSeeArchived }: S
           type="search"
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search name, ID, phone, email"
-          aria-label="Search students"
+          placeholder={t("Search name, ID, phone, email")}
+          aria-label={t("Search students")}
           className="pl-8"
         />
       </div>
 
       <Select value={query.status ?? ALL} onValueChange={(v) => navigate({ status: v === ALL ? undefined : (v as StudentListQuery["status"]) })}>
-        <SelectTrigger className="w-36" aria-label="Filter by status">
+        <SelectTrigger className="w-36" aria-label={t("Filter by status")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All statuses</SelectItem>
+          <SelectItem value={ALL}>{t("All statuses")}</SelectItem>
           {STUDENT_STATUSES.map((status) => (
             <SelectItem key={status} value={status}>
-              {STUDENT_STATUS[status].label}
+              {t(STUDENT_STATUS[status].label)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       <Select value={query.level ?? ALL} onValueChange={(v) => navigate({ level: v === ALL ? undefined : v })}>
-        <SelectTrigger className="w-44" aria-label="Filter by English level">
+        <SelectTrigger className="w-44" aria-label={t("Filter by English level")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All English levels</SelectItem>
+          <SelectItem value={ALL}>{t("All English levels")}</SelectItem>
           {frameworks.map((framework) => (
             <SelectGroup key={framework}>
-              <SelectLabel>{ENGLISH_FRAMEWORK_LABELS[framework]}</SelectLabel>
+              <SelectLabel>{t(ENGLISH_FRAMEWORK_LABELS[framework])}</SelectLabel>
               {levels
                 .filter((level) => level.framework === framework)
                 .map((level) => (
@@ -112,11 +114,11 @@ export function StudentListToolbar({ query, levels, classes, canSeeArchived }: S
       </Select>
 
       <Select value={query.class ?? ALL} onValueChange={(v) => navigate({ class: v === ALL ? undefined : v })}>
-        <SelectTrigger className="w-48" aria-label="Filter by class">
+        <SelectTrigger className="w-48" aria-label={t("Filter by class")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={ALL}>All classes</SelectItem>
+          <SelectItem value={ALL}>{t("All classes")}</SelectItem>
           {classes.map((klass) => (
             <SelectItem key={klass.id} value={klass.id}>
               {klass.name}
@@ -133,7 +135,7 @@ export function StudentListToolbar({ query, levels, classes, canSeeArchived }: S
             onCheckedChange={(checked) => navigate({ archived: checked === true ? "1" : undefined })}
           />
           <Label htmlFor="show-archived" className="font-normal">
-            Archived only
+            {t("Archived only")}
           </Label>
         </div>
       )}
@@ -141,11 +143,11 @@ export function StudentListToolbar({ query, levels, classes, canSeeArchived }: S
       {(hasActiveFilters(query) || search) && (
         <Button variant="ghost" size="sm" onClick={clearAll}>
           <XIcon aria-hidden />
-          Clear
+          {t("Clear")}
         </Button>
       )}
 
-      {isPending && <Loader2Icon className="text-muted-foreground size-4 animate-spin" aria-label="Loading" />}
+      {isPending && <Loader2Icon className="text-muted-foreground size-4 animate-spin" aria-label={t("Loading")} />}
     </div>
   )
 }

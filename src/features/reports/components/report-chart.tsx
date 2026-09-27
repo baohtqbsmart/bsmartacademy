@@ -7,6 +7,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { useT } from "@/i18n/client"
 
 type Datum = { label: string; value: number | null; detail?: string }
 
@@ -36,8 +37,9 @@ function usePrinting() {
 
 /** Bars from the report's own rows. Percent charts are fixed at 0–100%; missing values are gaps, not zeros. */
 export function ReportChart({ kind, data }: { kind: "attendance" | "money"; data: Datum[] }) {
+  const t = useT()
   const printing = usePrinting()
-  if (!data.some((d) => d.value !== null && d.value > 0)) return <p className="text-muted-foreground py-8 text-center text-sm">No data for these filters.</p>
+  if (!data.some((d) => d.value !== null && d.value > 0)) return <p className="text-muted-foreground py-8 text-center text-sm">{t("No data for these filters.")}</p>
   const yAxis = (
     <YAxis
       domain={kind === "attendance" ? [0, 100] : [0, "auto"]}
@@ -79,7 +81,7 @@ export function ReportChart({ kind, data }: { kind: "attendance" | "money"; data
                 const d = item.payload as Datum
                 return (
                   <div className="grid gap-0.5 tabular-nums">
-                    <span className="font-medium">{d.value === null ? "No data" : kind === "attendance" ? `${d.value}%` : money(d.value)}</span>
+                    <span className="font-medium">{d.value === null ? t("No data") : kind === "attendance" ? `${d.value}%` : money(d.value)}</span>
                     {d.detail && <span className="text-muted-foreground">{d.detail}</span>}
                   </div>
                 )
@@ -94,9 +96,10 @@ export function ReportChart({ kind, data }: { kind: "attendance" | "money"; data
 }
 
 export function PrintButton() {
+  const t = useT()
   return (
     <Button variant="outline" onClick={() => window.print()}>
-      <PrinterIcon aria-hidden /> Print
+      <PrinterIcon aria-hidden /> {t("Print")}
     </Button>
   )
 }

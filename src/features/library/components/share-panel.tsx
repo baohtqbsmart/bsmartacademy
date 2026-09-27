@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { classShareAction, studentShareAction, visibilityAction } from "@/features/library/actions"
+import { useT } from "@/i18n/client"
 
 type Target = { id: string; name: string; students: { id: string; name: string; code: string }[] }
 
@@ -31,6 +32,7 @@ export function SharePanel({
   studentIds: string[]
   archived: boolean
 }) {
+  const tr = useT()
   const [classes, setClasses] = useState(new Set(classIds))
   const [students, setStudents] = useState(new Set(studentIds))
   const [filter, setFilter] = useState("")
@@ -68,7 +70,7 @@ export function SharePanel({
 
   return (
     <div className="grid gap-5 text-sm">
-      {archived && <p className="text-muted-foreground">Archived materials cannot be assigned or shared. Restore it first.</p>}
+      {archived && <p className="text-muted-foreground">{tr("Archived materials cannot be assigned or shared. Restore it first.")}</p>}
       {canManage && (
         <label className="flex items-start gap-2">
           <Checkbox
@@ -83,22 +85,22 @@ export function SharePanel({
             className="mt-0.5"
           />
           <span>
-            Visible to all teachers
-            <span className="text-muted-foreground block text-xs">They can find it and assign it to their own classes. Students still only see it when assigned.</span>
+            {tr("Visible to all teachers")}
+            <span className="text-muted-foreground block text-xs">{tr("They can find it and assign it to their own classes. Students still only see it when assigned.")}</span>
           </span>
         </label>
       )}
 
       <fieldset className="grid gap-2">
-        <legend className="mb-1 font-medium">Assign to classes</legend>
+        <legend className="mb-1 font-medium">{tr("Assign to classes")}</legend>
         {targets.length === 0 ? (
-          <p className="text-muted-foreground text-xs">You have no planned or active classes.</p>
+          <p className="text-muted-foreground text-xs">{tr("You have no planned or active classes.")}</p>
         ) : (
           targets.map((t) => (
             <label key={t.id} className="flex items-center gap-2">
               <Checkbox checked={classes.has(t.id)} disabled={disabled} onCheckedChange={(v) => toggleClass(t.id, v === true)} />
               {t.name}
-              <span className="text-muted-foreground text-xs">({t.students.length} students)</span>
+              <span className="text-muted-foreground text-xs">{tr("({length} students)", { length: t.students.length })}</span>
             </label>
           ))
         )}
@@ -106,8 +108,8 @@ export function SharePanel({
 
       {allStudents.length > 0 && (
         <fieldset className="grid gap-2">
-          <legend className="mb-1 font-medium">Share with individual students</legend>
-          {allStudents.length > 8 && <Input className="h-8" placeholder="Filter students" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filter students" />}
+          <legend className="mb-1 font-medium">{tr("Share with individual students")}</legend>
+          {allStudents.length > 8 && <Input className="h-8" placeholder={tr("Filter students")} value={filter} onChange={(e) => setFilter(e.target.value)} aria-label={tr("Filter students")} />}
           <div className="grid max-h-60 gap-1.5 overflow-y-auto">
             {shownStudents.map((s) => (
               <label key={s.id} className="flex items-center gap-2">

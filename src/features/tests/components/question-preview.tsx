@@ -10,6 +10,7 @@ import {
   type QuestionType,
 } from "@/features/tests/questions"
 import type { Json } from "@/types/database"
+import { getT } from "@/i18n/server"
 
 type PreviewProps = {
   type: QuestionType
@@ -23,7 +24,8 @@ type PreviewProps = {
 }
 
 /** A question as a teacher sees it, with the correct answer highlighted when given. */
-export function QuestionPreview({ type, prompt, content: raw, points, answerKey, explanation, mediaUrl }: PreviewProps) {
+export async function QuestionPreview({ type, prompt, content: raw, points, answerKey, explanation, mediaUrl }: PreviewProps) {
+  const t = await getT()
   const content = asContent(raw)
   const key = answerKey ? asKey(answerKey) : null
   const correct = key ? (Array.isArray(key.correct) ? key.correct : typeof key.correct === "number" ? [key.correct] : []) : []
@@ -31,9 +33,9 @@ export function QuestionPreview({ type, prompt, content: raw, points, answerKey,
   return (
     <div className="grid gap-2 text-sm">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline">{QUESTION_TYPE_LABELS[type]}</Badge>
+        <Badge variant="outline">{t(QUESTION_TYPE_LABELS[type])}</Badge>
         <span className="text-muted-foreground tabular-nums">
-          {Number(points)} pt{Number(points) === 1 ? "" : "s"}
+          {t("{number} pt{value}", { number: Number(points), value: Number(points) === 1 ? "" : "s" })}
         </span>
       </div>
       <p className="font-medium whitespace-pre-wrap">
@@ -58,7 +60,7 @@ export function QuestionPreview({ type, prompt, content: raw, points, answerKey,
           {content.options.map((option, i) => (
             <li key={i} className={correct.includes(i) ? "font-medium" : undefined}>
               {String.fromCharCode(65 + i)}. {option}
-              {correct.includes(i) && <CircleCheckIcon className="ml-1 inline size-3.5 text-[#006300] dark:text-[#0ca30c]" aria-label="Correct" />}
+              {correct.includes(i) && <CircleCheckIcon className="ml-1 inline size-3.5 text-[#006300] dark:text-[#0ca30c]" aria-label={t("Correct")} />}
             </li>
           ))}
         </ul>
@@ -83,13 +85,13 @@ export function QuestionPreview({ type, prompt, content: raw, points, answerKey,
       )}
       {key && type !== "multiple_choice" && type !== "multiple_response" && describeKey(type, content, key) && (
         <p>
-          <span className="text-muted-foreground">Correct answer: </span>
+          <span className="text-muted-foreground">{t("Correct answer:")} </span>
           {describeKey(type, content, key)}
         </p>
       )}
       {explanation && (
         <p className="text-muted-foreground whitespace-pre-wrap">
-          <span className="font-medium">Explanation: </span>
+          <span className="font-medium">{t("Explanation:")} </span>
           {explanation}
         </p>
       )}

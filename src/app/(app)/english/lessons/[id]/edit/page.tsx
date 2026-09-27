@@ -10,10 +10,15 @@ import { listWords } from "@/features/english/server/vocabulary-service"
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit lesson" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit lesson") }
+}
 
 export default async function EditLessonPage({ params }: PageProps<"/english/lessons/[id]/edit">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.lessonEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -26,7 +31,7 @@ export default async function EditLessonPage({ params }: PageProps<"/english/les
 
   return (
     <>
-      <PageHeader title="Edit lesson" description={lesson.title} />
+      <PageHeader title={t("Edit lesson")} description={lesson.title} />
       <LessonForm
         skillLocked
         cancelHref={lessonPath(id)}

@@ -13,8 +13,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { addFeedbackAction } from "@/features/students/actions"
 import { feedbackSchema } from "@/features/students/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 export function FeedbackForm({ studentId }: { studentId: string }) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
   const form = useForm<z.input<typeof feedbackSchema>, unknown, z.output<typeof feedbackSchema>>({
@@ -28,7 +30,7 @@ export function FeedbackForm({ studentId }: { studentId: string }) {
       const result = await addFeedbackAction(values)
       if (result.ok) {
         form.reset({ studentId, body: "" })
-        toast.success("Feedback added.")
+        toast.success(t("Feedback added."))
       } else {
         setFormError(applyActionError(form, result.error))
       }
@@ -44,9 +46,9 @@ export function FeedbackForm({ studentId }: { studentId: string }) {
           name="body"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>New feedback</FormLabel>
+              <FormLabel>{t("New feedback")}</FormLabel>
               <FormControl>
-                <Textarea rows={3} placeholder="Progress, strengths, what to practise next…" {...field} />
+                <Textarea rows={3} placeholder={t("Progress, strengths, what to practise next…")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -54,7 +56,7 @@ export function FeedbackForm({ studentId }: { studentId: string }) {
         />
         <div>
           <SubmitButton pending={isPending} size="sm">
-            Add feedback
+            {t("Add feedback")}
           </SubmitButton>
         </div>
       </form>

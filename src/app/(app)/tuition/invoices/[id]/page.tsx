@@ -22,10 +22,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDate } from "@/lib/format"
 import { formatVnd } from "@/lib/money"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Invoice" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Invoice") }
+}
 
 export default async function InvoicePage({ params }: PageProps<"/tuition/invoices/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.invoiceDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -41,10 +46,10 @@ export default async function InvoicePage({ params }: PageProps<"/tuition/invoic
   return (
     <>
       <Link href={routes.invoices} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Invoices
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Invoices")}
       </Link>
       <PageHeader
-        title={`Invoice ${invoice.invoice_number}`}
+        title={t("Invoice {invoice_number}", { invoice_number: invoice.invoice_number })}
         description={invoice.description}
         actions={
           <>
@@ -56,31 +61,31 @@ export default async function InvoicePage({ params }: PageProps<"/tuition/invoic
       />
       <Card>
         <CardContent className="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <Detail label="Student">
+          <Detail label={t("Student")}>
             <Link href={studentPath(invoice.student_id, "tuition")} className="hover:underline">
               {invoice.student_name ?? "—"}
             </Link>
           </Detail>
-          <Detail label="Issued">{formatDate(invoice.issue_date)}</Detail>
-          <Detail label="Due">{formatDate(invoice.due_date)}</Detail>
-          <Detail label="Amount">{formatVnd(invoice.amount)}</Detail>
-          <Detail label="Paid">{formatVnd(invoice.paid)}</Detail>
-          <Detail label="Remaining">
+          <Detail label={t("Issued")}>{formatDate(invoice.issue_date)}</Detail>
+          <Detail label={t("Due")}>{formatDate(invoice.due_date)}</Detail>
+          <Detail label={t("Amount")}>{formatVnd(invoice.amount)}</Detail>
+          <Detail label={t("Paid")}>{formatVnd(invoice.paid)}</Detail>
+          <Detail label={t("Remaining")}>
             <span className="font-semibold">{formatVnd(invoice.remaining)}</span>
           </Detail>
           {invoice.void_reason && (
             <div className="sm:col-span-3 lg:col-span-6">
-              <Detail label="Void reason">{invoice.void_reason}</Detail>
+              <Detail label={t("Void reason")}>{invoice.void_reason}</Detail>
             </div>
           )}
         </CardContent>
       </Card>
       <section className="grid gap-2">
-        <h2 className="font-semibold">Payments</h2>
+        <h2 className="font-semibold">{t("Payments")}</h2>
         <SimpleTable
           rows={payments}
           rowKey={(p) => p.id}
-          empty="No payments recorded."
+          empty={t("No payments recorded.")}
           columns={[
             {
               header: "Receipt",
@@ -120,10 +125,11 @@ export default async function InvoicePage({ params }: PageProps<"/tuition/invoic
   )
 }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+async function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  const t = await getT()
   return (
     <div className="grid gap-0.5">
-      <span className="text-muted-foreground text-xs">{label}</span>
+      <span className="text-muted-foreground text-xs">{t(label)}</span>
       <span className="text-sm tabular-nums">{children}</span>
     </div>
   )

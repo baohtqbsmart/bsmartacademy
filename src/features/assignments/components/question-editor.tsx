@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { deleteQuestionAction, saveQuestionAction } from "@/features/assignments/actions"
 import { QUESTION_KIND_LABELS, QUESTION_KINDS, type QuestionKind } from "@/features/assignments/status"
+import { useT } from "@/i18n/client"
 
 export type QuestionValues = {
   questionId?: string
@@ -36,6 +37,7 @@ const EMPTY: QuestionValues = {
 
 /** Add or edit one question together with its answer key. */
 export function QuestionDialog({ assignmentId, initial }: { assignmentId: string; initial?: QuestionValues }) {
+  const t = useT()
   const [v, setV] = useState<QuestionValues>(initial ?? EMPTY)
   const set = <K extends keyof QuestionValues>(key: K, value: QuestionValues[K]) => setV((c) => ({ ...c, [key]: value }))
 
@@ -43,63 +45,63 @@ export function QuestionDialog({ assignmentId, initial }: { assignmentId: string
     <ActionDialog
       trigger={
         initial ? (
-          <Button variant="ghost" size="icon" aria-label="Edit question">
+          <Button variant="ghost" size="icon" aria-label={t("Edit question")}>
             <PencilIcon />
           </Button>
         ) : (
           <Button variant="outline" size="sm">
-            <PlusIcon aria-hidden /> Add question
+            <PlusIcon aria-hidden /> {t("Add question")}
           </Button>
         )
       }
-      title={initial ? "Edit question" : "New question"}
-      description="The answer key is only ever shown to the class's teachers."
-      submitLabel="Save question"
-      successMessage="Question saved."
+      title={initial ? t("Edit question") : t("New question")}
+      description={t("The answer key is only ever shown to the class's teachers.")}
+      submitLabel={t("Save question")}
+      successMessage={t("Question saved.")}
       onOpen={() => setV(initial ?? EMPTY)}
       onSubmit={() => saveQuestionAction({ ...v, assignmentId })}
     >
       <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
-        <Field id="q-kind" label="Type">
+        <Field id="q-kind" label={t("Type")}>
           <OptionSelect
             id="q-kind"
             value={v.kind}
             onChange={(value) => set("kind", value as QuestionKind)}
             options={QUESTION_KINDS.map((k) => ({ id: k, label: QUESTION_KIND_LABELS[k] }))}
-            placeholder="Type"
+            placeholder={t("Type")}
           />
         </Field>
-        <Field id="q-points" label="Points">
+        <Field id="q-points" label={t("Points")}>
           <Input id="q-points" inputMode="decimal" value={v.points} onChange={(e) => set("points", e.target.value)} />
         </Field>
       </div>
-      <Field id="q-prompt" label="Question">
+      <Field id="q-prompt" label={t("Question")}>
         <Textarea id="q-prompt" rows={3} value={v.prompt} onChange={(e) => set("prompt", e.target.value)} />
       </Field>
 
       {v.kind === "multiple_choice" && (
         <fieldset className="grid gap-2">
-          <legend className="mb-1 text-sm font-medium">Options — select the correct one</legend>
+          <legend className="mb-1 text-sm font-medium">{t("Options — select the correct one")}</legend>
           {v.options.map((option, index) => (
             <div key={index} className="flex items-center gap-2">
               <input
                 type="radio"
                 name="correct-option"
                 className="accent-primary size-4"
-                aria-label={`Option ${index + 1} is correct`}
+                aria-label={t("Option {value} is correct", { value: index + 1 })}
                 checked={v.correctOption === index}
                 onChange={() => set("correctOption", index)}
               />
               <Input
                 value={option}
-                aria-label={`Option ${index + 1}`}
+                aria-label={t("Option {value}", { value: index + 1 })}
                 onChange={(e) => set("options", v.options.map((o, i) => (i === index ? e.target.value : o)))}
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`Remove option ${index + 1}`}
+                aria-label={t("Remove option {value}", { value: index + 1 })}
                 disabled={v.options.length <= 2}
                 onClick={() => {
                   set("options", v.options.filter((_, i) => i !== index))
@@ -113,7 +115,7 @@ export function QuestionDialog({ assignmentId, initial }: { assignmentId: string
           {v.options.length < 8 && (
             <div>
               <Button type="button" variant="ghost" size="sm" onClick={() => set("options", [...v.options, ""])}>
-                <PlusIcon aria-hidden /> Add option
+                <PlusIcon aria-hidden /> {t("Add option")}
               </Button>
             </div>
           )}
@@ -121,19 +123,19 @@ export function QuestionDialog({ assignmentId, initial }: { assignmentId: string
       )}
 
       {v.kind === "short_answer" && (
-        <Field id="q-accepted" label="Accepted answers (one per line)">
+        <Field id="q-accepted" label={t("Accepted answers (one per line)")}>
           <Textarea
             id="q-accepted"
             rows={3}
             value={v.acceptedAnswers}
             onChange={(e) => set("acceptedAnswers", e.target.value)}
-            placeholder={"5/6\nfive sixths"}
+            placeholder={t("5/6\nfive sixths")}
           />
         </Field>
       )}
 
       <div className="grid gap-2">
-        <Label htmlFor="q-explanation">{v.kind === "long_answer" ? "Model answer / marking notes" : "Explanation (optional)"}</Label>
+        <Label htmlFor="q-explanation">{v.kind === "long_answer" ? t("Model answer / marking notes") : t("Explanation (optional)")}</Label>
         <Textarea id="q-explanation" rows={2} value={v.explanation} onChange={(e) => set("explanation", e.target.value)} />
       </div>
     </ActionDialog>
@@ -141,15 +143,16 @@ export function QuestionDialog({ assignmentId, initial }: { assignmentId: string
 }
 
 export function DeleteQuestionButton({ questionId }: { questionId: string }) {
+  const t = useT()
   return (
     <ConfirmActionButton
       variant="ghost"
       size="icon"
-      aria-label="Delete question"
-      title="Delete this question?"
-      description="The question and its answer key are deleted."
-      confirmLabel="Delete"
-      successMessage="Question deleted."
+      aria-label={t("Delete question")}
+      title={t("Delete this question?")}
+      description={t("The question and its answer key are deleted.")}
+      confirmLabel={t("Delete")}
+      successMessage={t("Question deleted.")}
       destructive
       action={deleteQuestionAction.bind(null, { questionId })}
     >

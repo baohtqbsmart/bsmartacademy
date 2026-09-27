@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import type { ActionResult } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type ActionDialogProps = {
   trigger: React.ReactNode
@@ -41,6 +42,7 @@ export function ActionDialog({
   onOpen,
   children,
 }: ActionDialogProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -81,9 +83,9 @@ export function ActionDialog({
           {children}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-              Cancel
+              {t("Cancel")}
             </Button>
-            <SubmitButton pending={isPending}>{submitLabel}</SubmitButton>
+            <SubmitButton pending={isPending}>{t(submitLabel)}</SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -17,14 +17,19 @@ import { todayInAcademy } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Class progress" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Class progress") }
+}
 
 /**
  * Class-level figures only: no student names or individual scores. Averages
  * are of students' own averages and are withheld below MIN_GROUP students.
  */
 export default async function ClassProgressPage({ params, searchParams }: PageProps<"/analytics/classes/[id]">) {
+  const t = await getT()
   await requireRouteAccess(routes.analyticsClass)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -57,47 +62,47 @@ export default async function ClassProgressPage({ params, searchParams }: PagePr
   return (
     <>
       <Link href={routes.analytics} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Progress
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Progress")}
       </Link>
-      <PageHeader title={klass.name} description={`Class progress · ${klass.code}${klass.course?.name ? ` · ${klass.course.name}` : ""}`} />
+      <PageHeader title={klass.name} description={t("Class progress · {code}{value}", { code: klass.code, value: klass.course?.name ? ` · ${klass.course.name}` : "" })} />
       <DateRangeFilter basePath={analyticsClassPath(id)} from={range.from} to={range.to} max={today} />
       <p className="text-muted-foreground -mt-3 flex items-center gap-1.5 text-xs">
-        <ShieldCheckIcon className="size-3.5" aria-hidden /> Class figures only — no names or individual scores. Open a student from the Progress page to see their own results.
+        <ShieldCheckIcon className="size-3.5" aria-hidden /> {t("Class figures only — no names or individual scores. Open a student from the Progress page to see their own results.")}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <ScoreCard
-          label="Class work"
+          label={t("Class work")}
           measure="Average percentage"
           value={group.suppressed ? "—" : pct(group.averageOfStudents)}
           basis={group.suppressed ? `Withheld: ${group.studentsWithResults} of ${enrolled} students have results (fewer than ${MIN_GROUP})` : `Average of ${group.studentsWithResults} of ${enrolled} students' own averages`}
           comparison={{ text: `${formatDate(before.from)}–${formatDate(before.to)}: ${groupBefore.suppressed ? "—" : pct(groupBefore.averageOfStudents)}`, delta }}
         />
         <ScoreCard
-          label="Attendance"
+          label={t("Attendance")}
           measure="Rate"
           value={rate(attendance.rate)}
           basis={`${attendance.total.present + attendance.total.late} attended of ${attendance.total.present + attendance.total.late + attendance.total.absent} student-sessions`}
           comparison={{ text: `Before: ${rate(attendanceBefore.rate)}`, delta: attendance.rate !== null && attendanceBefore.rate !== null ? Math.round((attendance.rate - attendanceBefore.rate) * 100) : null }}
         />
         <ScoreCard
-          label="Homework handed in"
+          label={t("Homework handed in")}
           measure="Rate"
           value={rate(hw.completionRate)}
           basis={hw.due ? `${Math.min(hw.handedIn, hw.due)} of ${hw.due} due pieces (${hw.late} late, ${hw.missing} missing)` : "No homework due in this period"}
         />
-        <ScoreCard label="Students" measure="Count" value={String(enrolled)} basis={`${group.studentsWithResults} with scored class work in this period`} />
+        <ScoreCard label={t("Students")} measure="Count" value={String(enrolled)} basis={`${group.studentsWithResults} with scored class work in this period`} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Spread of student averages</CardTitle>
-            <CardDescription>How many students&apos; own averages fall in each range.</CardDescription>
+            <CardTitle>{t("Spread of student averages")}</CardTitle>
+            <CardDescription>{t("How many students' own averages fall in each range.")}</CardDescription>
           </CardHeader>
           <CardContent>
             {group.suppressed ? (
-              <p className="text-muted-foreground py-10 text-center text-sm">Withheld: fewer than {MIN_GROUP} students have results.</p>
+              <p className="text-muted-foreground py-10 text-center text-sm">{t("Withheld: fewer than {MIN_GROUP} students have results.", { MIN_GROUP })}</p>
             ) : (
               <DistributionChart data={group.distribution} />
             )}
@@ -105,8 +110,8 @@ export default async function ClassProgressPage({ params, searchParams }: PagePr
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>English skills</CardTitle>
-            <CardDescription>Students&apos; averages per skill (class work and their own English practice).</CardDescription>
+            <CardTitle>{t("English skills")}</CardTitle>
+            <CardDescription>{t("Students' averages per skill (class work and their own English practice).")}</CardDescription>
           </CardHeader>
           <CardContent>
             <GroupSkillBars skills={groupSkillSummaries(results)} />
@@ -116,8 +121,8 @@ export default async function ClassProgressPage({ params, searchParams }: PagePr
 
       <Card>
         <CardHeader>
-          <CardTitle>Class work over time</CardTitle>
-          <CardDescription>Mean of students&apos; averages per {trend.granularity}; periods with fewer than {MIN_GROUP} students are left blank.</CardDescription>
+          <CardTitle>{t("Class work over time")}</CardTitle>
+          <CardDescription>{t("Mean of students' averages per {granularity}; periods with fewer than {MIN_GROUP} students are left blank.", { granularity: trend.granularity, MIN_GROUP })}</CardDescription>
         </CardHeader>
         <CardContent>
           <ProgressLineChart granularity={trend.granularity} unit="students" series={[{ id: "class", label: "Class work", buckets: trend.buckets }]} />
@@ -126,30 +131,30 @@ export default async function ClassProgressPage({ params, searchParams }: PagePr
 
       <Card>
         <CardHeader>
-          <CardTitle>By piece of work</CardTitle>
-          <CardDescription>Average percentage per assignment, test or task — only where at least {MIN_GROUP} students have a published result.</CardDescription>
+          <CardTitle>{t("By piece of work")}</CardTitle>
+          <CardDescription>{t("Average percentage per assignment, test or task — only where at least {MIN_GROUP} students have a published result.", { MIN_GROUP })}</CardDescription>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No published class results in this period.</p>
+            <p className="text-muted-foreground text-sm">{t("No published class results in this period.")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[32rem] text-left text-sm">
                 <thead className="text-muted-foreground text-xs">
                   <tr>
-                    <th className="py-2 font-normal">Work</th>
-                    <th className="py-2 font-normal">Type</th>
-                    <th className="py-2 text-right font-normal">Students</th>
-                    <th className="py-2 text-right font-normal">Average percentage</th>
+                    <th className="py-2 font-normal">{t("Work")}</th>
+                    <th className="py-2 font-normal">{t("Type")}</th>
+                    <th className="py-2 text-right font-normal">{t("Students")}</th>
+                    <th className="py-2 text-right font-normal">{t("Average percentage")}</th>
                   </tr>
                 </thead>
                 <tbody className="tabular-nums">
                   {items.map((i) => (
                     <tr key={i.itemId} className="border-t">
-                      <td className="py-2">{i.title}</td>
-                      <td className="text-muted-foreground py-2 text-xs">{SOURCES[i.source].label}</td>
+                      <td className="py-2">{t(i.title)}</td>
+                      <td className="text-muted-foreground py-2 text-xs">{t(SOURCES[i.source].label)}</td>
                       <td className="py-2 text-right">{i.students}</td>
-                      <td className="py-2 text-right">{i.average === null ? <span className="text-muted-foreground text-xs">withheld (fewer than {MIN_GROUP})</span> : `${i.average}%`}</td>
+                      <td className="py-2 text-right">{i.average === null ? <span className="text-muted-foreground text-xs">{t("withheld (fewer than {MIN_GROUP})", { MIN_GROUP })}</span> : `${i.average}%`}</td>
                     </tr>
                   ))}
                 </tbody>

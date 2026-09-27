@@ -19,10 +19,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Assessment history" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Assessment history") }
+}
 
 export default async function HistoryPage({ searchParams }: PageProps<"/assessments/history">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.assessmentHistory)
   const db = await createClient()
   const requested = uuidParam(await searchParams, "student")
@@ -42,7 +47,7 @@ export default async function HistoryPage({ searchParams }: PageProps<"/assessme
 
   return (
     <>
-      <PageHeader title="Assessment history" description={name ? `${name}'s writing and speaking over time.` : "Writing and speaking over time."} />
+      <PageHeader title={t("Assessment history")} description={name ? t("{name}'s writing and speaking over time.", { name }) : t("Writing and speaking over time.")} />
       {students.length > 1 && (
         <div className="flex flex-wrap gap-2">
           {students.map((s) => (
@@ -53,7 +58,7 @@ export default async function HistoryPage({ searchParams }: PageProps<"/assessme
         </div>
       )}
       {!studentId ? (
-        <EmptyState icon={HistoryIcon} title="Choose a student" />
+        <EmptyState icon={HistoryIcon} title={t("Choose a student")} />
       ) : (
         <StudentHistory history={history} />
       )}
@@ -61,7 +66,8 @@ export default async function HistoryPage({ searchParams }: PageProps<"/assessme
   )
 }
 
-function StudentHistory({ history }: { history: HistoryRow[] }) {
+async function StudentHistory({ history }: { history: HistoryRow[] }) {
+  const t = await getT()
   const returned = history.filter((h) => h.assessment_grades?.returned_at)
   const share = (h: HistoryRow) => Number(h.assessment_grades!.total_score) / Number(h.task?.max_score ?? 1)
   const average = returned.length ? returned.reduce((sum, h) => sum + share(h), 0) / returned.length : null
@@ -89,12 +95,12 @@ function StudentHistory({ history }: { history: HistoryRow[] }) {
           return (
             <Card key={kind}>
               <CardHeader>
-                <CardTitle>{KIND_LABELS[kind]} by criterion</CardTitle>
-                <CardDescription>Average share of each criterion&apos;s maximum; weakest first.</CardDescription>
+                <CardTitle>{t("{value} by criterion", { value: KIND_LABELS[kind] })}</CardTitle>
+                <CardDescription>{t("Average share of each criterion's maximum; weakest first.")}</CardDescription>
               </CardHeader>
               <CardContent>
                 {rows.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No returned {kind} yet.</p>
+                  <p className="text-muted-foreground text-sm">{t("No returned {kind} yet.", { kind })}</p>
                 ) : (
                   <ul className="grid gap-2 text-sm">
                     {rows.map((r) => (
@@ -120,7 +126,7 @@ function StudentHistory({ history }: { history: HistoryRow[] }) {
       <SimpleTable
         rows={history}
         rowKey={(h) => h.id}
-        empty={<EmptyState icon={HistoryIcon} title="Nothing handed in yet" />}
+        empty={<EmptyState icon={HistoryIcon} title={t("Nothing handed in yet")} />}
         columns={[
           { header: "Handed in", cell: (h) => <span className="tabular-nums">{formatDateTime(h.submitted_at)}</span> },
           {
@@ -131,7 +137,7 @@ function StudentHistory({ history }: { history: HistoryRow[] }) {
               </Link>
             ),
           },
-          { header: "Kind", cell: (h) => (h.task ? <Badge variant="outline">{KIND_LABELS[h.task.kind]}</Badge> : "—") },
+          { header: "Kind", cell: (h) => (h.task ? <Badge variant="outline">{t(KIND_LABELS[h.task.kind])}</Badge> : "—") },
           { header: "Class", cell: (h) => h.task?.class?.name ?? "—" },
           { header: "Attempt", cell: (h) => h.attempt },
           {
@@ -139,10 +145,10 @@ function StudentHistory({ history }: { history: HistoryRow[] }) {
             cell: (h) =>
               h.assessment_grades?.returned_at ? (
                 <span className="tabular-nums">
-                  {h.task?.scoring === "ielts_band" ? `Band ${Number(h.assessment_grades.total_score)}` : `${Number(h.assessment_grades.total_score)} / ${Number(h.task?.max_score)}`}
+                  {h.task?.scoring === "ielts_band" ? t("Band {number}", { number: Number(h.assessment_grades.total_score) }) : `${Number(h.assessment_grades.total_score)} / ${Number(h.task?.max_score)}`}
                 </span>
               ) : (
-                <span className="text-muted-foreground">{h.assessment_grades ? "Graded, not returned" : "Waiting for feedback"}</span>
+                <span className="text-muted-foreground">{h.assessment_grades ? t("Graded, not returned") : t("Waiting for feedback")}</span>
               ),
           },
         ]}

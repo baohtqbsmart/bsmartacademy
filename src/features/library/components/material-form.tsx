@@ -21,6 +21,7 @@ import { BUCKETS } from "@/lib/storage"
 import { createClient } from "@/lib/supabase/client"
 import { checkFile, fileExtension, formatFileSize } from "@/lib/uploads"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n/client"
 
 const NONE = "__none"
 
@@ -55,6 +56,7 @@ export function MaterialForm({
   folders: FolderNode[]
   cancelHref: string
 }) {
+  const t = useT()
   const editing = Boolean(initial.materialId)
   const [v, setV] = useState(initial)
   const [file, setFile] = useState<File | null>(null)
@@ -64,7 +66,7 @@ export function MaterialForm({
   const [isPending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
   const set = <K extends keyof MaterialFormInitial>(key: K, value: MaterialFormInitial[K]) => setV((c) => ({ ...c, [key]: value }))
-  const fieldError = (name: string) => fieldErrors[name]?.[0] && <p className="text-destructive text-sm">{fieldErrors[name]![0]}</p>
+  const fieldError = (name: string) => fieldErrors[name]?.[0] && <p className="text-destructive text-sm">{t(fieldErrors[name]![0])}</p>
 
   const scopeFolders = folderPaths(folders.filter((f) => f.scope === v.scope && (v.scope === "academy" || f.ownerId === userId)))
   const subjectLevels = levels.filter((l) => l.subject_id === v.subjectId)
@@ -108,7 +110,7 @@ export function MaterialForm({
       if (!check.ok) return setError(check.message)
       // Straight to Storage, into the uploader's own folder; the server then
       // checks the bytes and the database checks the record.
-      setProgress(`Uploading ${formatFileSize(file.size)}…`)
+      setProgress(t("Uploading {size}…", { size: formatFileSize(file.size) }))
       const objectPath = `library/${userId}/${crypto.randomUUID()}.${fileExtension(file.name)}`
       const { error: uploadError } = await createClient().storage.from(BUCKETS.assignmentFiles).upload(objectPath, file, { contentType: check.mimeType, upsert: false })
       if (uploadError) {
@@ -131,8 +133,8 @@ export function MaterialForm({
       {!editing && (
         <Card>
           <CardHeader>
-            <CardTitle>File</CardTitle>
-            <CardDescription>PDF, Word (.docx), PowerPoint (.pptx), images (PNG, JPEG, WebP), audio (MP3, M4A, WAV, WebM) or video (MP4, MOV); up to 20 MB. Its content is checked before it is accepted.</CardDescription>
+            <CardTitle>{t("File")}</CardTitle>
+            <CardDescription>{t("PDF, Word (.docx), PowerPoint (.pptx), images (PNG, JPEG, WebP), audio (MP3, M4A, WAV, WebM) or video (MP4, MOV); up to 20 MB. Its content is checked before it is accepted.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <input ref={inputRef} type="file" accept={LIBRARY_ACCEPT} className="sr-only" tabIndex={-1} aria-hidden onChange={(e) => pick(e.target.files?.[0])} />
@@ -149,10 +151,10 @@ export function MaterialForm({
               <FileUpIcon className="text-muted-foreground size-8" aria-hidden />
               {file ? (
                 <span>
-                  <span className="font-medium">{file.name}</span> · {formatFileSize(file.size)} — choose another
+                  <span className="font-medium">{file.name}</span> {t("· {fileSize} — choose another", { fileSize: formatFileSize(file.size) })}
                 </span>
               ) : (
-                <span>Choose a file or drop it here</span>
+                <span>{t("Choose a file or drop it here")}</span>
               )}
             </button>
           </CardContent>
@@ -161,53 +163,53 @@ export function MaterialForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Details</CardTitle>
-          <CardDescription>Used for searching and filtering.</CardDescription>
+          <CardTitle>{t("Details")}</CardTitle>
+          <CardDescription>{t("Used for searching and filtering.")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Field id="m-title" label="Title">
+          <Field id="m-title" label={t("Title")}>
             <Input id="m-title" maxLength={200} value={v.title} onChange={(e) => set("title", e.target.value)} />
             {fieldError("title")}
           </Field>
-          <Field id="m-desc" label="Description">
+          <Field id="m-desc" label={t("Description")}>
             <Textarea id="m-desc" rows={3} maxLength={2000} value={v.description} onChange={(e) => set("description", e.target.value)} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field id="m-subject" label="Subject">
+            <Field id="m-subject" label={t("Subject")}>
               <OptionSelect
                 id="m-subject"
                 value={v.subjectId || NONE}
                 onChange={(value) => setV((c) => ({ ...c, subjectId: value === NONE ? "" : value, levelId: "" }))}
                 options={[{ id: NONE, label: "Any subject" }, ...subjects.map((s) => ({ id: s.id, label: s.name }))]}
-                placeholder="Subject"
+                placeholder={t("Subject")}
               />
             </Field>
-            <Field id="m-level" label="Level">
+            <Field id="m-level" label={t("Level")}>
               <OptionSelect
                 id="m-level"
                 value={v.levelId || NONE}
                 onChange={(value) => set("levelId", value === NONE ? "" : value)}
                 options={[{ id: NONE, label: v.subjectId ? "Any level" : "Choose a subject first" }, ...subjectLevels.map((l) => ({ id: l.id, label: l.name }))]}
-                placeholder="Level"
+                placeholder={t("Level")}
                 disabled={!v.subjectId}
               />
             </Field>
-            <Field id="m-skill" label="Skill">
+            <Field id="m-skill" label={t("Skill")}>
               <OptionSelect
                 id="m-skill"
                 value={v.skill || NONE}
                 onChange={(value) => set("skill", value === NONE ? "" : value)}
                 options={[{ id: NONE, label: "Any skill" }, ...ASSIGNMENT_SKILLS.map((s) => ({ id: s, label: SKILL_LABELS[s] }))]}
-                placeholder="Skill"
+                placeholder={t("Skill")}
               />
             </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="m-topic" label="Topic">
-              <Input id="m-topic" maxLength={120} value={v.topic} onChange={(e) => set("topic", e.target.value)} placeholder="Animals" />
+            <Field id="m-topic" label={t("Topic")}>
+              <Input id="m-topic" maxLength={120} value={v.topic} onChange={(e) => set("topic", e.target.value)} placeholder={t("Animals")} />
             </Field>
-            <Field id="m-tags" label="Tags (comma-separated, up to 10)">
-              <Input id="m-tags" value={v.tags} onChange={(e) => set("tags", e.target.value)} placeholder="flyers, unit 4, reading" />
+            <Field id="m-tags" label={t("Tags (comma-separated, up to 10)")}>
+              <Input id="m-tags" value={v.tags} onChange={(e) => set("tags", e.target.value)} placeholder={t("flyers, unit 4, reading")} />
               {fieldError("tags")}
             </Field>
           </div>
@@ -216,38 +218,38 @@ export function MaterialForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Where and who</CardTitle>
-          <CardDescription>Students never see a material until it is assigned to their class or shared with them (from the material page).</CardDescription>
+          <CardTitle>{t("Where and who")}</CardTitle>
+          <CardDescription>{t("Students never see a material until it is assigned to their class or shared with them (from the material page).")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           {canManageAcademy && !editing && (
             <fieldset className="grid gap-2">
-              <legend className="mb-1 text-sm font-medium">Library</legend>
-              <RadioRow name="scope" value="personal" checked={v.scope === "personal"} onChange={() => setV((c) => ({ ...c, scope: "personal", folderId: "" }))} label="My materials" hint="You manage it." />
-              <RadioRow name="scope" value="academy" checked={v.scope === "academy"} onChange={() => setV((c) => ({ ...c, scope: "academy", folderId: "" }))} label="Academy library" hint="Shared academy resource, managed by administrators." />
+              <legend className="mb-1 text-sm font-medium">{t("Library")}</legend>
+              <RadioRow name="scope" value="personal" checked={v.scope === "personal"} onChange={() => setV((c) => ({ ...c, scope: "personal", folderId: "" }))} label={t("My materials")} hint={t("You manage it.")} />
+              <RadioRow name="scope" value="academy" checked={v.scope === "academy"} onChange={() => setV((c) => ({ ...c, scope: "academy", folderId: "" }))} label={t("Academy library")} hint={t("Shared academy resource, managed by administrators.")} />
             </fieldset>
           )}
-          <Field id="m-folder" label="Folder">
+          <Field id="m-folder" label={t("Folder")}>
             <OptionSelect
               id="m-folder"
               value={v.folderId || NONE}
               onChange={(value) => set("folderId", value === NONE ? "" : value)}
               options={[{ id: NONE, label: "No folder" }, ...scopeFolders.map((f) => ({ id: f.id, label: f.path }))]}
-              placeholder="Folder"
+              placeholder={t("Folder")}
             />
           </Field>
           <fieldset className="grid gap-2">
-            <legend className="mb-1 text-sm font-medium">Other teachers</legend>
-            <RadioRow name="visibility" value="private" checked={v.visibility === "private"} onChange={() => set("visibility", "private")} label="Only me" hint={v.scope === "academy" ? "Administrators only (a draft)." : "Administrators can still see it."} />
-            <RadioRow name="visibility" value="staff" checked={v.visibility === "staff"} onChange={() => set("visibility", "staff")} label="All teachers" hint="Any teacher can find it and use it in their own classes." />
+            <legend className="mb-1 text-sm font-medium">{t("Other teachers")}</legend>
+            <RadioRow name="visibility" value="private" checked={v.visibility === "private"} onChange={() => set("visibility", "private")} label={t("Only me")} hint={v.scope === "academy" ? t("Administrators only (a draft).") : t("Administrators can still see it.")} />
+            <RadioRow name="visibility" value="staff" checked={v.visibility === "staff"} onChange={() => set("visibility", "staff")} label={t("All teachers")} hint={t("Any teacher can find it and use it in their own classes.")} />
           </fieldset>
         </CardContent>
       </Card>
 
       <div className="flex items-center gap-3">
-        <SubmitButton pending={isPending}>{editing ? "Save changes" : "Upload"}</SubmitButton>
+        <SubmitButton pending={isPending}>{editing ? t("Save changes") : t("Upload")}</SubmitButton>
         <Button variant="ghost" asChild>
-          <Link href={cancelHref}>Cancel</Link>
+          <Link href={cancelHref}>{t("Cancel")}</Link>
         </Button>
         {progress && (
           <span className="text-muted-foreground text-sm" role="status">
@@ -260,13 +262,14 @@ export function MaterialForm({
 }
 
 function RadioRow({ name, value, checked, onChange, label, hint }: { name: string; value: string; checked: boolean; onChange: () => void; label: string; hint: string }) {
+  const t = useT()
   const id = `${name}-${value}`
   return (
     <div className="flex items-start gap-2">
       <input type="radio" id={id} name={name} value={value} checked={checked} onChange={onChange} className="accent-primary mt-1" />
       <Label htmlFor={id} className="grid gap-0.5 font-normal">
-        <span className="font-medium">{label}</span>
-        <span className="text-muted-foreground text-xs">{hint}</span>
+        <span className="font-medium">{t(label)}</span>
+        <span className="text-muted-foreground text-xs">{t(hint)}</span>
       </Label>
     </div>
   )

@@ -2,6 +2,7 @@ import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
 import Link from "next/link"
 
 import { studentListHref, type StudentListQuery, type StudentSort } from "@/features/students/list-query"
+import { getT } from "@/i18n/server"
 
 type SortableHeaderProps = {
   label: string
@@ -9,7 +10,8 @@ type SortableHeaderProps = {
   query: StudentListQuery
 }
 
-export function SortableHeader({ label, sort, query }: SortableHeaderProps) {
+export async function SortableHeader({ label, sort, query }: SortableHeaderProps) {
+  const t = await getT()
   const active = query.sort === sort
   const nextDir = active && query.dir === "asc" ? "desc" : "asc"
   const Icon = !active ? ArrowUpDownIcon : query.dir === "asc" ? ArrowUpIcon : ArrowDownIcon
@@ -19,9 +21,9 @@ export function SortableHeader({ label, sort, query }: SortableHeaderProps) {
       href={studentListHref(query, { sort, dir: nextDir, page: 1 })}
       scroll={false}
       className="hover:text-foreground inline-flex items-center gap-1"
-      aria-label={`Sort by ${label.toLowerCase()} ${nextDir === "asc" ? "ascending" : "descending"}`}
+      aria-label={t("Sort by {label} {value}", { label: label.toLowerCase(), value: nextDir === "asc" ? "ascending" : "descending" })}
     >
-      {label}
+      {t(label)}
       <Icon className={active ? "size-3.5" : "size-3.5 opacity-40"} aria-hidden />
     </Link>
   )

@@ -12,6 +12,7 @@ import { removeAssetAction } from "@/features/designer/actions"
 import type { AssetInfo } from "@/features/designer/server/design-service"
 import { acceptFor, uploadDesignFile, type Media } from "@/features/designer/uploads"
 import { UPLOAD_RULES } from "@/lib/uploads"
+import { useT } from "@/i18n/client"
 
 const TITLES: Record<Media, string> = { image: "Pictures", audio: "Audio", video: "Video" }
 
@@ -36,6 +37,7 @@ export function MediaPicker({
   onChooseLink: (url: string) => void
   onClose: () => void
 }) {
+  const t = useT()
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [link, setLink] = useState("")
@@ -52,7 +54,7 @@ export function MediaPicker({
         next = { ...next, [asset.id]: asset }
         last = asset.id
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Upload failed.")
+        toast.error(t(error instanceof Error ? error.message : "Upload failed."))
       }
     }
     onAssetsChange(next)
@@ -67,7 +69,7 @@ export function MediaPicker({
     const next = { ...assets }
     delete next[asset.id]
     onAssetsChange(next)
-    toast.success("File removed.")
+    toast.success(t("File removed."))
   }
 
   return (
@@ -75,7 +77,7 @@ export function MediaPicker({
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{media ? TITLES[media] : ""}</DialogTitle>
-          <DialogDescription>Files belong to this design. Up to {UPLOAD_RULES.maxBytes / 1024 / 1024} MB each; each file&apos;s content is checked before it is accepted.</DialogDescription>
+          <DialogDescription>{t("Files belong to this design. Up to {value} MB each; each file's content is checked before it is accepted.", { value: UPLOAD_RULES.maxBytes / 1024 / 1024 })}</DialogDescription>
         </DialogHeader>
 
         <input
@@ -93,7 +95,7 @@ export function MediaPicker({
         />
         <div>
           <Button onClick={() => inputRef.current?.click()} disabled={busy}>
-            {busy ? <Loader2Icon className="animate-spin" aria-hidden /> : <UploadIcon aria-hidden />} {busy ? "Uploading…" : "Upload from this device"}
+            {busy ? <Loader2Icon className="animate-spin" aria-hidden /> : <UploadIcon aria-hidden />} {busy ? t("Uploading…") : t("Upload from this device")}
           </Button>
         </div>
 
@@ -103,22 +105,22 @@ export function MediaPicker({
             onSubmit={(e) => {
               e.preventDefault()
               if (/^https:\/\/[^\s<>"]+$/.test(link.trim())) onChooseLink(link.trim())
-              else toast.error("Paste a link starting with https://")
+              else toast.error(t("Paste a link starting with https://"))
             }}
           >
-            <Label htmlFor="video-link">…or paste a video link</Label>
+            <Label htmlFor="video-link">{t("…or paste a video link")}</Label>
             <div className="flex gap-2">
-              <Input id="video-link" type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" />
+              <Input id="video-link" type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder={t("https://www.youtube.com/watch?v=…")} />
               <Button type="submit" variant="outline">
-                Add link
+                {t("Add link")}
               </Button>
             </div>
-            <p className="text-muted-foreground text-xs">YouTube and Vimeo play inside the page; other links open in a new tab.</p>
+            <p className="text-muted-foreground text-xs">{t("YouTube and Vimeo play inside the page; other links open in a new tab.")}</p>
           </form>
         )}
 
         {files.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No {media === "image" ? "pictures" : media} uploaded to this design yet.</p>
+          <p className="text-muted-foreground text-sm">{t("No")} {media === "image" ? "pictures" : media} {t("uploaded to this design yet.")}</p>
         ) : (
           <ul className={media === "image" ? "grid grid-cols-2 gap-2 sm:grid-cols-4" : "grid gap-2"}>
             {files.map((asset) => (
@@ -129,7 +131,7 @@ export function MediaPicker({
                       // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
                       <img src={asset.url} alt={asset.fileName} className="aspect-square w-full object-cover" />
                     ) : (
-                      <span className="text-muted-foreground flex aspect-square items-center justify-center text-xs">Unavailable</span>
+                      <span className="text-muted-foreground flex aspect-square items-center justify-center text-xs">{t("Unavailable")}</span>
                     )
                   ) : (
                     <span className="flex items-center gap-2 p-2 text-sm">
@@ -137,13 +139,13 @@ export function MediaPicker({
                       <span className="truncate">{asset.fileName}</span>
                     </span>
                   )}
-                  <span className="sr-only">Use {asset.fileName}</span>
+                  <span className="sr-only">{t("Use {fileName}", { fileName: asset.fileName })}</span>
                 </button>
                 <Button
                   variant="secondary"
                   size="icon"
                   className="absolute top-1 right-1 size-7 opacity-80"
-                  aria-label={`Remove ${asset.fileName}`}
+                  aria-label={t("Remove {fileName}", { fileName: asset.fileName })}
                   onClick={() => void remove(asset)}
                 >
                   <Trash2Icon />

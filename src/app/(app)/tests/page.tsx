@@ -16,12 +16,17 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Tests" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Tests") }
+}
 
 const STATUSES = ["draft", "published", "closed", "archived"] as const satisfies readonly TestStatus[]
 
 export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.tests)
   const db = await createClient()
   const staff = can(user.permissions, "tests.read", ["all", "assigned"])
@@ -32,11 +37,11 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
     const isParent = can(user.permissions, "tests.read", ["children"])
     return (
       <>
-        <PageHeader title="Tests" description={isParent ? "Your children's tests and results." : "Your tests and results."} />
+        <PageHeader title={tr("Tests")} description={isParent ? tr("Your children's tests and results.") : tr("Your tests and results.")} />
         <SimpleTable
           rows={tests}
           rowKey={(t) => t.id}
-          empty={<EmptyState icon={FileCheckIcon} title="No tests yet" />}
+          empty={<EmptyState icon={FileCheckIcon} title={tr("No tests yet")} />}
           columns={[
             { header: "Test", cell: (t) => <TestLink test={t} /> },
             { header: "Class", cell: (t) => t.class?.name ?? "—" },
@@ -45,7 +50,7 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
               header: "Attempts",
               cell: (t) => (
                 <span className="tabular-nums">
-                  {t.test_attempts.length} {isParent ? "" : `of ${t.max_attempts}`}
+                  {t.test_attempts.length} {isParent ? "" : tr("of {max_attempts}", { max_attempts: t.max_attempts })}
                 </span>
               ),
             },
@@ -66,13 +71,13 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
   return (
     <>
       <PageHeader
-        title="Tests"
-        description="Build tests from the question bank, publish them to a class, mark and analyse the results."
+        title={tr("Tests")}
+        description={tr("Build tests from the question bank, publish them to a class, mark and analyse the results.")}
         actions={
           can(user.permissions, "tests.write") && (
             <Button asChild>
               <Link href={routes.testNew}>
-                <PlusIcon aria-hidden /> New test
+                <PlusIcon aria-hidden /> {tr("New test")}
               </Link>
             </Button>
           )
@@ -81,7 +86,7 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
       <ListFilters
         basePath={routes.tests}
         values={{ q, class: classId, status }}
-        searchPlaceholder="Search tests"
+        searchPlaceholder={tr("Search tests")}
         filters={[
           { param: "class", allLabel: "All classes", options: classes.map((c) => ({ value: c.id, label: c.name })) },
           { param: "status", allLabel: "Not archived", options: STATUSES.map((s) => ({ value: s, label: TEST_STATUS_LABELS[s] })) },
@@ -90,7 +95,7 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
       <SimpleTable
         rows={tests}
         rowKey={(t) => t.id}
-        empty={<EmptyState icon={FileCheckIcon} title="No tests match" />}
+        empty={<EmptyState icon={FileCheckIcon} title={tr("No tests match")} />}
         columns={[
           { header: "Test", cell: (t) => <TestLink test={t} /> },
           { header: "Class", cell: (t) => t.class?.name ?? "—" },
@@ -103,7 +108,7 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
               return (
                 <span className="tabular-nums">
                   {students}
-                  {toMark > 0 && <span className="text-muted-foreground"> · {toMark} to mark</span>}
+                  {toMark > 0 && <span className="text-muted-foreground"> {tr("· {toMark} to mark", { toMark })}</span>}
                 </span>
               )
             },
@@ -116,7 +121,7 @@ export default async function TestsPage({ searchParams }: PageProps<"/tests">) {
   )
 }
 
-function TestLink({ test }: { test: TestListItem }) {
+async function TestLink({ test }: { test: TestListItem }) {
   return (
     <Link href={testPath(test.id)} className="font-medium hover:underline">
       {test.title}

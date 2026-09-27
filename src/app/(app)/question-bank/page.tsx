@@ -23,10 +23,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Question bank" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Question bank") }
+}
 
 export default async function QuestionBankPage({ searchParams }: PageProps<"/question-bank">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.questionBank)
   const params = await searchParams
   const filters = {
@@ -55,13 +60,13 @@ export default async function QuestionBankPage({ searchParams }: PageProps<"/que
   return (
     <>
       <PageHeader
-        title="Question bank"
-        description="Reusable questions shared by all teachers. Answer keys are never shown to students."
+        title={tr("Question bank")}
+        description={tr("Reusable questions shared by all teachers. Answer keys are never shown to students.")}
         actions={
           can(user.permissions, "question_bank.write") && (
             <Button asChild>
               <Link href={routes.questionNew}>
-                <PlusIcon aria-hidden /> New question
+                <PlusIcon aria-hidden /> {tr("New question")}
               </Link>
             </Button>
           )
@@ -80,7 +85,7 @@ export default async function QuestionBankPage({ searchParams }: PageProps<"/que
           status: filters.status,
           owner: filters.owner,
         }}
-        searchPlaceholder="Search questions, topics, tags"
+        searchPlaceholder={tr("Search questions, topics, tags")}
         filters={[
           { param: "subject", allLabel: "All subjects", options: subjects.map((s) => ({ value: s.id, label: s.name })) },
           { param: "type", allLabel: "All types", options: QUESTION_TYPES.map((t) => ({ value: t, label: QUESTION_TYPE_LABELS[t] })) },
@@ -95,8 +100,8 @@ export default async function QuestionBankPage({ searchParams }: PageProps<"/que
       <SimpleTable
         rows={questions}
         rowKey={(q) => q.id}
-        empty={<EmptyState icon={LibraryBigIcon} title="No questions match" />}
-        footer={questions.length > 0 && <p className="text-muted-foreground text-sm">{questions.length} questions</p>}
+        empty={<EmptyState icon={LibraryBigIcon} title={tr("No questions match")} />}
+        footer={questions.length > 0 && <p className="text-muted-foreground text-sm">{tr("{length} questions", { length: questions.length })}</p>}
         columns={[
           {
             header: "Question",
@@ -109,7 +114,7 @@ export default async function QuestionBankPage({ searchParams }: PageProps<"/que
               </div>
             ),
           },
-          { header: "Type", cell: (q) => <Badge variant="outline">{QUESTION_TYPE_LABELS[q.question_type]}</Badge> },
+          { header: "Type", cell: (q) => <Badge variant="outline">{tr(QUESTION_TYPE_LABELS[q.question_type])}</Badge> },
           { header: "Subject", cell: (q) => q.subject?.name ?? "—" },
           { header: "Topic", cell: (q) => q.topic ?? "—" },
           { header: "Level", cell: (q) => (q.cefr_level ? CEFR_LABELS[q.cefr_level] : "—") },

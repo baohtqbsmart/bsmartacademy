@@ -22,6 +22,8 @@ export type CurrentUser = {
   phone: string | null
   avatarPath: string | null
   roleCode: string
+  /** Set on accounts created with a default password; cleared when it changes. */
+  mustChangePassword: boolean
   permissions: PermissionGrants
 }
 
@@ -42,7 +44,7 @@ const getSession = cache(async (): Promise<SessionState> => {
   const [profileResult, permissionsResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, email, full_name, phone, avatar_path, role_code, is_active")
+      .select("id, email, full_name, phone, avatar_path, role_code, is_active, must_change_password")
       .eq("id", claimsData.claims.sub)
       .maybeSingle(),
     supabase.rpc("my_permissions"),
@@ -63,6 +65,7 @@ const getSession = cache(async (): Promise<SessionState> => {
       phone: profile.phone,
       avatarPath: profile.avatar_path,
       roleCode: profile.role_code,
+      mustChangePassword: profile.must_change_password,
       permissions: toGrants(permissionsResult.data),
     },
   }

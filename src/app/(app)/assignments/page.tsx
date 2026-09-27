@@ -26,8 +26,12 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Assignments" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Assignments") }
+}
 
 const STATUS_FILTERS = ["current", "draft", "scheduled", "published", "closed", "archived"] as const
 const STATUS_FILTER_LABELS: Record<(typeof STATUS_FILTERS)[number], string> = {
@@ -36,6 +40,7 @@ const STATUS_FILTER_LABELS: Record<(typeof STATUS_FILTERS)[number], string> = {
 }
 
 export default async function AssignmentsPage({ searchParams }: PageProps<"/assignments">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.assignments)
   const db = await createClient()
 
@@ -46,8 +51,8 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
     return (
       <>
         <PageHeader
-          title="Assignments"
-          description={isParent ? "Your children's assignments, what is handed in and returned grades." : "Your assignments and returned grades."}
+          title={tr("Assignments")}
+          description={isParent ? tr("Your children's assignments, what is handed in and returned grades.") : tr("Your assignments and returned grades.")}
         />
         <StudentWorkTable rows={rows} showStudent={isParent} />
       </>
@@ -69,13 +74,13 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
   return (
     <>
       <PageHeader
-        title="Assignments"
-        description="Homework, quizzes and projects set for your classes."
+        title={tr("Assignments")}
+        description={tr("Homework, quizzes and projects set for your classes.")}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={classId ? `${routes.assignmentNew}?class=${classId}` : routes.assignmentNew}>
-                <PlusIcon aria-hidden /> New assignment
+                <PlusIcon aria-hidden /> {tr("New assignment")}
               </Link>
             </Button>
           )
@@ -84,7 +89,7 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
       <ListFilters
         basePath={routes.assignments}
         values={{ q, class: classId, status: status === "current" ? undefined : status, type }}
-        searchPlaceholder="Search assignments"
+        searchPlaceholder={tr("Search assignments")}
         filters={[
           { param: "class", allLabel: "All classes", options: classes.map((c) => ({ value: c.id, label: c.name })) },
           {
@@ -99,7 +104,7 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
       <SimpleTable
         rows={assignments}
         rowKey={(a) => a.id}
-        empty={<EmptyState icon={ClipboardListIcon} title="No assignments match" description={canWrite ? "Create one with “New assignment”." : undefined} />}
+        empty={<EmptyState icon={ClipboardListIcon} title={tr("No assignments match")} description={canWrite ? tr("Create one with “New assignment”.") : undefined} />}
         columns={[
           {
             header: "Assignment",
@@ -108,7 +113,7 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
                 <Link href={assignmentPath(a.id)} className="font-medium hover:underline">
                   {a.title}
                 </Link>
-                <span className="text-muted-foreground text-xs">{ASSIGNMENT_TYPE_LABELS[a.assignment_type]}</span>
+                <span className="text-muted-foreground text-xs">{tr(ASSIGNMENT_TYPE_LABELS[a.assignment_type])}</span>
               </div>
             ),
           },
@@ -123,7 +128,7 @@ export default async function AssignmentsPage({ searchParams }: PageProps<"/assi
               return (
                 <span className="tabular-nums">
                   {handedIn.length}
-                  {toGrade > 0 && <span className="text-muted-foreground"> · {toGrade} to grade</span>}
+                  {toGrade > 0 && <span className="text-muted-foreground"> {tr("· {toGrade} to grade", { toGrade })}</span>}
                 </span>
               )
             },

@@ -17,10 +17,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Courses" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Courses") }
+}
 
 export default async function CoursesPage({ searchParams }: PageProps<"/courses">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.courses)
   const canWrite = can(user.permissions, "courses.write")
   const params = await searchParams
@@ -41,13 +46,13 @@ export default async function CoursesPage({ searchParams }: PageProps<"/courses"
   return (
     <>
       <PageHeader
-        title="Courses"
-        description="Reusable course designs. Every class runs one course."
+        title={t("Courses")}
+        description={t("Reusable course designs. Every class runs one course.")}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={routes.courseNew}>
-                <PlusIcon aria-hidden /> New course
+                <PlusIcon aria-hidden /> {t("New course")}
               </Link>
             </Button>
           )
@@ -56,7 +61,7 @@ export default async function CoursesPage({ searchParams }: PageProps<"/courses"
       <ListFilters
         basePath={routes.courses}
         values={filters}
-        searchPlaceholder="Search courses"
+        searchPlaceholder={t("Search courses")}
         filters={[
           {
             param: "subject",
@@ -81,8 +86,8 @@ export default async function CoursesPage({ searchParams }: PageProps<"/courses"
         empty={
           <EmptyState
             icon={BookOpenIcon}
-            title={filtered ? "No courses match your filters" : "No courses yet"}
-            description={filtered ? "Try removing some filters." : undefined}
+            title={filtered ? t("No courses match your filters") : t("No courses yet")}
+            description={filtered ? t("Try removing some filters.") : undefined}
           />
         }
         columns={[
@@ -111,7 +116,7 @@ export default async function CoursesPage({ searchParams }: PageProps<"/courses"
           { header: "Classes", cell: (c) => c.currentClassCount },
           {
             header: "Status",
-            cell: (c) => <Badge variant={COURSE_STATUS[c.status].variant}>{COURSE_STATUS[c.status].label}</Badge>,
+            cell: (c) => <Badge variant={COURSE_STATUS[c.status].variant}>{t(COURSE_STATUS[c.status].label)}</Badge>,
           },
         ]}
       />

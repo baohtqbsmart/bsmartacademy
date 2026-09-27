@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest"
 
-import { as, column, createTestDb, switchUser, userId, type TestDb } from "./harness"
+import { as, column, createTestDb, switchUser, userId, type Session, type TestDb } from "./harness"
 
 const EMAILS = {
   superAdmin: "superadmin@bsmart.test",
@@ -315,6 +315,48 @@ describe("profiles and privilege escalation", () => {
       ).rejects.toThrow(/permission denied/)
     }
   )
+
+  it("users cannot clear their own required password change", async () => {
+    await expect(
+      as(db, ids.huy, (tx) =>
+        tx.query("update public.profiles set must_change_password = false where id = $1", [ids.huy])
+      )
+    ).rejects.toThrow(/permission denied/)
+  })
+
+  it("new accounts flagged in app metadata must change password, and a password change clears it", async () => {
+    const flag = async (tx: Session, email: string) =>
+      (
+        await tx.query<{ must_change_password: boolean }>(
+          "select must_change_password from public.profiles where email = $1",
+          [email]
+        )
+      ).rows[0]?.must_change_password
+
+    const seen: Record<string, boolean | undefined> = {}
+    await db
+      .transaction(async (tx) => {
+        await tx.query(
+          `insert into auth.users (id, email, encrypted_password, raw_app_meta_data, raw_user_meta_data)
+           values (gen_random_uuid(), 'new.student@bsmart.test', 'hash-1',
+                   '{"role": "student", "must_change_password": true}', '{"full_name": "Học sinh mới"}')`
+        )
+        seen.created = await flag(tx, "new.student@bsmart.test")
+
+        await tx.query("update auth.users set last_sign_in_at = now() where email = 'new.student@bsmart.test'")
+        seen.signedIn = await flag(tx, "new.student@bsmart.test")
+
+        await tx.query("update auth.users set encrypted_password = 'hash-2' where email = 'new.student@bsmart.test'")
+        seen.changed = await flag(tx, "new.student@bsmart.test")
+
+        seen.unflagged = await flag(tx, EMAILS.huy)
+        await tx.rollback()
+      })
+      .catch(() => {
+        // rollback() rejects the transaction promise by design.
+      })
+    expect(seen).toEqual({ created: true, signedIn: true, changed: false, unflagged: false })
+  })
 
   it("users cannot edit someone else's profile", async () => {
     const { rows } = await as(db, ids.huy, (tx) =>

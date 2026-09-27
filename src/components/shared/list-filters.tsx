@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { withParams } from "@/lib/search-params"
+import { useT } from "@/i18n/client"
 
 const ALL = "__all"
 
@@ -41,6 +42,7 @@ type ListFiltersProps = {
  * the same parameters, so lists are shareable and survive reloads.
  */
 export function ListFilters({ basePath, values, searchPlaceholder, filters, preserve = {} }: ListFiltersProps) {
+  const t = useT()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [search, setSearch] = useState(values.q ?? "")
@@ -69,8 +71,8 @@ export function ListFilters({ basePath, values, searchPlaceholder, filters, pres
             type="search"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={searchPlaceholder}
-            aria-label={searchPlaceholder}
+            placeholder={t(searchPlaceholder)}
+            aria-label={t(searchPlaceholder)}
             className="pl-8"
           />
         </div>
@@ -81,14 +83,14 @@ export function ListFilters({ basePath, values, searchPlaceholder, filters, pres
           value={values[filter.param] ?? filter.defaultValue ?? ALL}
           onValueChange={(value) => navigate({ [filter.param]: value === ALL ? undefined : value })}
         >
-          <SelectTrigger className="w-44" aria-label={filter.allLabel}>
+          <SelectTrigger className="w-44" aria-label={t(filter.allLabel)}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {!filter.defaultValue && <SelectItem value={ALL}>{filter.allLabel}</SelectItem>}
+            {!filter.defaultValue && <SelectItem value={ALL}>{t(filter.allLabel)}</SelectItem>}
             {filter.options.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                {t(option.label)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -104,10 +106,10 @@ export function ListFilters({ basePath, values, searchPlaceholder, filters, pres
             startTransition(() => router.replace(withParams(basePath, preserve), { scroll: false }))
           }}
         >
-          <XIcon aria-hidden /> Clear
+          <XIcon aria-hidden /> {t("Clear")}
         </Button>
       )}
-      {isPending && <Loader2Icon className="text-muted-foreground size-4 animate-spin" aria-label="Loading" />}
+      {isPending && <Loader2Icon className="text-muted-foreground size-4 animate-spin" aria-label={t("Loading")} />}
     </div>
   )
 }

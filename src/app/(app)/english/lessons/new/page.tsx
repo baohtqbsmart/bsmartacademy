@@ -8,16 +8,21 @@ import { LESSON_SKILLS } from "@/features/english/skills"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "New lesson" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("New lesson") }
+}
 
 export default async function NewLessonPage({ searchParams }: PageProps<"/english/lessons/new">) {
+  const t = await getT()
   await requireRouteAccess(routes.lessonNew)
   const skill = enumParam(await searchParams, "skill", LESSON_SKILLS) ?? "grammar"
   const words = await listWords(await createClient())
   return (
     <>
-      <PageHeader title="New lesson" />
+      <PageHeader title={t("New lesson")} />
       <LessonForm
         skillLocked={false}
         cancelHref={routes.lessons}

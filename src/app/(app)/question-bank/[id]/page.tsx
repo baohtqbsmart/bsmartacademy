@@ -25,10 +25,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Question" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Question") }
+}
 
 export default async function QuestionPage({ params }: PageProps<"/question-bank/[id]">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.questionDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -54,55 +59,55 @@ export default async function QuestionPage({ params }: PageProps<"/question-bank
   return (
     <>
       <Link href={routes.questionBank} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Question bank
+        <ArrowLeftIcon className="size-4" aria-hidden /> {tr("Question bank")}
       </Link>
       <PageHeader
-        title="Question"
+        title={tr("Question")}
         description={question.tags.length ? question.tags.map((t) => `#${t}`).join(" ") : undefined}
         actions={
           <>
-            {!active && <Badge variant="outline">Archived</Badge>}
+            {!active && <Badge variant="outline">{tr("Archived")}</Badge>}
             {canEdit && active && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={questionEditPath(id)}>
-                  <PencilIcon aria-hidden /> Edit
+                  <PencilIcon aria-hidden /> {tr("Edit")}
                 </Link>
               </Button>
             )}
             {canWrite && (
               <ConfirmActionButton
                 size="sm"
-                title="Duplicate this question?"
-                description="You get your own copy (with its answer key) to adapt; the original is unchanged."
-                confirmLabel="Duplicate"
-                successMessage="Copy created."
+                title={tr("Duplicate this question?")}
+                description={tr("You get your own copy (with its answer key) to adapt; the original is unchanged.")}
+                confirmLabel={tr("Duplicate")}
+                successMessage={tr("Copy created.")}
                 action={duplicateQuestionAction.bind(null, { questionId: id })}
               >
-                <CopyIcon aria-hidden /> Duplicate
+                <CopyIcon aria-hidden /> {tr("Duplicate")}
               </ConfirmActionButton>
             )}
             {canEdit &&
               (active ? (
                 <ConfirmActionButton
                   size="sm"
-                  title="Archive this question?"
-                  description="It leaves the bank's active list and cannot be added to new tests. Tests already using it keep their copy."
-                  confirmLabel="Archive"
-                  successMessage="Question archived."
+                  title={tr("Archive this question?")}
+                  description={tr("It leaves the bank's active list and cannot be added to new tests. Tests already using it keep their copy.")}
+                  confirmLabel={tr("Archive")}
+                  successMessage={tr("Question archived.")}
                   action={archiveQuestionAction.bind(null, { questionId: id })}
                 >
-                  <ArchiveIcon aria-hidden /> Archive
+                  <ArchiveIcon aria-hidden /> {tr("Archive")}
                 </ConfirmActionButton>
               ) : (
                 <ConfirmActionButton
                   size="sm"
-                  title="Restore this question?"
-                  description="It returns to the active bank."
-                  confirmLabel="Restore"
-                  successMessage="Question restored."
+                  title={tr("Restore this question?")}
+                  description={tr("It returns to the active bank.")}
+                  confirmLabel={tr("Restore")}
+                  successMessage={tr("Question restored.")}
                   action={restoreQuestionAction.bind(null, { questionId: id })}
                 >
-                  <ArchiveRestoreIcon aria-hidden /> Restore
+                  <ArchiveRestoreIcon aria-hidden /> {tr("Restore")}
                 </ConfirmActionButton>
               ))}
           </>
@@ -112,8 +117,8 @@ export default async function QuestionPage({ params }: PageProps<"/question-bank
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Preview with answer key</CardTitle>
-            <CardDescription>Staff only. Students see the question without the key, inside a test.</CardDescription>
+            <CardTitle>{tr("Preview with answer key")}</CardTitle>
+            <CardDescription>{tr("Staff only. Students see the question without the key, inside a test.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <QuestionPreview
@@ -127,26 +132,26 @@ export default async function QuestionPage({ params }: PageProps<"/question-bank
             />
             {canEdit && active && (
               <div className="grid gap-2 border-t pt-4">
-                <span className="text-sm font-medium">{question.question_type === "listening" ? "Audio" : "Picture or audio (optional)"}</span>
+                <span className="text-sm font-medium">{question.question_type === "listening" ? tr("Audio") : tr("Picture or audio (optional)")}</span>
                 {question.media_path && (
                   <div>
                     <ConfirmActionButton
                       variant="ghost"
                       size="sm"
-                      title="Remove the media?"
-                      description="Tests that already use this question keep theirs."
-                      confirmLabel="Remove"
-                      successMessage="Media removed."
+                      title={tr("Remove the media?")}
+                      description={tr("Tests that already use this question keep theirs.")}
+                      confirmLabel={tr("Remove")}
+                      successMessage={tr("Media removed.")}
                       action={removeQuestionMediaAction.bind(null, { questionId: id })}
                     >
-                      <XIcon aria-hidden /> Remove media
+                      <XIcon aria-hidden /> {tr("Remove media")}
                     </ConfirmActionButton>
                   </div>
                 )}
                 <FileUploader
                   target={{ kind: "question", questionId: id }}
                   remaining={1}
-                  label={question.media_path ? "Replace media" : "Upload media"}
+                  label={question.media_path ? tr("Replace media") : tr("Upload media")}
                   accept=".mp3,.m4a,.wav,.webm,.png,.jpg,.jpeg,.webp"
                 />
               </div>
@@ -159,25 +164,25 @@ export default async function QuestionPage({ params }: PageProps<"/question-bank
             <CardContent className="grid gap-3">
               {details.map(([label, value]) => (
                 <div key={label} className="grid gap-0.5">
-                  <span className="text-muted-foreground text-xs">{label}</span>
+                  <span className="text-muted-foreground text-xs">{tr(label)}</span>
                   <span className="text-sm">{value}</span>
                 </div>
               ))}
               {question.duplicated_from && (
                 <Link href={questionPath(question.duplicated_from)} className="text-sm hover:underline">
-                  Copied from another question
+                  {tr("Copied from another question")}
                 </Link>
               )}
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Used in tests</CardTitle>
-              <CardDescription>Only tests you can see are listed.</CardDescription>
+              <CardTitle>{tr("Used in tests")}</CardTitle>
+              <CardDescription>{tr("Only tests you can see are listed.")}</CardDescription>
             </CardHeader>
             <CardContent>
               {question.usedIn.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Not used yet.</p>
+                <p className="text-muted-foreground text-sm">{tr("Not used yet.")}</p>
               ) : (
                 <ul className="grid gap-1 text-sm">
                   {question.usedIn.map((test) => (
@@ -187,7 +192,7 @@ export default async function QuestionPage({ params }: PageProps<"/question-bank
                       </Link>
                       <span className="text-muted-foreground">
                         {" "}
-                        · {test.class?.name} · {TEST_STATUS_LABELS[test.status]}
+                        · {test.class?.name} · {tr(TEST_STATUS_LABELS[test.status])}
                       </span>
                     </li>
                   ))}

@@ -18,10 +18,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { enumParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Writing & speaking" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Writing & speaking") }
+}
 
 export default async function AssessmentsPage({ searchParams }: PageProps<"/assessments">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.assessments)
   const params = await searchParams
   const db = await createClient()
@@ -36,30 +41,30 @@ export default async function AssessmentsPage({ searchParams }: PageProps<"/asse
   return (
     <>
       <PageHeader
-        title="Writing & speaking"
-        description={staff ? "Writing and speaking tasks, marked with rubrics and detailed feedback." : "Your writing and speaking tasks and feedback."}
+        title={tr("Writing & speaking")}
+        description={staff ? tr("Writing and speaking tasks, marked with rubrics and detailed feedback.") : tr("Your writing and speaking tasks and feedback.")}
         actions={
           <>
             <Button variant="outline" asChild>
               <Link href={routes.assessmentHistory}>
-                <HistoryIcon aria-hidden /> History
+                <HistoryIcon aria-hidden /> {tr("History")}
               </Link>
             </Button>
             {canWrite && (
               <>
                 <Button variant="outline" asChild>
                   <Link href={routes.assessmentRubrics}>
-                    <LibraryIcon aria-hidden /> Rubrics
+                    <LibraryIcon aria-hidden /> {tr("Rubrics")}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>
                   <Link href={routes.feedbackComments}>
-                    <MessageSquareTextIcon aria-hidden /> Comment library
+                    <MessageSquareTextIcon aria-hidden /> {tr("Comment library")}
                   </Link>
                 </Button>
                 <Button asChild>
                   <Link href={routes.assessmentNew}>
-                    <PlusIcon aria-hidden /> New task
+                    <PlusIcon aria-hidden /> {tr("New task")}
                   </Link>
                 </Button>
               </>
@@ -79,7 +84,7 @@ export default async function AssessmentsPage({ searchParams }: PageProps<"/asse
       <SimpleTable
         rows={tasks}
         rowKey={(t) => t.id}
-        empty={<EmptyState icon={PenLineIcon} title="No tasks yet" />}
+        empty={<EmptyState icon={PenLineIcon} title={tr("No tasks yet")} />}
         columns={[
           {
             header: "Task",
@@ -88,11 +93,11 @@ export default async function AssessmentsPage({ searchParams }: PageProps<"/asse
                 <Link href={assessmentPath(t.id)} className="font-medium hover:underline">
                   {t.title}
                 </Link>
-                <span className="text-muted-foreground text-xs">{RESPONSE_LABELS[t.response_mode]}</span>
+                <span className="text-muted-foreground text-xs">{tr(RESPONSE_LABELS[t.response_mode])}</span>
               </div>
             ),
           },
-          { header: "Kind", cell: (t) => <Badge variant="outline">{KIND_LABELS[t.kind]}</Badge> },
+          { header: "Kind", cell: (t) => <Badge variant="outline">{tr(KIND_LABELS[t.kind])}</Badge> },
           { header: "Class", cell: (t) => t.class?.name ?? "—" },
           { header: "Level", cell: (t) => (t.cefr_level ? CEFR_LABELS[t.cefr_level] : "—") },
           { header: "Due", cell: (t) => <span className="tabular-nums">{formatDateTime(t.due_at)}</span> },
@@ -106,18 +111,20 @@ export default async function AssessmentsPage({ searchParams }: PageProps<"/asse
   )
 }
 
-function StaffCounts({ task }: { task: TaskListItem }) {
+async function StaffCounts({ task }: { task: TaskListItem }) {
+  const t = await getT()
   const students = new Set(task.assessment_submissions.map((s) => s.student_id)).size
   const toGrade = task.assessment_submissions.filter((s) => s.status === "submitted").length
   return (
     <span className="tabular-nums">
-      {students} handed in{toGrade > 0 && <span className="text-muted-foreground"> · {toGrade} to grade</span>}
+      {t("{students} handed in", { students })}{toGrade > 0 && <span className="text-muted-foreground"> {t("· {toGrade} to grade", { toGrade })}</span>}
     </span>
   )
 }
 
-function FamilyStatus({ task }: { task: TaskListItem }) {
-  if (task.assessment_submissions.length === 0) return <span className="text-muted-foreground">Not handed in</span>
+async function FamilyStatus({ task }: { task: TaskListItem }) {
+  const t = await getT()
+  if (task.assessment_submissions.length === 0) return <span className="text-muted-foreground">{t("Not handed in")}</span>
   const returned = task.assessment_submissions.some((s) => s.status === "returned")
-  return <span>{returned ? "Feedback ready" : "Handed in"}</span>
+  return <span>{returned ? t("Feedback ready") : t("Handed in")}</span>
 }

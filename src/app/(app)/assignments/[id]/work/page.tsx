@@ -14,10 +14,15 @@ import { listAttempts } from "@/features/assignments/server/submission-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Work on assignment" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Work on assignment") }
+}
 
 export default async function AssignmentWorkPage({ params }: PageProps<"/assignments/[id]/work">) {
+  const t = await getT()
   await requireRouteAccess(routes.assignmentWork)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -39,11 +44,11 @@ export default async function AssignmentWorkPage({ params }: PageProps<"/assignm
       </Link>
       <PageHeader
         title={assignment.title}
-        description={`${assignment.class?.name ?? ""}${assignment.due_at ? ` · due ${formatDateTime(assignment.due_at)}` : ""}`}
+        description={t("{value}{value2}", { value: assignment.class?.name ?? "", value2: assignment.due_at ? ` · due ${formatDateTime(assignment.due_at)}` : "" })}
       />
       <Card>
         <CardHeader>
-          <CardTitle>Instructions</CardTitle>
+          <CardTitle>{t("Instructions")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3">
           <p className="text-sm whitespace-pre-wrap">{assignment.instructions || assignment.description || "—"}</p>

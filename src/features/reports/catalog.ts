@@ -103,7 +103,8 @@ export type Cell = string | number | null
 export type Row = Record<string, Cell>
 
 /** Spreadsheet-safe CSV: quoted where needed, formulas neutralised, UTF-8 BOM for Excel. */
-export function toCsv(columns: Column[], rows: Row[]) {
+/** `translate` renders headers and status values in the reader's language. */
+export function toCsv(columns: Column[], rows: Row[], translate: (text: string) => string = (text) => text) {
   const escape = (value: Cell) => {
     if (value === null || value === undefined) return ""
     let text = String(value)
@@ -111,7 +112,8 @@ export function toCsv(columns: Column[], rows: Row[]) {
     if (typeof value === "string" && /^[=+\-@\t\r]/.test(text)) text = `'${text}`
     return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
   }
-  const lines = [columns.map((c) => escape(c.label)).join(","), ...rows.map((r) => columns.map((c) => escape(r[c.key])).join(","))]
+  const cell = (c: Column, value: Cell) => (c.key === "status" && typeof value === "string" ? translate(value.replaceAll("_", " ")) : value)
+  const lines = [columns.map((c) => escape(translate(c.label))).join(","), ...rows.map((r) => columns.map((c) => escape(cell(c, r[c.key]))).join(","))]
   return "﻿" + lines.join("\r\n") + "\r\n"
 }
 

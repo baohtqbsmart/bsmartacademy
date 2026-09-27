@@ -12,28 +12,33 @@ import { KIND_LABELS, maxScore, SCORING_LABELS } from "@/features/assessments/sc
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Rubrics" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Rubrics") }
+}
 
 export default async function RubricsPage() {
+  const t = await getT()
   const user = await requireRouteAccess(routes.assessmentRubrics)
   const rubrics = await listRubrics(await createClient())
   const admin = can(user.permissions, "assessments.write", ["all"])
 
   return (
     <>
-      <PageHeader title="Rubrics" description="Templates for writing and speaking tasks. Tasks copy a rubric when they are set." actions={<RubricDialog />} />
+      <PageHeader title={t("Rubrics")} description={t("Templates for writing and speaking tasks. Tasks copy a rubric when they are set.")} actions={<RubricDialog />} />
       <div className="grid gap-4 md:grid-cols-2">
         {rubrics.map((r) => (
           <Card key={r.id}>
             <CardHeader>
               <CardTitle className="flex flex-wrap items-center gap-2">
                 {r.name}
-                <Badge variant="outline">{KIND_LABELS[r.kind]}</Badge>
-                {r.is_system && <Badge variant="secondary">Built-in</Badge>}
+                <Badge variant="outline">{t(KIND_LABELS[r.kind])}</Badge>
+                {r.is_system && <Badge variant="secondary">{t("Built-in")}</Badge>}
               </CardTitle>
               <CardDescription>
-                {SCORING_LABELS[r.scoring]} · maximum {maxScore(r.scoring, r.criteriaList)}
+                {t("{value} · maximum {maxScore}", { value: SCORING_LABELS[r.scoring], maxScore: maxScore(r.scoring, r.criteriaList) })}
                 {r.description && ` · ${r.description}`}
               </CardDescription>
               {!r.is_system && (admin || r.created_by === user.id) && (
@@ -48,8 +53,8 @@ export default async function RubricsPage() {
                       criteria: r.criteriaList.map((c) => ({ name: c.name, description: c.description ?? "", maxPoints: String(c.max_points) })),
                     }}
                   />
-                  <ConfirmActionButton variant="ghost" size="sm" title="Archive this rubric?" description="Tasks that use it keep their copy." confirmLabel="Archive" successMessage="Rubric archived." action={archiveRubricAction.bind(null, { rubricId: r.id })}>
-                    Archive
+                  <ConfirmActionButton variant="ghost" size="sm" title={t("Archive this rubric?")} description={t("Tasks that use it keep their copy.")} confirmLabel={t("Archive")} successMessage={t("Rubric archived.")} action={archiveRubricAction.bind(null, { rubricId: r.id })}>
+                    {t("Archive")}
                   </ConfirmActionButton>
                 </CardAction>
               )}

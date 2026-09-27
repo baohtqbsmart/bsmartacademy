@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { deleteUnitAction, moveUnitAction, saveUnitAction } from "@/features/courses/actions"
+import { useT } from "@/i18n/client"
 
 type UnitValues = { unitId?: string; title: string; description: string; sessionCount: string }
 
 export function UnitDialog({ courseId, initial }: { courseId: string; initial?: UnitValues }) {
+  const t = useT()
   const empty: UnitValues = { title: "", description: "", sessionCount: "" }
   const [values, setValues] = useState<UnitValues>(initial ?? empty)
   const set = (key: keyof UnitValues) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -24,31 +26,31 @@ export function UnitDialog({ courseId, initial }: { courseId: string; initial?: 
     <ActionDialog
       trigger={
         initial ? (
-          <Button variant="ghost" size="icon" aria-label={`Edit ${initial.title}`}>
+          <Button variant="ghost" size="icon" aria-label={t("Edit {title}", { title: initial.title })}>
             <PencilIcon />
           </Button>
         ) : (
           <Button variant="outline" size="sm">
-            <PlusIcon aria-hidden /> Add unit
+            <PlusIcon aria-hidden /> {t("Add unit")}
           </Button>
         )
       }
-      title={initial ? "Edit unit" : "Add a unit"}
-      description="Units make up the course structure shared by every class of this course."
-      submitLabel={initial ? "Save" : "Add unit"}
-      successMessage={initial ? "Unit updated." : "Unit added."}
+      title={initial ? t("Edit unit") : t("Add a unit")}
+      description={t("Units make up the course structure shared by every class of this course.")}
+      submitLabel={initial ? t("Save") : t("Add unit")}
+      successMessage={initial ? t("Unit updated.") : t("Unit added.")}
       onOpen={() => setValues(initial ?? empty)}
       onSubmit={() => saveUnitAction({ ...values, courseId })}
     >
       <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
-        <Field id="unit-title" label="Title">
+        <Field id="unit-title" label={t("Title")}>
           <Input id="unit-title" value={values.title} onChange={set("title")} />
         </Field>
-        <Field id="unit-sessions" label="Sessions">
+        <Field id="unit-sessions" label={t("Sessions")}>
           <Input id="unit-sessions" inputMode="numeric" value={values.sessionCount} onChange={set("sessionCount")} />
         </Field>
       </div>
-      <Field id="unit-description" label="Description">
+      <Field id="unit-description" label={t("Description")}>
         <Textarea id="unit-description" rows={3} value={values.description} onChange={set("description")} />
       </Field>
     </ActionDialog>
@@ -66,6 +68,7 @@ export function UnitControls({
   isFirst: boolean
   isLast: boolean
 }) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
 
   function move(direction: "up" | "down") {
@@ -77,10 +80,10 @@ export function UnitControls({
 
   return (
     <div className="flex justify-end gap-1">
-      <Button variant="ghost" size="icon" disabled={isFirst || isPending} onClick={() => move("up")} aria-label="Move up">
+      <Button variant="ghost" size="icon" disabled={isFirst || isPending} onClick={() => move("up")} aria-label={t("Move up")}>
         <ArrowUpIcon />
       </Button>
-      <Button variant="ghost" size="icon" disabled={isLast || isPending} onClick={() => move("down")} aria-label="Move down">
+      <Button variant="ghost" size="icon" disabled={isLast || isPending} onClick={() => move("down")} aria-label={t("Move down")}>
         <ArrowDownIcon />
       </Button>
       <UnitDialog
@@ -95,11 +98,11 @@ export function UnitControls({
       <ConfirmActionButton
         variant="ghost"
         size="icon"
-        aria-label={`Delete ${unit.title}`}
-        title="Delete unit?"
-        description={`"${unit.title}" will be removed from the course structure.`}
-        confirmLabel="Delete"
-        successMessage="Unit deleted."
+        aria-label={t("Delete {title}", { title: unit.title })}
+        title={t("Delete unit?")}
+        description={t("\"{title}\" will be removed from the course structure.", { title: unit.title })}
+        confirmLabel={t("Delete")}
+        successMessage={t("Unit deleted.")}
         destructive
         action={() => deleteUnitAction({ unitId: unit.id })}
       >

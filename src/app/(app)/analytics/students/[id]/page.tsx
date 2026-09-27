@@ -30,10 +30,15 @@ import { todayInAcademy } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Student progress" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Student progress") }
+}
 
 export default async function StudentProgressPage({ params, searchParams }: PageProps<"/analytics/students/[id]">) {
+  const t = await getT()
   await requireRouteAccess(routes.analyticsStudent)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -78,53 +83,53 @@ export default async function StudentProgressPage({ params, searchParams }: Page
   return (
     <>
       <Link href={routes.analytics} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Progress
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Progress")}
       </Link>
       <PageHeader
         title={student.full_name}
-        description={`${student.student_code} · ${student.classes.map((c) => c.name).join(", ") || "No current class"}`}
+        description={t("{student_code} · {value}", { student_code: student.student_code, value: student.classes.map((c) => c.name).join(", ") || "No current class" })}
         actions={
           <div className="flex flex-col items-end gap-1 text-sm">
             <span className="flex items-center gap-2">
-              <Badge variant="outline">Level</Badge>
-              {student.level ? `${student.level.name}${student.level.cefr ? ` (≈ CEFR ${student.level.cefr})` : ""}` : "Not recorded"}
+              <Badge variant="outline">{t("Level")}</Badge>
+              {student.level ? `${student.level.name}${student.level.cefr ? t(" (≈ CEFR {cefr})", { cefr: student.level.cefr }) : ""}` : t("Not recorded")}
             </span>
-            {student.target && <span className="text-muted-foreground text-xs">Target: {student.target.name} · levels are recorded by staff, not calculated</span>}
+            {student.target && <span className="text-muted-foreground text-xs">{t("Target: {name} · levels are recorded by staff, not calculated", { name: student.target.name })}</span>}
           </div>
         }
       />
       <DateRangeFilter basePath={analyticsStudentPath(id)} from={range.from} to={range.to} max={today} />
       <p className="text-muted-foreground -mt-3 text-xs">
-        Compared with the {range.days} days before ({previousLabel}).
+        {t("Compared with the {days} days before ({previousLabel}).", { days: range.days, previousLabel })}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <ScoreCard label="All scored work" measure="Average percentage" value={pct(overall.averagePercent)} basis={averageBasis(overall)} comparison={comparisonOf(change, "Before")} warning={overall.lowConfidence ? "Fewer than 3 results" : null} />
-        <ScoreCard label="Tests" measure="Average percentage" value={pct(tests.averagePercent)} basis={averageBasis(tests) + (tests.scored ? " (best attempt each)" : "")} comparison={comparisonOf(compare(tests, testsBefore), "Before")} />
+        <ScoreCard label={t("All scored work")} measure="Average percentage" value={pct(overall.averagePercent)} basis={averageBasis(overall)} comparison={comparisonOf(change, "Before")} warning={overall.lowConfidence ? "Fewer than 3 results" : null} />
+        <ScoreCard label={t("Tests")} measure="Average percentage" value={pct(tests.averagePercent)} basis={averageBasis(tests) + (tests.scored ? " (best attempt each)" : "")} comparison={comparisonOf(compare(tests, testsBefore), "Before")} />
         <ScoreCard
-          label="Attendance"
+          label={t("Attendance")}
           measure="Rate"
           value={rate(attendance.rate)}
           basis={`${attendance.total.present + attendance.total.late} of ${attendance.total.present + attendance.total.late + attendance.total.absent} sessions attended (excused not counted)`}
           comparison={{ text: `Before: ${rate(attendanceBefore.rate)}`, delta: attendance.rate !== null && attendanceBefore.rate !== null ? Math.round((attendance.rate - attendanceBefore.rate) * 100) : null }}
         />
         <ScoreCard
-          label="Homework handed in"
+          label={t("Homework handed in")}
           measure="Rate"
           value={rate(hw.completionRate)}
           basis={hw.due ? `${Math.min(hw.handedIn, hw.due)} of ${hw.due} due (${hw.late} late, ${hw.missing} missing)${hw.notDue ? ` · ${hw.notDue} not due yet` : ""}` : "No homework due in this period"}
           comparison={{ text: `Before: ${rate(hwBefore.completionRate)}`, delta: hw.completionRate !== null && hwBefore.completionRate !== null ? Math.round((hw.completionRate - hwBefore.completionRate) * 100) : null }}
         />
-        <ScoreCard label="Teacher-assessed work" measure="Teacher assessment" value={pct(summarize(teacherAssessed).averagePercent)} basis={averageBasis(summarize(teacherAssessed))} />
-        <ScoreCard label="Vocabulary" measure="Count" value={`${vocab.secure} / ${vocab.total}`} basis="Words secure (reviewed after a week or more) of the words practised — current, not limited by the dates" />
-        <ScoreCard label="Other subjects" measure="Average percentage" value={pct(nonEnglish.averagePercent)} basis={averageBasis(nonEnglish) + " (work without an English skill)"} />
+        <ScoreCard label={t("Teacher-assessed work")} measure="Teacher assessment" value={pct(summarize(teacherAssessed).averagePercent)} basis={averageBasis(summarize(teacherAssessed))} />
+        <ScoreCard label={t("Vocabulary")} measure="Count" value={`${vocab.secure} / ${vocab.total}`} basis="Words secure (reviewed after a week or more) of the words practised — current, not limited by the dates" />
+        <ScoreCard label={t("Other subjects")} measure="Average percentage" value={pct(nonEnglish.averagePercent)} basis={averageBasis(nonEnglish) + " (work without an English skill)"} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>English skills</CardTitle>
-            <CardDescription>Average percentage per skill in the chosen dates. Each bar shows how many results it rests on and who marked them.</CardDescription>
+            <CardTitle>{t("English skills")}</CardTitle>
+            <CardDescription>{t("Average percentage per skill in the chosen dates. Each bar shows how many results it rests on and who marked them.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <SkillBars skills={skills} previous={skillsBefore} />
@@ -132,14 +137,14 @@ export default async function StudentProgressPage({ params, searchParams }: Page
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Skill profile</CardTitle>
-            <CardDescription>{radar ? "Skills with results only; a missing skill is not a zero." : "Shown when at least three skills have results — use the bars until then."}</CardDescription>
+            <CardTitle>{t("Skill profile")}</CardTitle>
+            <CardDescription>{radar ? t("Skills with results only; a missing skill is not a zero.") : t("Shown when at least three skills have results — use the bars until then.")}</CardDescription>
           </CardHeader>
           <CardContent>
             {radar ? (
               <SkillRadarChart data={radar.map((s) => ({ skill: SKILL_NAMES[s.skill], value: s.averagePercent!, results: s.scored }))} />
             ) : (
-              <p className="text-muted-foreground py-10 text-center text-sm">{skills.filter((s) => s.scored > 0).length} of 7 skills have results in this period.</p>
+              <p className="text-muted-foreground py-10 text-center text-sm">{skills.filter((s) => s.scored > 0).length} {t("of 7 skills have results in this period.")}</p>
             )}
           </CardContent>
         </Card>
@@ -147,9 +152,9 @@ export default async function StudentProgressPage({ params, searchParams }: Page
 
       <Card>
         <CardHeader>
-          <CardTitle>Progress over time</CardTitle>
+          <CardTitle>{t("Progress over time")}</CardTitle>
           <CardDescription>
-            Average percentage per {series.granularity}. Gaps are periods without results (not zeros). Bands are not included.
+            {t("Average percentage per {granularity}. Gaps are periods without results (not zeros). Bands are not included.", { granularity: series.granularity })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,8 +164,8 @@ export default async function StudentProgressPage({ params, searchParams }: Page
 
       <Card>
         <CardHeader>
-          <CardTitle>By source</CardTitle>
-          <CardDescription>Assignments, quizzes and tests are class work; exercises and practice are self-study.</CardDescription>
+          <CardTitle>{t("By source")}</CardTitle>
+          <CardDescription>{t("Assignments, quizzes and tests are class work; exercises and practice are self-study.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <SourceTable rows={sourceSummaries(results)} />
@@ -169,8 +174,8 @@ export default async function StudentProgressPage({ params, searchParams }: Page
 
       <Card>
         <CardHeader>
-          <CardTitle>All results ({results.length})</CardTitle>
-          <CardDescription>The raw scores behind every number on this page.</CardDescription>
+          <CardTitle>{t("All results ({length})", { length: results.length })}</CardTitle>
+          <CardDescription>{t("The raw scores behind every number on this page.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <ResultsTable results={results} />

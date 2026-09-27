@@ -20,8 +20,10 @@ import { Input } from "@/components/ui/input"
 import { setPasswordAction } from "@/features/auth/actions"
 import { setPasswordSchema } from "@/features/auth/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 export function SetPasswordForm() {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -51,11 +53,11 @@ export function SetPasswordForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>New password</FormLabel>
+              <FormLabel>{t("New password")}</FormLabel>
               <FormControl>
                 <Input type="password" autoComplete="new-password" autoFocus {...field} />
               </FormControl>
-              <FormDescription>At least 8 characters.</FormDescription>
+              <FormDescription>{t("At least 8 characters.")}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -65,7 +67,7 @@ export function SetPasswordForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm password</FormLabel>
+              <FormLabel>{t("Confirm password")}</FormLabel>
               <FormControl>
                 <Input type="password" autoComplete="new-password" {...field} />
               </FormControl>
@@ -74,7 +76,7 @@ export function SetPasswordForm() {
           )}
         />
         <SubmitButton pending={isPending} className="w-full">
-          Save password
+          {t("Save password")}
         </SubmitButton>
       </form>
     </Form>

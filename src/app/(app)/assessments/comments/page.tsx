@@ -11,27 +11,32 @@ import { listComments } from "@/features/assessments/server/assessment-service"
 import { CATEGORY_LABELS, KIND_LABELS } from "@/features/assessments/scoring"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Comment library" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Comment library") }
+}
 
 export default async function CommentsPage() {
+  const t = await getT()
   const user = await requireRouteAccess(routes.feedbackComments)
   const comments = await listComments(await createClient())
 
   return (
     <>
       <PageHeader
-        title="Comment library"
-        description="Reusable feedback comments. Shared ones are visible to every teacher; yours can be private."
+        title={t("Comment library")}
+        description={t("Reusable feedback comments. Shared ones are visible to every teacher; yours can be private.")}
         actions={<CommentDialog />}
       />
       <SimpleTable
         rows={comments}
         rowKey={(c) => c.id}
-        empty={<EmptyState icon={MessageSquareTextIcon} title="No comments yet" />}
+        empty={<EmptyState icon={MessageSquareTextIcon} title={t("No comments yet")} />}
         columns={[
           { header: "Comment", cell: (c) => <span className="whitespace-normal">{c.body}</span> },
-          { header: "Category", cell: (c) => <Badge variant="outline">{CATEGORY_LABELS[c.category]}</Badge> },
+          { header: "Category", cell: (c) => <Badge variant="outline">{t(CATEGORY_LABELS[c.category])}</Badge> },
           { header: "For", cell: (c) => (c.kind ? KIND_LABELS[c.kind] : "Both") },
           { header: "Visibility", cell: (c) => (c.shared ? "Shared" : "Only me") },
           { header: "Author", cell: (c) => (c.created_by === user.id ? "You" : c.created_by_name || "BSmart") },

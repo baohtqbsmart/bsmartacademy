@@ -8,6 +8,7 @@ import { ButtonBody, MediaCard, PageView, type AssetUrls } from "@/features/desi
 import { useFitScale } from "@/features/designer/components/use-fit-scale"
 import { isCorrect, PAGE_SIZES, videoEmbedUrl, type DesignContent, type DesignElement, type ElementOf } from "@/features/designer/model"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n/client"
 
 type Response = { selected: number[]; text: string; checked: boolean }
 
@@ -17,6 +18,7 @@ type Response = { selected: number[]; text: string; checked: boolean }
  * or graded — use Tests or Assignments for that).
  */
 export function Presenter({ content, assets, title, onClose, className }: { content: DesignContent; assets: AssetUrls; title: string; onClose?: () => void; className?: string }) {
+  const t = useT()
   const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState<Set<string>>(new Set())
   const [responses, setResponses] = useState<Record<string, Response>>({})
@@ -97,23 +99,23 @@ export function Presenter({ content, assets, title, onClose, className }: { cont
         const url = assets[el.assetId]?.url
         return url ? (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center" }}>
-            <audio controls src={url} style={{ width: "100%" }} aria-label={el.label || "Audio"} />
+            <audio controls src={url} style={{ width: "100%" }} aria-label={el.label || t("Audio")} />
           </div>
         ) : (
-          <MediaCard icon={null} label="Audio unavailable" />
+          <MediaCard icon={null} label={t("Audio unavailable")} />
         )
       }
       case "video": {
         if (el.assetId) {
           const url = assets[el.assetId]?.url
-          return url ? <video controls src={url} style={{ width: "100%", height: "100%", background: "#000", borderRadius: 12 }} aria-label={el.label || "Video"} /> : <MediaCard icon={null} label="Video unavailable" />
+          return url ? <video controls src={url} style={{ width: "100%", height: "100%", background: "#000", borderRadius: 12 }} aria-label={el.label || t("Video")} /> : <MediaCard icon={null} label={t("Video unavailable")} />
         }
         const embed = el.url ? videoEmbedUrl(el.url) : null
         if (embed)
           return (
             <iframe
               src={embed}
-              title={el.label || "Video"}
+              title={el.label || t("Video")}
               style={{ width: "100%", height: "100%", border: 0, borderRadius: 12 }}
               allow="encrypted-media; picture-in-picture; fullscreen"
               sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
@@ -122,7 +124,7 @@ export function Presenter({ content, assets, title, onClose, className }: { cont
           )
         return (
           <a href={el.url ?? "#"} target="_blank" rel="noopener noreferrer" style={{ all: "unset", display: "block", width: "100%", height: "100%", cursor: "pointer" }}>
-            <MediaCard icon={<ExternalLinkIcon style={{ width: 28, height: 28 }} />} label={`${el.label || "Video"} — open link`} />
+            <MediaCard icon={<ExternalLinkIcon style={{ width: 28, height: 28 }} />} label={t("{value} — open link", { value: el.label || "Video" })} />
           </a>
         )
       }
@@ -137,14 +139,14 @@ export function Presenter({ content, assets, title, onClose, className }: { cont
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{title}</span>
         {hasHidden && (
           <Button size="sm" variant="outline" onClick={reveal} disabled={isRevealed}>
-            <EyeIcon aria-hidden /> {isRevealed ? "Revealed" : "Reveal"}
+            <EyeIcon aria-hidden /> {isRevealed ? t("Revealed") : t("Reveal")}
           </Button>
         )}
-        <Button size="icon" variant="ghost" onClick={toggleFullscreen} aria-label={fullscreen ? "Exit full screen" : "Full screen"}>
+        <Button size="icon" variant="ghost" onClick={toggleFullscreen} aria-label={fullscreen ? t("Exit full screen") : t("Full screen")}>
           {fullscreen ? <MinimizeIcon /> : <MaximizeIcon />}
         </Button>
         {onClose && (
-          <Button size="icon" variant="ghost" onClick={onClose} aria-label="Close preview">
+          <Button size="icon" variant="ghost" onClick={onClose} aria-label={t("Close preview")}>
             <XIcon />
           </Button>
         )}
@@ -159,13 +161,13 @@ export function Presenter({ content, assets, title, onClose, className }: { cont
         )}
       </div>
       <div className="bg-background flex items-center justify-center gap-3 border-t px-3 py-2">
-        <Button size="icon" variant="outline" onClick={() => go(index - 1)} disabled={index === 0} aria-label="Previous page">
+        <Button size="icon" variant="outline" onClick={() => go(index - 1)} disabled={index === 0} aria-label={t("Previous page")}>
           <ChevronLeftIcon />
         </Button>
         <span className="text-sm tabular-nums" aria-live="polite">
           {index + 1} / {content.pages.length}
         </span>
-        <Button size="icon" variant="outline" onClick={() => go(index + 1)} disabled={index === content.pages.length - 1} aria-label="Next page">
+        <Button size="icon" variant="outline" onClick={() => go(index + 1)} disabled={index === content.pages.length - 1} aria-label={t("Next page")}>
           <ChevronRightIcon />
         </Button>
       </div>
@@ -174,6 +176,7 @@ export function Presenter({ content, assets, title, onClose, className }: { cont
 }
 
 function PracticeQuestion({ el, response, onChange }: { el: ElementOf<"question">; response: Response; onChange: (r: Response) => void }) {
+  const t = useT()
   const multiple = el.questionType === "multiple_choice" && el.correct.length > 1
   const right = response.checked && isCorrect(el, response)
   const toggle = (i: number) => {
@@ -232,11 +235,11 @@ function PracticeQuestion({ el, response, onChange }: { el: ElementOf<"question"
           onClick={() => onChange({ ...response, checked: true })}
           style={{ all: "unset", cursor: answered ? "pointer" : "not-allowed", opacity: answered ? 1 : 0.5, background: "#0f766e", color: "#fff", padding: "4px 16px", borderRadius: 999, fontSize: el.fontSize * 0.8, fontWeight: 700 }}
         >
-          Check
+          {t("Check")}
         </button>
         {response.checked && (
           <span role="status" style={{ fontWeight: 700, color: right ? "#15803d" : "#b91c1c", fontSize: el.fontSize * 0.85 }}>
-            {right ? "✓ Correct!" : el.questionType === "short_answer" ? `✗ Answer: ${el.answers.filter((a) => a.trim()).join(" / ")}` : "✗ Not quite"}
+            {right ? t("✓ Correct!") : el.questionType === "short_answer" ? t("✗ Answer: {value}", { value: el.answers.filter((a) => a.trim()).join(" / ") }) : t("✗ Not quite")}
           </span>
         )}
       </div>

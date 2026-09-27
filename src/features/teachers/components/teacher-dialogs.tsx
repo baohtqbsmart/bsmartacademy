@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { addQualificationAction, setTeacherSubjectsAction } from "@/features/teachers/actions"
+import { useT } from "@/i18n/client"
 
 export function TeacherSubjectsDialog({
   teacherId,
@@ -20,24 +21,25 @@ export function TeacherSubjectsDialog({
   subjects: { id: string; name: string }[]
   selected: string[]
 }) {
+  const t = useT()
   const [chosen, setChosen] = useState<string[]>(selected)
 
   return (
     <ActionDialog
       trigger={
         <Button variant="outline" size="sm">
-          <PencilIcon aria-hidden /> Edit subjects
+          <PencilIcon aria-hidden /> {t("Edit subjects")}
         </Button>
       }
-      title="Subjects taught"
-      submitLabel="Save subjects"
-      successMessage="Subjects updated."
+      title={t("Subjects taught")}
+      submitLabel={t("Save subjects")}
+      successMessage={t("Subjects updated.")}
       onOpen={() => setChosen(selected)}
       onSubmit={() => setTeacherSubjectsAction({ teacherId, subjectIds: chosen })}
     >
       <fieldset className="grid gap-3">
-        <legend className="sr-only">Subjects</legend>
-        {subjects.length === 0 && <p className="text-muted-foreground text-sm">No subjects defined yet.</p>}
+        <legend className="sr-only">{t("Subjects")}</legend>
+        {subjects.length === 0 && <p className="text-muted-foreground text-sm">{t("No subjects defined yet.")}</p>}
         {subjects.map((subject) => (
           <div key={subject.id} className="flex items-center gap-2">
             <Checkbox
@@ -60,6 +62,7 @@ export function TeacherSubjectsDialog({
 }
 
 export function AddQualificationDialog({ teacherId }: { teacherId: string }) {
+  const t = useT()
   const [title, setTitle] = useState("")
   const [institution, setInstitution] = useState("")
   const [yearAwarded, setYearAwarded] = useState("")
@@ -68,12 +71,12 @@ export function AddQualificationDialog({ teacherId }: { teacherId: string }) {
     <ActionDialog
       trigger={
         <Button variant="outline" size="sm">
-          <PlusIcon aria-hidden /> Add
+          <PlusIcon aria-hidden /> {t("Add")}
         </Button>
       }
-      title="Add a qualification"
-      submitLabel="Add qualification"
-      successMessage="Qualification added."
+      title={t("Add a qualification")}
+      submitLabel={t("Add qualification")}
+      successMessage={t("Qualification added.")}
       onOpen={() => {
         setTitle("")
         setInstitution("")
@@ -81,14 +84,14 @@ export function AddQualificationDialog({ teacherId }: { teacherId: string }) {
       }}
       onSubmit={() => addQualificationAction({ teacherId, title, institution, yearAwarded })}
     >
-      <Field id="qual-title" label="Qualification">
-        <Input id="qual-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Cambridge CELTA" />
+      <Field id="qual-title" label={t("Qualification")}>
+        <Input id="qual-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("Cambridge CELTA")} />
       </Field>
       <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
-        <Field id="qual-institution" label="Institution">
+        <Field id="qual-institution" label={t("Institution")}>
           <Input id="qual-institution" value={institution} onChange={(e) => setInstitution(e.target.value)} />
         </Field>
-        <Field id="qual-year" label="Year">
+        <Field id="qual-year" label={t("Year")}>
           <Input id="qual-year" inputMode="numeric" value={yearAwarded} onChange={(e) => setYearAwarded(e.target.value)} />
         </Field>
       </div>

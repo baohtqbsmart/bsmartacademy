@@ -20,10 +20,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam, firstParam, uuidParam, withParams } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Material library" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Material library") }
+}
 
 export default async function LibraryPage({ searchParams }: PageProps<"/library">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.library)
   const params = await searchParams
   const staff = can(user.permissions, "library.read", ["all", "assigned"])
@@ -61,7 +66,7 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
         basePath={routes.library}
         values={{ q, subject: subjectId, level: levelId, skill, kind, sort: current.sort }}
         preserve={{ view: current.view, folder: folderId }}
-        searchPlaceholder="Search title, description, topic or tag"
+        searchPlaceholder={t("Search title, description, topic or tag")}
         filters={[
           { param: "subject", allLabel: "All subjects", options: options.subjects.map((s) => ({ value: s.id, label: s.name })) },
           ...(subjectId ? [{ param: "level", allLabel: "All levels", options: options.levels.filter((l) => l.subject_id === subjectId).map((l) => ({ value: l.id, label: l.name })) }] : []),
@@ -75,13 +80,13 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
           <CardContent>
             <EmptyState
               icon={FolderOpenIcon}
-              title={filtered ? "No materials match" : staff ? "No materials here yet" : "Nothing has been shared with you yet"}
-              description={!staff && !filtered ? "Your teachers' materials appear here when they assign them to your class." : undefined}
+              title={filtered ? t("No materials match") : staff ? t("No materials here yet") : t("Nothing has been shared with you yet")}
+              description={!staff && !filtered ? t("Your teachers' materials appear here when they assign them to your class.") : undefined}
               action={
                 canWrite && !filtered ? (
                   <Button asChild>
                     <Link href={routes.libraryNew}>
-                      <UploadIcon aria-hidden /> Upload material
+                      <UploadIcon aria-hidden /> {t("Upload material")}
                     </Link>
                   </Button>
                 ) : undefined
@@ -101,20 +106,20 @@ export default async function LibraryPage({ searchParams }: PageProps<"/library"
   return (
     <>
       <PageHeader
-        title="Material library"
-        description={staff ? "Worksheets, slides, pictures, recordings and videos — upload once, use in every class." : "Materials your teachers have shared with you."}
+        title={t("Material library")}
+        description={staff ? t("Worksheets, slides, pictures, recordings and videos — upload once, use in every class.") : t("Materials your teachers have shared with you.")}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={folderId && folderId !== "root" ? `${routes.libraryNew}?folder=${folderId}` : routes.libraryNew}>
-                <UploadIcon aria-hidden /> Upload
+                <UploadIcon aria-hidden /> {t("Upload")}
               </Link>
             </Button>
           )
         }
       />
       <TabNav
-        label="Library views"
+        label={t("Library views")}
         active={active}
         tabs={views.map((v) => ({ value: v, label: v === "all" && !staff ? "Shared with me" : VIEW_LABELS[v], href: href({ view: v === "all" ? undefined : v }) }))}
       />

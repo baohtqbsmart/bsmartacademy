@@ -17,10 +17,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { todayInAcademy } from "@/lib/dates"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Progress" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Progress") }
+}
 
 export default async function AnalyticsPage({ searchParams }: PageProps<"/analytics">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.analytics)
   const db = await createClient()
   const staff = can(user.permissions, "analytics.read", ["all", "assigned"])
@@ -33,9 +38,9 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
     if (students.length === 1) redirect(analyticsStudentPath(students[0].id))
     return (
       <>
-        <PageHeader title="Progress" description="Choose a child to see their results, attendance and homework." />
+        <PageHeader title={t("Progress")} description={t("Choose a child to see their results, attendance and homework.")} />
         {students.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No students are linked to your account.</p>
+          <p className="text-muted-foreground text-sm">{t("No students are linked to your account.")}</p>
         ) : (
           <ul className="grid gap-2 sm:grid-cols-2">
             {students.map((s) => (
@@ -80,39 +85,39 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
   return (
     <>
       <PageHeader
-        title={admin ? "Academic analytics" : "Progress"}
-        description={admin ? "Academy-wide figures: averages of students, never individual scores." : "Your classes and students. Open a class for its figures or a student for their own progress."}
+        title={admin ? t("Academic analytics") : t("Progress")}
+        description={admin ? t("Academy-wide figures: averages of students, never individual scores.") : t("Your classes and students. Open a class for its figures or a student for their own progress.")}
       />
       <DateRangeFilter basePath={routes.analytics} from={range.from} to={range.to} max={today} />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <ScoreCard
-          label={admin ? "All students" : "Your students"}
+          label={admin ? t("All students") : t("Your students")}
           measure="Average percentage"
           value={everyone.suppressed ? "—" : pct(everyone.averageOfStudents)}
           basis={everyone.suppressed ? `Withheld: fewer than ${MIN_GROUP} students with results` : `Average of ${everyone.studentsWithResults} students' own averages`}
         />
-        <ScoreCard label="Attendance" measure="Rate" value={rate(attendance.rate)} basis={`${attendance.total.present + attendance.total.late} attended of ${attendance.total.present + attendance.total.late + attendance.total.absent} student-sessions`} />
-        <ScoreCard label="Homework handed in" measure="Rate" value={rate(hw.completionRate)} basis={hw.due ? `${Math.min(hw.handedIn, hw.due)} of ${hw.due} due pieces · ${hw.missing} missing` : "No homework due in this period"} />
-        <ScoreCard label="Students with results" measure="Count" value={String(everyone.studentsWithResults)} basis={`Of ${students.length} student${students.length === 1 ? "" : "s"} you can see`} />
+        <ScoreCard label={t("Attendance")} measure="Rate" value={rate(attendance.rate)} basis={`${attendance.total.present + attendance.total.late} attended of ${attendance.total.present + attendance.total.late + attendance.total.absent} student-sessions`} />
+        <ScoreCard label={t("Homework handed in")} measure="Rate" value={rate(hw.completionRate)} basis={hw.due ? `${Math.min(hw.handedIn, hw.due)} of ${hw.due} due pieces · ${hw.missing} missing` : "No homework due in this period"} />
+        <ScoreCard label={t("Students with results")} measure="Count" value={String(everyone.studentsWithResults)} basis={`Of ${students.length} student${students.length === 1 ? "" : "s"} you can see`} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Classes</CardTitle>
+          <CardTitle>{t("Classes")}</CardTitle>
           <CardDescription>
-            Class work only (assignments, quizzes, tests, writing and speaking tasks). A class average is withheld when fewer than {MIN_GROUP} students have results.
+            {t("Class work only (assignments, quizzes, tests, writing and speaking tasks). A class average is withheld when fewer than {MIN_GROUP} students have results.", { MIN_GROUP })}
           </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full min-w-[36rem] text-left text-sm">
             <thead className="text-muted-foreground text-xs">
               <tr>
-                <th className="py-2 font-normal">Class</th>
-                <th className="py-2 text-right font-normal">Students</th>
-                <th className="py-2 text-right font-normal">Average of students</th>
-                <th className="py-2 text-right font-normal">Attendance</th>
-                <th className="py-2 text-right font-normal">Homework handed in</th>
+                <th className="py-2 font-normal">{t("Class")}</th>
+                <th className="py-2 text-right font-normal">{t("Students")}</th>
+                <th className="py-2 text-right font-normal">{t("Average of students")}</th>
+                <th className="py-2 text-right font-normal">{t("Attendance")}</th>
+                <th className="py-2 text-right font-normal">{t("Homework handed in")}</th>
               </tr>
             </thead>
             <tbody className="tabular-nums">
@@ -125,7 +130,7 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
                   </td>
                   <td className="py-2 text-right">{c.students}</td>
                   <td className="py-2 text-right">
-                    {c.group.suppressed ? <span className="text-muted-foreground text-xs">{c.group.studentsWithResults ? `withheld (${c.group.studentsWithResults} with results)` : "no results"}</span> : `${c.group.averageOfStudents}% (${c.group.studentsWithResults})`}
+                    {c.group.suppressed ? <span className="text-muted-foreground text-xs">{c.group.studentsWithResults ? t("withheld ({studentsWithResults} with results)", { studentsWithResults: c.group.studentsWithResults }) : t("no results")}</span> : `${c.group.averageOfStudents}% (${c.group.studentsWithResults})`}
                   </td>
                   <td className="py-2 text-right">{rate(c.attendance)}</td>
                   <td className="py-2 text-right">{rate(c.homework)}</td>
@@ -139,8 +144,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>English skills</CardTitle>
-            <CardDescription>Students&apos; averages per skill, class work and self-study together.</CardDescription>
+            <CardTitle>{t("English skills")}</CardTitle>
+            <CardDescription>{t("Students' averages per skill, class work and self-study together.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <GroupSkillBars skills={groupSkillSummaries(results)} />
@@ -148,8 +153,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Find a student</CardTitle>
-            <CardDescription>Their own results over time, compared with the previous period.</CardDescription>
+            <CardTitle>{t("Find a student")}</CardTitle>
+            <CardDescription>{t("Their own results over time, compared with the previous period.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <StudentPicker students={students} />
@@ -159,8 +164,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<"/analyt
 
       <Card>
         <CardHeader>
-          <CardTitle>Over time</CardTitle>
-          <CardDescription>Mean of students&apos; averages per {trend.granularity}; periods with fewer than {MIN_GROUP} students are left blank.</CardDescription>
+          <CardTitle>{t("Over time")}</CardTitle>
+          <CardDescription>{t("Mean of students' averages per {granularity}; periods with fewer than {MIN_GROUP} students are left blank.", { granularity: trend.granularity, MIN_GROUP })}</CardDescription>
         </CardHeader>
         <CardContent>
           <ProgressLineChart granularity={trend.granularity} unit="students" series={[{ id: "all", label: "All scored work", buckets: trend.buckets }]} />

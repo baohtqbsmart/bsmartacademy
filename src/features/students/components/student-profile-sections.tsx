@@ -12,13 +12,15 @@ import { EnrollDialog, EnrollmentActions } from "@/features/enrollments/componen
 import { LinkParentDialog } from "@/features/students/components/student-dialogs"
 import type { StudentProfile } from "@/features/students/server/student-service"
 import { formatDate, formatDateRange } from "@/lib/format"
+import { getT } from "@/i18n/server"
 
 type Option = { id: string; label: string }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+async function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  const t = await getT()
   return (
     <div className="grid gap-0.5">
-      <dt className="text-muted-foreground text-xs">{label}</dt>
+      <dt className="text-muted-foreground text-xs">{t(label)}</dt>
       <dd className="text-sm break-words">{children || "—"}</dd>
     </div>
   )
@@ -31,7 +33,7 @@ function levelText(level: { name: string; cefr: string | null } | null) {
 
 const CURRENT = new Set(["pending", "active"])
 
-export function StudentOverview({
+export async function StudentOverview({
   student,
   canEditStudent,
   canManageEnrollments,
@@ -44,6 +46,7 @@ export function StudentOverview({
   parentOptions: Option[]
   classOptions: Option[]
 }) {
+  const t = await getT()
   const current = student.enrollments.filter((e) => CURRENT.has(e.status) && e.class)
   const parents = student.student_parents.filter((link) => link.parent)
 
@@ -51,28 +54,28 @@ export function StudentOverview({
     <div className="grid gap-6 lg:grid-cols-3">
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Student details</CardTitle>
+          <CardTitle>{t("Student details")}</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Detail label="Student ID">
+            <Detail label={t("Student ID")}>
               <span className="font-mono">{student.student_code}</span>
             </Detail>
-            <Detail label="Full name">{student.full_name}</Detail>
-            <Detail label="Date of birth">{formatDate(student.date_of_birth)}</Detail>
-            <Detail label="Gender">{student.gender && GENDER_LABELS[student.gender]}</Detail>
-            <Detail label="Phone">{student.phone}</Detail>
-            <Detail label="Email">{student.email}</Detail>
-            <Detail label="Address">{student.address}</Detail>
-            <Detail label="School">{student.school_name}</Detail>
-            <Detail label="Enrollment date">{formatDate(student.joined_on)}</Detail>
-            <Detail label="Current class">{current.map((e) => e.class!.name).join(", ")}</Detail>
-            <Detail label="English level">{levelText(student.english_level)}</Detail>
-            <Detail label="Target level">{levelText(student.target_level)}</Detail>
+            <Detail label={t("Full name")}>{student.full_name}</Detail>
+            <Detail label={t("Date of birth")}>{formatDate(student.date_of_birth)}</Detail>
+            <Detail label={t("Gender")}>{student.gender && GENDER_LABELS[student.gender]}</Detail>
+            <Detail label={t("Phone")}>{student.phone}</Detail>
+            <Detail label={t("Email")}>{student.email}</Detail>
+            <Detail label={t("Address")}>{student.address}</Detail>
+            <Detail label={t("School")}>{student.school_name}</Detail>
+            <Detail label={t("Enrollment date")}>{formatDate(student.joined_on)}</Detail>
+            <Detail label={t("Current class")}>{current.map((e) => e.class!.name).join(", ")}</Detail>
+            <Detail label={t("English level")}>{levelText(student.english_level)}</Detail>
+            <Detail label={t("Target level")}>{levelText(student.target_level)}</Detail>
             {/* Notes are staff-only; student_notes() returns null for everyone else. */}
             {(student.notes !== null || canEditStudent) && (
               <div className="sm:col-span-2">
-                <Detail label="Internal notes">
+                <Detail label={t("Internal notes")}>
                   {student.notes && <span className="whitespace-pre-line">{student.notes}</span>}
                 </Detail>
               </div>
@@ -84,7 +87,7 @@ export function StudentOverview({
       <div className="grid content-start gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Parents</CardTitle>
+            <CardTitle>{t("Parents")}</CardTitle>
             {canEditStudent && (
               <CardAction>
                 <LinkParentDialog studentId={student.id} parents={parentOptions} />
@@ -93,7 +96,7 @@ export function StudentOverview({
           </CardHeader>
           <CardContent>
             {parents.length === 0 ? (
-              <EmptyState icon={UsersRoundIcon} title="No parents linked" />
+              <EmptyState icon={UsersRoundIcon} title={t("No parents linked")} />
             ) : (
               <ul className="grid gap-3">
                 {parents.map((link) => (
@@ -101,10 +104,10 @@ export function StudentOverview({
                     <div className="grid text-sm">
                       <span className="font-medium">
                         {link.parent!.full_name}{" "}
-                        {link.is_primary_contact && <Badge variant="secondary">Primary</Badge>}
+                        {link.is_primary_contact && <Badge variant="secondary">{t("Primary")}</Badge>}
                       </span>
                       <span className="text-muted-foreground">
-                        {RELATIONSHIP_LABELS[link.relationship]}
+                        {t(RELATIONSHIP_LABELS[link.relationship])}
                         {link.parent!.phone && ` · ${link.parent!.phone}`}
                       </span>
                     </div>
@@ -112,11 +115,11 @@ export function StudentOverview({
                       <ConfirmActionButton
                         variant="ghost"
                         size="icon"
-                        aria-label={`Unlink ${link.parent!.full_name}`}
-                        title="Unlink parent?"
-                        description={`${link.parent!.full_name} will no longer be linked to ${student.full_name}.`}
-                        confirmLabel="Unlink"
-                        successMessage="Parent unlinked."
+                        aria-label={t("Unlink {full_name}", { full_name: link.parent!.full_name })}
+                        title={t("Unlink parent?")}
+                        description={t("{full_name} will no longer be linked to {full_name2}.", { full_name: link.parent!.full_name, full_name2: student.full_name })}
+                        confirmLabel={t("Unlink")}
+                        successMessage={t("Parent unlinked.")}
                         destructive
                         action={unlinkParentAction.bind(null, { studentId: student.id, parentId: link.parent!.id })}
                       >
@@ -132,8 +135,8 @@ export function StudentOverview({
 
         <Card>
           <CardHeader>
-            <CardTitle>Classes</CardTitle>
-            <CardDescription>Current enrolments</CardDescription>
+            <CardTitle>{t("Classes")}</CardTitle>
+            <CardDescription>{t("Current enrolments")}</CardDescription>
             {canManageEnrollments && (
               <CardAction>
                 <EnrollDialog studentId={student.id} classes={classOptions} />
@@ -142,7 +145,7 @@ export function StudentOverview({
           </CardHeader>
           <CardContent>
             {current.length === 0 ? (
-              <EmptyState icon={BookOpenCheckIcon} title="Not in a class" />
+              <EmptyState icon={BookOpenCheckIcon} title={t("Not in a class")} />
             ) : (
               <ul className="grid gap-4">
                 {current.map((enrollment) => (
@@ -150,7 +153,7 @@ export function StudentOverview({
                     <div className="grid text-sm">
                       <span className="font-medium">{enrollment.class!.name}</span>
                       <span className="text-muted-foreground">
-                        {enrollment.class!.course?.name} · since {formatDate(enrollment.enrolled_on)}
+                        {t("{name} · since {date}", { name: enrollment.class!.course?.name, date: formatDate(enrollment.enrolled_on) })}
                       </span>
                     </div>
                     {canManageEnrollments ? (
@@ -162,7 +165,7 @@ export function StudentOverview({
                       />
                     ) : (
                       <Badge variant={ENROLLMENT_STATUS[enrollment.status].variant}>
-                        {ENROLLMENT_STATUS[enrollment.status].label}
+                        {t(ENROLLMENT_STATUS[enrollment.status].label)}
                       </Badge>
                     )}
                   </li>
@@ -176,7 +179,7 @@ export function StudentOverview({
   )
 }
 
-export function StudentProgress({
+export async function StudentProgress({
   student,
   canManageEnrollments,
   classOptions,
@@ -185,28 +188,29 @@ export function StudentProgress({
   canManageEnrollments: boolean
   classOptions: Option[]
 }) {
+  const t = await getT()
   const history = [...student.enrollments].sort((a, b) => b.enrolled_on.localeCompare(a.enrolled_on))
 
   return (
     <div className="grid gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>English level</CardTitle>
-          <CardDescription>Current level and the level the student is working towards.</CardDescription>
+          <CardTitle>{t("English level")}</CardTitle>
+          <CardDescription>{t("Current level and the level the student is working towards.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <dl className="grid gap-4 sm:grid-cols-2">
-            <Detail label="Current">{levelText(student.english_level)}</Detail>
-            <Detail label="Target">{levelText(student.target_level)}</Detail>
+            <Detail label={t("Current")}>{levelText(student.english_level)}</Detail>
+            <Detail label={t("Target")}>{levelText(student.target_level)}</Detail>
           </dl>
         </CardContent>
       </Card>
       <div className="grid gap-2">
-        <h2 className="font-semibold">Class history</h2>
+        <h2 className="font-semibold">{t("Class history")}</h2>
         <SimpleTable
           rows={history}
           rowKey={(e) => e.id}
-          empty={<EmptyState icon={BookOpenCheckIcon} title="No class history yet" />}
+          empty={<EmptyState icon={BookOpenCheckIcon} title={t("No class history yet")} />}
           columns={[
             { header: "Class", cell: (e) => e.class?.name ?? "Class not visible to you" },
             { header: "Course", cell: (e) => e.class?.course?.name ?? "—" },
@@ -222,7 +226,7 @@ export function StudentProgress({
                     classes={classOptions}
                   />
                 ) : (
-                  <Badge variant={ENROLLMENT_STATUS[e.status].variant}>{ENROLLMENT_STATUS[e.status].label}</Badge>
+                  <Badge variant={ENROLLMENT_STATUS[e.status].variant}>{t(ENROLLMENT_STATUS[e.status].label)}</Badge>
                 ),
             },
           ]}
@@ -232,7 +236,7 @@ export function StudentProgress({
   )
 }
 
-export function StudentFeedback({
+export async function StudentFeedback({
   studentId,
   feedback,
   canWrite,
@@ -245,6 +249,7 @@ export function StudentFeedback({
   canModerateAll: boolean
   currentUserId: string
 }) {
+  const t = await getT()
   return (
     <div className="grid max-w-3xl gap-6">
       {canWrite && (
@@ -257,8 +262,8 @@ export function StudentFeedback({
       {feedback.length === 0 ? (
         <EmptyState
           icon={MessageSquareIcon}
-          title="No feedback yet"
-          description="Teachers' notes about this student's progress will appear here."
+          title={t("No feedback yet")}
+          description={t("Teachers' notes about this student's progress will appear here.")}
         />
       ) : (
         <ul className="grid gap-3">
@@ -266,21 +271,21 @@ export function StudentFeedback({
             <li key={item.id}>
               <Card className="gap-3 py-4">
                 <CardHeader className="px-4">
-                  <CardTitle className="text-sm">{item.author_name || "Former staff member"}</CardTitle>
+                  <CardTitle className="text-sm">{item.author_name || t("Former staff member")}</CardTitle>
                   <CardDescription>{formatDate(item.created_at)}</CardDescription>
                   {(canModerateAll || (canWrite && item.author_profile_id === currentUserId)) && (
                     <CardAction>
                       <ConfirmActionButton
                         variant="ghost"
                         size="sm"
-                        title="Remove feedback?"
-                        description="It will no longer be visible to the student, parents or teachers."
-                        confirmLabel="Remove"
-                        successMessage="Feedback removed."
+                        title={t("Remove feedback?")}
+                        description={t("It will no longer be visible to the student, parents or teachers.")}
+                        confirmLabel={t("Remove")}
+                        successMessage={t("Feedback removed.")}
                         destructive
                         action={archiveFeedbackAction.bind(null, { feedbackId: item.id })}
                       >
-                        Remove
+                        {t("Remove")}
                       </ConfirmActionButton>
                     </CardAction>
                   )}

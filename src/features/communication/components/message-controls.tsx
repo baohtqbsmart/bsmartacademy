@@ -10,11 +10,13 @@ import { SubmitButton } from "@/components/shared/submit-button"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { markThreadReadAction, sendMessageAction, startThreadAction } from "@/features/communication/actions"
+import { useT } from "@/i18n/client"
 
 type Target = { studentId: string; studentName: string; people: { profileId: string; name: string; detail: string }[] }
 
 /** Parents pick a child and one of its teachers; teachers pick a student and one of its parents. */
 export function NewThreadDialog({ role, userId, targets }: { role: "parent" | "teacher"; userId: string; targets: Target[] }) {
+  const tr = useT()
   const [studentId, setStudentId] = useState(targets.length === 1 ? targets[0].studentId : "")
   const [personId, setPersonId] = useState("")
   const people = targets.find((t) => t.studentId === studentId)?.people ?? []
@@ -22,13 +24,13 @@ export function NewThreadDialog({ role, userId, targets }: { role: "parent" | "t
     <ActionDialog
       trigger={
         <Button disabled={targets.length === 0}>
-          <PlusIcon aria-hidden /> New conversation
+          <PlusIcon aria-hidden /> {tr("New conversation")}
         </Button>
       }
-      title="New conversation"
-      description={role === "parent" ? "Write to one of your child's teachers." : "Write to a parent of a student you teach."}
-      submitLabel="Open conversation"
-      successMessage="Conversation opened."
+      title={tr("New conversation")}
+      description={role === "parent" ? tr("Write to one of your child's teachers.") : tr("Write to a parent of a student you teach.")}
+      submitLabel={tr("Open conversation")}
+      successMessage={tr("Conversation opened.")}
       onOpen={() => setPersonId("")}
       onSubmit={() =>
         startThreadAction({
@@ -38,7 +40,7 @@ export function NewThreadDialog({ role, userId, targets }: { role: "parent" | "t
         })
       }
     >
-      <Field id="nt-student" label={role === "parent" ? "Child" : "Student"}>
+      <Field id="nt-student" label={role === "parent" ? tr("Child") : tr("Student")}>
         <OptionSelect
           id="nt-student"
           value={studentId}
@@ -47,21 +49,21 @@ export function NewThreadDialog({ role, userId, targets }: { role: "parent" | "t
             setPersonId("")
           }}
           options={targets.map((t) => ({ id: t.studentId, label: t.studentName }))}
-          placeholder="Choose"
+          placeholder={tr("Choose")}
         />
       </Field>
-      <Field id="nt-person" label={role === "parent" ? "Teacher" : "Parent"}>
+      <Field id="nt-person" label={role === "parent" ? tr("Teacher") : tr("Parent")}>
         <OptionSelect
           id="nt-person"
           value={personId}
           onChange={setPersonId}
           options={people.map((p) => ({ id: p.profileId, label: `${p.name} (${p.detail})` }))}
-          placeholder={studentId ? "Choose" : "Choose the student first"}
+          placeholder={studentId ? tr("Choose") : tr("Choose the student first")}
           disabled={!studentId || people.length === 0}
         />
         {studentId && people.length === 0 && (
           <p className="text-muted-foreground text-xs">
-            {role === "parent" ? "None of this child's current teachers has an account yet." : "No parent of this student has an account yet."} Please contact the academy office.
+            {tr("{value} Please contact the academy office.", { value: role === "parent" ? "None of this child's current teachers has an account yet." : "No parent of this student has an account yet." })}
           </p>
         )}
       </Field>
@@ -70,6 +72,7 @@ export function NewThreadDialog({ role, userId, targets }: { role: "parent" | "t
 }
 
 export function MessageComposer({ threadId }: { threadId: string }) {
+  const t = useT()
   const [body, setBody] = useState("")
   const [isPending, startTransition] = useTransition()
   function submit(event: React.FormEvent) {
@@ -85,7 +88,7 @@ export function MessageComposer({ threadId }: { threadId: string }) {
   return (
     <form onSubmit={submit} className="grid gap-2">
       <Textarea
-        aria-label="Message"
+        aria-label={t("Message")}
         rows={3}
         maxLength={4000}
         value={body}
@@ -93,12 +96,12 @@ export function MessageComposer({ threadId }: { threadId: string }) {
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit(e)
         }}
-        placeholder="Write a message… (Ctrl+Enter to send)"
+        placeholder={t("Write a message… (Ctrl+Enter to send)")}
       />
       <div className="flex items-center justify-between gap-2">
         <span className="text-muted-foreground text-xs">{body.length}/4000</span>
         <SubmitButton pending={isPending} disabled={!body.trim()}>
-          <SendIcon aria-hidden /> Send
+          <SendIcon aria-hidden /> {t("Send")}
         </SubmitButton>
       </div>
     </form>

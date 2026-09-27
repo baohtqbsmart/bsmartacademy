@@ -18,8 +18,12 @@ import { formatVnd } from "@/lib/money"
 import { normalizeSearch } from "@/lib/search"
 import { enumParam, firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Student tuition" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Student tuition") }
+}
 
 const STATUSES = ["overdue", "partially_paid", "unpaid", "paid", "cancelled"] as const
 const STATUS_LABELS: Record<(typeof STATUSES)[number], string> = {
@@ -31,6 +35,7 @@ const STATUS_LABELS: Record<(typeof STATUSES)[number], string> = {
 }
 
 export default async function StudentTuitionPage({ searchParams }: PageProps<"/tuition/students">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.tuitionStudents)
   const canWrite = can(user.permissions, "tuition.write")
   const params = await searchParams
@@ -55,8 +60,8 @@ export default async function StudentTuitionPage({ searchParams }: PageProps<"/t
   return (
     <>
       <PageHeader
-        title="Student tuition"
-        description="Each row is a plan assigned to a student, with what has been paid and what remains."
+        title={tr("Student tuition")}
+        description={tr("Each row is a plan assigned to a student, with what has been paid and what remains.")}
         actions={
           canWrite && (
             <AssignTuitionDialog
@@ -72,17 +77,17 @@ export default async function StudentTuitionPage({ searchParams }: PageProps<"/t
       <ListFilters
         basePath={routes.tuitionStudents}
         values={{ q, status }}
-        searchPlaceholder="Search student or plan"
+        searchPlaceholder={tr("Search student or plan")}
         filters={[{ param: "status", allLabel: "All statuses", options: STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] })) }]}
       />
       <SimpleTable
         rows={rows}
         rowKey={(t) => t.id}
-        empty={<EmptyState icon={WalletIcon} title={q || status ? "No tuition matches your filters" : "No tuition assigned yet"} />}
+        empty={<EmptyState icon={WalletIcon} title={q || status ? tr("No tuition matches your filters") : tr("No tuition assigned yet")} />}
         footer={
           rows.length > 0 && (
             <p className="text-muted-foreground text-sm tabular-nums">
-              {rows.length} shown · final {formatVnd(totals.final)} · paid {formatVnd(totals.paid)} · remaining {formatVnd(totals.remaining)}
+              {tr("{length} shown · final {vnd} · paid {vnd2} · remaining {vnd3}", { length: rows.length, vnd: formatVnd(totals.final), vnd2: formatVnd(totals.paid), vnd3: formatVnd(totals.remaining) })}
             </p>
           )
         }

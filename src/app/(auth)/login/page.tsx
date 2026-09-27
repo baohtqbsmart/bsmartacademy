@@ -2,8 +2,12 @@ import type { Metadata } from "next"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { LoginForm } from "@/features/auth/components/login-form"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Sign in" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Sign in") }
+}
 
 const ERROR_MESSAGES: Record<string, string> = {
   link_invalid: "That link is invalid or has expired. Please request a new one.",
@@ -11,15 +15,16 @@ const ERROR_MESSAGES: Record<string, string> = {
 }
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  const t = await getT()
   const { next, error } = await searchParams
 
   return (
     <Card>
       <CardHeader className="text-center">
         <CardTitle className="text-xl">
-            <h1>Welcome back</h1>
+            <h1>{t("Welcome back")}</h1>
           </CardTitle>
-        <CardDescription>Sign in with the account provided by the academy.</CardDescription>
+        <CardDescription>{t("Sign in with the account provided by the academy.")}</CardDescription>
       </CardHeader>
       <CardContent>
         <LoginForm

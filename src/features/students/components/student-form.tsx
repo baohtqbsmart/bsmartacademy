@@ -37,6 +37,7 @@ import {
   type StudentFormOutput,
 } from "@/features/students/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type StudentFormProps = {
   /** Present when editing an existing student. */
@@ -49,6 +50,7 @@ type StudentFormProps = {
 const NONE = "none"
 
 export function StudentForm({ studentId, defaultValues, levels, cancelHref }: StudentFormProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -73,7 +75,7 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>{t(label)}</FormLabel>
           <FormControl>
             <Input {...props} {...field} value={field.value ?? ""} />
           </FormControl>
@@ -90,7 +92,7 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
 
         <Card>
           <CardHeader>
-            <CardTitle>Personal details</CardTitle>
+            <CardTitle>{t("Personal details")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">{text("fullName", "Full name", { autoComplete: "off" })}</div>
@@ -100,7 +102,7 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
               name="gender"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel>{t("Gender")}</FormLabel>
                   <Select value={field.value || NONE} onValueChange={(v) => field.onChange(v === NONE ? "" : v)}>
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -108,10 +110,10 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={NONE}>Not set</SelectItem>
+                      <SelectItem value={NONE}>{t("Not set")}</SelectItem>
                       {STUDENT_GENDERS.map((gender) => (
                         <SelectItem key={gender} value={gender}>
-                          {GENDER_LABELS[gender]}
+                          {t(GENDER_LABELS[gender])}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -126,8 +128,8 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
 
         <Card>
           <CardHeader>
-            <CardTitle>Contact</CardTitle>
-            <CardDescription>The student&apos;s own contact details, if they have any.</CardDescription>
+            <CardTitle>{t("Contact")}</CardTitle>
+            <CardDescription>{t("The student's own contact details, if they have any.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             {text("phone", "Phone", { type: "tel" })}
@@ -138,7 +140,7 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
 
         <Card>
           <CardHeader>
-            <CardTitle>Academy</CardTitle>
+            <CardTitle>{t("Academy")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             {text("joinedOn", "Enrollment date", { type: "date" })}
@@ -147,7 +149,7 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel>{t("Status")}</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -157,7 +159,7 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
                     <SelectContent>
                       {STUDENT_STATUSES.map((status) => (
                         <SelectItem key={status} value={status}>
-                          {STUDENT_STATUS[status].label}
+                          {t(STUDENT_STATUS[status].label)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -173,13 +175,13 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
                 name={name}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{name === "englishLevelCode" ? "English level" : "Target level"}</FormLabel>
+                    <FormLabel>{name === "englishLevelCode" ? t("English level") : t("Target level")}</FormLabel>
                     <FormControl>
                       <EnglishLevelSelect
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         levels={levels}
-                        placeholder="Not set"
+                        placeholder={t("Not set")}
                       />
                     </FormControl>
                     <FormMessage />
@@ -193,7 +195,7 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes</FormLabel>
+                    <FormLabel>{t("Notes")}</FormLabel>
                     <FormControl>
                       <Textarea rows={4} {...field} value={field.value ?? ""} />
                     </FormControl>
@@ -206,9 +208,9 @@ export function StudentForm({ studentId, defaultValues, levels, cancelHref }: St
         </Card>
 
         <div className="flex gap-2">
-          <SubmitButton pending={isPending}>{studentId ? "Save changes" : "Add student"}</SubmitButton>
+          <SubmitButton pending={isPending}>{studentId ? t("Save changes") : t("Add student")}</SubmitButton>
           <Button variant="outline" asChild>
-            <Link href={cancelHref}>Cancel</Link>
+            <Link href={cancelHref}>{t("Cancel")}</Link>
           </Button>
         </div>
       </form>

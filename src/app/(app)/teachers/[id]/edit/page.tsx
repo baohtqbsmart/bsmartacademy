@@ -8,10 +8,15 @@ import { TeacherForm } from "@/features/teachers/components/teacher-form"
 import { getTeacher } from "@/features/teachers/server/teacher-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit teacher" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit teacher") }
+}
 
 export default async function EditTeacherPage({ params }: PageProps<"/teachers/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.teacherEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -20,7 +25,7 @@ export default async function EditTeacherPage({ params }: PageProps<"/teachers/[
 
   return (
     <>
-      <PageHeader title={`Edit ${teacher.full_name}`} description={teacher.teacher_code} />
+      <PageHeader title={t("Edit {full_name}", { full_name: teacher.full_name })} description={teacher.teacher_code} />
       <TeacherForm
         teacherId={teacher.id}
         cancelHref={teacherPath(teacher.id)}

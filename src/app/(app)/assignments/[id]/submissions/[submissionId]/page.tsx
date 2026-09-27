@@ -18,10 +18,15 @@ import { workStatus } from "@/features/assignments/status"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Grade submission" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Grade submission") }
+}
 
 export default async function SubmissionPage({ params }: PageProps<"/assignments/[id]/submissions/[submissionId]">) {
+  const t = await getT()
   await requireRouteAccess(routes.submissionDetail)
   const { id, submissionId } = await params
   if (!z.uuid().safeParse(id).success || !z.uuid().safeParse(submissionId).success) notFound()
@@ -52,20 +57,20 @@ export default async function SubmissionPage({ params }: PageProps<"/assignments
         <ArrowLeftIcon className="size-4" aria-hidden /> {assignment.title}
       </Link>
       <PageHeader
-        title={submission.student?.full_name ?? "Submission"}
-        description={`${assignment.title} · attempt ${submission.attempt}`}
+        title={submission.student?.full_name ?? t("Submission")}
+        description={t("{title} · attempt {attempt}", { title: assignment.title, attempt: submission.attempt })}
         actions={<WorkStatusBadge status={workStatus(submission, assignment.due_at, "staff")} />}
       />
 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Work handed in</CardTitle>
+            <CardTitle>{t("Work handed in")}</CardTitle>
             <CardDescription>
-              {submission.submitted_at ? `Handed in ${formatDateTime(submission.submitted_at)}` : "Not handed in yet"}
-              {submission.is_late && " · late"}
+              {submission.submitted_at ? t("Handed in {dateTime}", { dateTime: formatDateTime(submission.submitted_at) }) : t("Not handed in yet")}
+              {submission.is_late && t(" · late")}
               {objective.length > 0 &&
-                ` · auto-marked: ${earned} of ${objective.reduce((sum, m) => sum + Number(m.points), 0)} points on ${objective.length} objective question${objective.length === 1 ? "" : "s"}`}
+                t(" · auto-marked: {earned} of {objective} points on {length} objective question{value}", { earned, objective: objective.reduce((sum, m) => sum + Number(m.points), 0), length: objective.length, value: objective.length === 1 ? "" : "s" })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -77,8 +82,8 @@ export default async function SubmissionPage({ params }: PageProps<"/assignments
           {submission.status !== "in_progress" && (
             <Card>
               <CardHeader>
-                <CardTitle>Grade</CardTitle>
-                <CardDescription>The student sees the score and feedback only once you return it.</CardDescription>
+                <CardTitle>{t("Grade")}</CardTitle>
+                <CardDescription>{t("The student sees the score and feedback only once you return it.")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <GradeForm
@@ -95,27 +100,27 @@ export default async function SubmissionPage({ params }: PageProps<"/assignments
           {isLatest && submission.status !== "in_progress" && (
             <Card>
               <CardHeader>
-                <CardTitle>Resubmission</CardTitle>
+                <CardTitle>{t("Resubmission")}</CardTitle>
                 <CardDescription>
                   {submission.resubmission_allowed
-                    ? "The student may start a new attempt (their answers are copied into it)."
-                    : "Handed-in work is locked. Allow a resubmission to let the student try again; this attempt is kept in the history."}
+                    ? t("The student may start a new attempt (their answers are copied into it).")
+                    : t("Handed-in work is locked. Allow a resubmission to let the student try again; this attempt is kept in the history.")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ConfirmActionButton
-                  title={submission.resubmission_allowed ? "Withdraw the resubmission?" : "Allow a resubmission?"}
+                  title={submission.resubmission_allowed ? t("Withdraw the resubmission?") : t("Allow a resubmission?")}
                   description={
                     submission.resubmission_allowed
-                      ? "The student will no longer be able to start a new attempt."
+                      ? t("The student will no longer be able to start a new attempt.")
                       : "The student can start attempt " + (submission.attempt + 1) + " while the assignment is open."
                   }
-                  confirmLabel={submission.resubmission_allowed ? "Withdraw" : "Allow"}
-                  successMessage="Saved."
+                  confirmLabel={submission.resubmission_allowed ? t("Withdraw") : t("Allow")}
+                  successMessage={t("Saved.")}
                   action={setResubmissionAction.bind(null, { submissionId: submission.id, allowed: !submission.resubmission_allowed })}
                 >
                   {submission.resubmission_allowed ? <UndoIcon aria-hidden /> : <RotateCcwIcon aria-hidden />}
-                  {submission.resubmission_allowed ? "Withdraw resubmission" : "Allow resubmission"}
+                  {submission.resubmission_allowed ? t("Withdraw resubmission") : t("Allow resubmission")}
                 </ConfirmActionButton>
               </CardContent>
             </Card>
@@ -127,10 +132,10 @@ export default async function SubmissionPage({ params }: PageProps<"/assignments
               {attempts.map((a) => (
                 <li key={a.id}>
                   {a.id === submission.id ? (
-                    <span className="font-medium">Attempt {a.attempt} (shown)</span>
+                    <span className="font-medium">{t("Attempt {attempt} (shown)", { attempt: a.attempt })}</span>
                   ) : (
                     <Link href={submissionPath(assignment.id, a.id)} className="hover:underline">
-                      Open attempt {a.attempt}
+                      {t("Open attempt {attempt}", { attempt: a.attempt })}
                     </Link>
                   )}
                 </li>
@@ -139,7 +144,7 @@ export default async function SubmissionPage({ params }: PageProps<"/assignments
           )}
           {submission.student && (
             <Link href={studentPath(submission.student.id, "assignments")} className="text-muted-foreground text-sm hover:underline">
-              All of {submission.student.full_name}&apos;s assignments
+              {t("All of {full_name}'s assignments", { full_name: submission.student.full_name })}
             </Link>
           )}
         </div>

@@ -22,6 +22,7 @@ import {
   transferEnrollmentAction,
 } from "@/features/enrollments/actions"
 import type { Enums } from "@/types/database"
+import { useT } from "@/i18n/client"
 
 type EnrollDialogProps =
   /** From a student profile: the student is fixed, pick a class. */
@@ -30,6 +31,7 @@ type EnrollDialogProps =
   | { classId: string; students: Option[]; studentId?: never; classes?: never }
 
 export function EnrollDialog(props: EnrollDialogProps) {
+  const t = useT()
   const today = new Date().toISOString().slice(0, 10)
   const [picked, setPicked] = useState("")
   const [status, setStatus] = useState<"pending" | "active">("active")
@@ -40,17 +42,17 @@ export function EnrollDialog(props: EnrollDialogProps) {
     <ActionDialog
       trigger={
         <Button variant="outline" size="sm">
-          <PlusIcon aria-hidden /> {fromClass ? "Add student" : "Enrol in class"}
+          <PlusIcon aria-hidden /> {fromClass ? t("Add student") : t("Enrol in class")}
         </Button>
       }
-      title={fromClass ? "Add a student to this class" : "Enrol in a class"}
+      title={fromClass ? t("Add a student to this class") : t("Enrol in a class")}
       description={
         fromClass
-          ? "Students already in the class are not listed. Class capacity is enforced."
-          : "Only planned and running classes are listed. Class capacity is enforced."
+          ? t("Students already in the class are not listed. Class capacity is enforced.")
+          : t("Only planned and running classes are listed. Class capacity is enforced.")
       }
-      submitLabel={fromClass ? "Add student" : "Enrol"}
-      successMessage="Student enrolled."
+      submitLabel={fromClass ? t("Add student") : t("Enrol")}
+      successMessage={t("Student enrolled.")}
       onOpen={() => {
         setPicked("")
         setStatus("active")
@@ -65,26 +67,26 @@ export function EnrollDialog(props: EnrollDialogProps) {
         })
       }
     >
-      <Field id="enrol-target" label={fromClass ? "Student" : "Class"}>
+      <Field id="enrol-target" label={fromClass ? t("Student") : t("Class")}>
         <OptionSelect
           id="enrol-target"
           value={picked}
           onChange={setPicked}
           options={fromClass ? props.students : props.classes}
-          placeholder={fromClass ? "Choose a student" : "Choose a class"}
+          placeholder={fromClass ? t("Choose a student") : t("Choose a class")}
         />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="enrol-status" label="Status">
+        <Field id="enrol-status" label={t("Status")}>
           <OptionSelect
             id="enrol-status"
             value={status}
             onChange={(value) => setStatus(value as "pending" | "active")}
             options={(["active", "pending"] as const).map((s) => ({ id: s, label: ENROLLMENT_STATUS[s].label }))}
-            placeholder="Status"
+            placeholder={t("Status")}
           />
         </Field>
-        <Field id="enrol-start" label="Start date">
+        <Field id="enrol-start" label={t("Start date")}>
           <Input id="enrol-start" type="date" value={startOn} onChange={(event) => setStartOn(event.target.value)} />
         </Field>
       </div>
@@ -106,6 +108,7 @@ export function EnrollmentActions({
   currentClassId: string | null
   classes: Option[]
 }) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [targetClassId, setTargetClassId] = useState("")
   const isCurrent = status === "pending" || status === "active"
@@ -114,7 +117,7 @@ export function EnrollmentActions({
     if (next === status) return
     startTransition(async () => {
       const result = await setEnrollmentStatusAction({ enrollmentId, status: next })
-      if (result.ok) toast.success("Enrolment updated.")
+      if (result.ok) toast.success(t("Enrolment updated."))
       else toast.error(result.error.message)
     })
   }
@@ -122,13 +125,13 @@ export function EnrollmentActions({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select value={status} onValueChange={changeStatus} disabled={isPending}>
-        <SelectTrigger size="sm" className="w-32" aria-label="Enrolment status">
+        <SelectTrigger size="sm" className="w-32" aria-label={t("Enrolment status")}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {ENROLLMENT_STATUSES.map((s) => (
             <SelectItem key={s} value={s}>
-              {ENROLLMENT_STATUS[s].label}
+              {t(ENROLLMENT_STATUS[s].label)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -137,23 +140,23 @@ export function EnrollmentActions({
         <ActionDialog
           trigger={
             <Button variant="ghost" size="sm">
-              <ArrowRightLeftIcon aria-hidden /> Transfer
+              <ArrowRightLeftIcon aria-hidden /> {t("Transfer")}
             </Button>
           }
-          title="Move to another class"
-          description="The current enrolment is marked withdrawn and a new active enrolment is created, in one step."
-          submitLabel="Transfer"
-          successMessage="Student transferred."
+          title={t("Move to another class")}
+          description={t("The current enrolment is marked withdrawn and a new active enrolment is created, in one step.")}
+          submitLabel={t("Transfer")}
+          successMessage={t("Student transferred.")}
           onOpen={() => setTargetClassId("")}
           onSubmit={() => transferEnrollmentAction({ enrollmentId, classId: targetClassId })}
         >
-          <Field id={`transfer-${enrollmentId}`} label="New class">
+          <Field id={`transfer-${enrollmentId}`} label={t("New class")}>
             <OptionSelect
               id={`transfer-${enrollmentId}`}
               value={targetClassId}
               onChange={setTargetClassId}
               options={classes.filter((option) => option.id !== currentClassId)}
-              placeholder="Choose a class"
+              placeholder={t("Choose a class")}
             />
           </Field>
         </ActionDialog>

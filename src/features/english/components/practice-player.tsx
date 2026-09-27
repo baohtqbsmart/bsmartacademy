@@ -20,6 +20,7 @@ import {
   type VocabularyActivity,
 } from "@/features/english/skills"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n/client"
 
 type Result = { wordId: string; correct: boolean }
 
@@ -61,6 +62,7 @@ function Progress({ index, total }: { index: number; total: number }) {
 }
 
 function WordHeading({ word, showMeaning = false }: { word: PracticeWord; showMeaning?: boolean }) {
+  const t = useT()
   return (
     <div className="grid justify-items-center gap-2 text-center">
       {word.imageUrl && (
@@ -69,7 +71,7 @@ function WordHeading({ word, showMeaning = false }: { word: PracticeWord; showMe
       )}
       <p className="text-3xl font-semibold">{word.word}</p>
       <p className="text-muted-foreground">
-        {word.ipa} <span className="italic">{PART_OF_SPEECH_LABELS[word.part_of_speech]}</span>
+        {word.ipa} <span className="italic">{t(PART_OF_SPEECH_LABELS[word.part_of_speech])}</span>
       </p>
       <SpeakButton text={word.word} audioUrl={word.audioUrl} />
       {showMeaning && (
@@ -86,6 +88,7 @@ function WordHeading({ word, showMeaning = false }: { word: PracticeWord; showMe
 // --- Flashcards ------------------------------------------------------------
 
 function Flashcards({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result[]) => void }) {
+  const t = useT()
   const deck = useMemo(() => shuffle(words), [words])
   const [index, setIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
@@ -107,14 +110,14 @@ function Flashcards({ words, onDone }: { words: PracticeWord[]; onDone: (r: Resu
         <WordHeading word={word} showMeaning={flipped} />
         <div className="flex flex-wrap justify-center gap-2">
           {!flipped ? (
-            <Button onClick={() => setFlipped(true)}>Show meaning</Button>
+            <Button onClick={() => setFlipped(true)}>{t("Show meaning")}</Button>
           ) : (
             <>
               <Button variant="outline" onClick={() => answer(false)}>
-                <XIcon aria-hidden /> Not yet
+                <XIcon aria-hidden /> {t("Not yet")}
               </Button>
               <Button onClick={() => answer(true)}>
-                <CheckIcon aria-hidden /> I knew it
+                <CheckIcon aria-hidden /> {t("I knew it")}
               </Button>
             </>
           )}
@@ -127,6 +130,7 @@ function Flashcards({ words, onDone }: { words: PracticeWord[]; onDone: (r: Resu
 // --- Matching --------------------------------------------------------------
 
 function Matching({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result[]) => void }) {
+  const t = useT()
   const round = useMemo(() => shuffle(words).slice(0, 8), [words])
   const meanings = useMemo(() => shuffle(round), [round])
   const [selected, setSelected] = useState<string | null>(null)
@@ -151,7 +155,7 @@ function Matching({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result
   return (
     <Card>
       <CardContent className="grid gap-4 py-6">
-        <p className="text-muted-foreground text-sm">Choose a word, then its meaning.</p>
+        <p className="text-muted-foreground text-sm">{t("Choose a word, then its meaning.")}</p>
         <div className="grid grid-cols-2 gap-3">
           <ul className="grid gap-2">
             {round.map((w) => (
@@ -191,6 +195,7 @@ function Matching({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result
 // --- Multiple choice ---------------------------------------------------------
 
 function MultipleChoice({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result[]) => void }) {
+  const t = useT()
   const questions = useMemo(() => buildChoiceQuestions(words), [words])
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
@@ -209,7 +214,7 @@ function MultipleChoice({ words, onDone }: { words: PracticeWord[]; onDone: (r: 
     <Card>
       <CardContent className="grid gap-4 py-6">
         <Progress index={index} total={questions.length} />
-        <p className="text-lg font-medium">Which word means: “{q.prompt}”?</p>
+        <p className="text-lg font-medium">{t("Which word means: “{prompt}”?", { prompt: q.prompt })}</p>
         <div role="radiogroup" className="grid gap-2 sm:grid-cols-2">
           {q.options.map((option) => (
             <Button
@@ -228,7 +233,7 @@ function MultipleChoice({ words, onDone }: { words: PracticeWord[]; onDone: (r: 
         {picked && (
           <div className="flex flex-wrap items-center gap-2">
             <Feedback correct={picked === q.answer} answer={q.answer} />
-            <Button onClick={next}>{index + 1 >= questions.length ? "Finish" : "Next"}</Button>
+            <Button onClick={next}>{index + 1 >= questions.length ? t("Finish") : t("Next")}</Button>
           </div>
         )}
       </CardContent>
@@ -247,6 +252,7 @@ function TypedRound({
   onDone: (r: Result[]) => void
   render: (index: number) => React.ReactNode
 }) {
+  const t = useT()
   const [index, setIndex] = useState(0)
   const [value, setValue] = useState("")
   const [checked, setChecked] = useState<boolean | null>(null)
@@ -282,13 +288,13 @@ function TypedRound({
             onChange={(e) => setValue(e.target.value)}
             disabled={checked !== null}
             className={cn("max-w-xs", checked === true && GOOD, checked === false && BAD)}
-            aria-label="Your answer"
+            aria-label={t("Your answer")}
             autoComplete="off"
             autoCapitalize="off"
             spellCheck={false}
           />
           <Button type="submit" disabled={checked === null && value.trim() === ""}>
-            {checked === null ? "Check" : index + 1 >= items.length ? "Finish" : "Next"}
+            {checked === null ? t("Check") : index + 1 >= items.length ? t("Finish") : t("Next")}
           </Button>
         </form>
         {checked !== null && <Feedback correct={checked} answer={item.answer} />}
@@ -298,9 +304,10 @@ function TypedRound({
 }
 
 function FillBlank({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result[]) => void }) {
+  const t = useT()
   const questions = useMemo(() => buildBlankQuestions(words), [words])
   if (questions.length === 0) {
-    return <p className="text-muted-foreground text-sm">None of these words has an example sentence yet.</p>
+    return <p className="text-muted-foreground text-sm">{t("None of these words has an example sentence yet.")}</p>
   }
   return (
     <TypedRound
@@ -309,7 +316,7 @@ function FillBlank({ words, onDone }: { words: PracticeWord[]; onDone: (r: Resul
       render={(i) => (
         <div className="grid gap-1">
           <p className="text-lg">{questions[i].sentence}</p>
-          <p className="text-muted-foreground text-sm">Hint: {questions[i].hint}</p>
+          <p className="text-muted-foreground text-sm">{t("Hint: {hint}", { hint: questions[i].hint })}</p>
         </div>
       )}
     />
@@ -317,6 +324,7 @@ function FillBlank({ words, onDone }: { words: PracticeWord[]; onDone: (r: Resul
 }
 
 function Spelling({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result[]) => void }) {
+  const t = useT()
   const deck = useMemo(() => shuffle(words), [words])
   return (
     <TypedRound
@@ -324,11 +332,11 @@ function Spelling({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result
       onDone={onDone}
       render={(i) => (
         <div className="grid gap-2">
-          <p>Listen and type the word.</p>
+          <p>{t("Listen and type the word.")}</p>
           <div className="flex flex-wrap items-center gap-2">
-            <SpeakButton text={deck[i].word} audioUrl={deck[i].audioUrl} label="Play the word" />
+            <SpeakButton text={deck[i].word} audioUrl={deck[i].audioUrl} label={t("Play the word")} />
             <span className="text-muted-foreground text-sm">
-              {deck[i].meaning_vi} · {PART_OF_SPEECH_LABELS[deck[i].part_of_speech]}
+              {deck[i].meaning_vi} · {t(PART_OF_SPEECH_LABELS[deck[i].part_of_speech])}
             </span>
           </div>
         </div>
@@ -340,6 +348,7 @@ function Spelling({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result
 // --- Pronunciation ---------------------------------------------------------
 
 function Pronunciation({ words, onDone }: { words: PracticeWord[]; onDone: (r: Result[]) => void }) {
+  const t = useT()
   const deck = useMemo(() => shuffle(words), [words])
   const [index, setIndex] = useState(0)
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null)
@@ -361,15 +370,15 @@ function Pronunciation({ words, onDone }: { words: PracticeWord[]; onDone: (r: R
         <Progress index={index} total={deck.length} />
         <WordHeading word={word} />
         <div className="grid justify-items-center gap-2">
-          <p className="text-muted-foreground text-sm">Listen, then record yourself and compare. Your recording stays on this device.</p>
+          <p className="text-muted-foreground text-sm">{t("Listen, then record yourself and compare. Your recording stays on this device.")}</p>
           <AudioRecorder maxSeconds={10} onRecorded={(_file, url) => setRecordingUrl(url)} />
           {recordingUrl && <audio controls src={recordingUrl} className="w-full max-w-xs" />}
         </div>
         <div className="flex flex-wrap justify-center gap-2">
           <Button variant="outline" onClick={() => answer(false)}>
-            Needs more practice
+            {t("Needs more practice")}
           </Button>
-          <Button onClick={() => answer(true)}>Sounded right</Button>
+          <Button onClick={() => answer(true)}>{t("Sounded right")}</Button>
         </div>
       </CardContent>
     </Card>
@@ -379,13 +388,14 @@ function Pronunciation({ words, onDone }: { words: PracticeWord[]; onDone: (r: R
 // --- Results ---------------------------------------------------------------
 
 function Feedback({ correct, answer }: { correct: boolean; answer: string }) {
+  const t = useT()
   return correct ? (
     <Badge variant="outline" className={cn("gap-1", GOOD)}>
-      <CheckIcon className="size-3" aria-hidden /> Correct
+      <CheckIcon className="size-3" aria-hidden /> {t("Correct")}
     </Badge>
   ) : (
     <Badge variant="outline" className={cn("gap-1", BAD)}>
-      <XIcon className="size-3" aria-hidden /> Answer: {answer}
+      <XIcon className="size-3" aria-hidden /> {t("Answer: {answer}", { answer })}
     </Badge>
   )
 }
@@ -403,6 +413,7 @@ function Summary({
   results: Result[]
   onAgain: () => void
 }) {
+  const t = useT()
   const [saved, setSaved] = useState<"saving" | "saved" | string>("saving")
   const sent = useRef(false)
   useEffect(() => {
@@ -421,12 +432,12 @@ function Summary({
           {correct} / {results.length}
         </p>
         <p className="text-muted-foreground text-sm">
-          {ACTIVITY_LABELS[activity].title} ·{" "}
-          {saved === "saving" ? "saving…" : saved === "saved" ? "saved to your progress" : `not saved: ${saved}`}
+          {t(ACTIVITY_LABELS[activity].title)} ·{" "}
+          {saved === "saving" ? "saving…" : saved === "saved" ? t("saved to your progress") : t("not saved: {saved}", { saved })}
         </p>
         {missed.length > 0 && (
           <div className="grid gap-1">
-            <p className="text-sm font-medium">Practise these again</p>
+            <p className="text-sm font-medium">{t("Practise these again")}</p>
             <ul className="grid gap-1 text-sm">
               {missed.map((w) => (
                 <li key={w.id}>
@@ -438,7 +449,7 @@ function Summary({
         )}
         <div>
           <Button onClick={onAgain}>
-            <RotateCcwIcon aria-hidden /> Practise again
+            <RotateCcwIcon aria-hidden /> {t("Practise again")}
           </Button>
         </div>
       </CardContent>

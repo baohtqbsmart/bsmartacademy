@@ -17,6 +17,7 @@ import { AbsenceAlertBadge, ATTENDANCE_STATUS } from "@/features/attendance/comp
 import { ATTENDANCE_STATUSES, type AlertLevel, type AttendanceStatus } from "@/features/attendance/summary"
 import { cn } from "@/lib/utils"
 import type { Enums } from "@/types/database"
+import { useT } from "@/i18n/client"
 
 type Mode = "in_person" | "online"
 
@@ -64,6 +65,7 @@ function initialMarks(rows: RegisterRow[], deliveryMode: Enums<"delivery_mode">,
  * Absent / Excused, minutes late, online (hybrid classes) and a note.
  */
 export function AttendanceRegister({ classId, date, deliveryMode, rows, sessionNotes, defaultOnline = false }: AttendanceRegisterProps) {
+  const t = useT()
   const [marks, setMarks] = useState<Record<string, Mark>>(() => initialMarks(rows, deliveryMode, defaultOnline))
   const [notes, setNotes] = useState(sessionNotes)
   const [error, setError] = useState<string | null>(null)
@@ -108,7 +110,7 @@ export function AttendanceRegister({ classId, date, deliveryMode, rows, sessionN
           }
         }),
       })
-      if (result.ok) toast.success("Attendance saved.")
+      if (result.ok) toast.success(t("Attendance saved."))
       else setError(result.error.message)
     })
   }
@@ -117,11 +119,11 @@ export function AttendanceRegister({ classId, date, deliveryMode, rows, sessionN
     <form onSubmit={submit} className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-muted-foreground text-sm tabular-nums" aria-live="polite">
-          {counts.present} present · {counts.late} late · {counts.absent} absent · {counts.excused} excused
-          {unmarked > 0 && ` · ${unmarked} not marked`}
+          {t("{present} present · {late} late · {absent} absent · {excused} excused", { present: counts.present, late: counts.late, absent: counts.absent, excused: counts.excused })}
+          {unmarked > 0 && t(" · {unmarked} not marked", { unmarked })}
         </p>
         <Button type="button" variant="outline" size="sm" onClick={markAllPresent} disabled={unmarked === 0}>
-          <CheckCheckIcon aria-hidden /> Mark the rest present
+          <CheckCheckIcon aria-hidden /> {t("Mark the rest present")}
         </Button>
       </div>
 
@@ -159,7 +161,7 @@ export function AttendanceRegister({ classId, date, deliveryMode, rows, sessionN
                           className={cn(selected && config.className, selected && "ring-ring/50 ring-2")}
                           onClick={() => update(student.id, { status })}
                         >
-                          <Icon aria-hidden /> {config.label}
+                          <Icon aria-hidden /> {t(config.label)}
                         </Button>
                       )
                     })}
@@ -174,10 +176,10 @@ export function AttendanceRegister({ classId, date, deliveryMode, rows, sessionN
                           className="h-8 w-16"
                           value={mark.minutesLate}
                           onChange={(e) => update(student.id, { minutesLate: e.target.value.replace(/\D/g, "").slice(0, 3) })}
-                          aria-label={`Minutes late, ${student.full_name}`}
+                          aria-label={t("Minutes late, {full_name}", { full_name: student.full_name })}
                         />
                         <Label htmlFor={`late-${student.id}`} className="text-muted-foreground text-xs font-normal">
-                          min
+                          {t("min")}
                         </Label>
                       </div>
                     )}
@@ -189,17 +191,17 @@ export function AttendanceRegister({ classId, date, deliveryMode, rows, sessionN
                           onCheckedChange={(checked) => update(student.id, { online: checked === true })}
                         />
                         <Label htmlFor={`online-${student.id}`} className="text-xs font-normal">
-                          Online
+                          {t("Online")}
                         </Label>
                       </div>
                     )}
                     <Input
                       className="h-8 min-w-40 flex-1"
-                      placeholder="Note (optional)"
+                      placeholder={t("Note (optional)")}
                       maxLength={500}
                       value={mark.note}
                       onChange={(e) => update(student.id, { note: e.target.value })}
-                      aria-label={`Note, ${student.full_name}`}
+                      aria-label={t("Note, {full_name}", { full_name: student.full_name })}
                     />
                   </div>
                 </CardContent>
@@ -210,20 +212,20 @@ export function AttendanceRegister({ classId, date, deliveryMode, rows, sessionN
       </ul>
 
       <div className="grid gap-2">
-        <Label htmlFor="session-notes">Notes for this session</Label>
+        <Label htmlFor="session-notes">{t("Notes for this session")}</Label>
         <Textarea
           id="session-notes"
           rows={2}
           maxLength={1000}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Topic covered, substitute teacher, room change…"
+          placeholder={t("Topic covered, substitute teacher, room change…")}
         />
       </div>
 
       <FormAlert message={error} />
       <div>
-        <SubmitButton pending={isPending}>Save attendance</SubmitButton>
+        <SubmitButton pending={isPending}>{t("Save attendance")}</SubmitButton>
       </div>
     </form>
   )

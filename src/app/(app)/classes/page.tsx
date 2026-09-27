@@ -20,12 +20,17 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateRange } from "@/lib/format"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Classes" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Classes") }
+}
 
 const STATUS_FILTERS = ["current", "all", ...CLASS_STATUSES] as const
 
 export default async function ClassesPage({ searchParams }: PageProps<"/classes">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.classes)
   const canWrite = can(user.permissions, "classes.write")
   const seesAll = can(user.permissions, "classes.read", ["all"])
@@ -55,13 +60,13 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
   return (
     <>
       <PageHeader
-        title="Classes"
-        description={seesAll ? "All classes at the academy." : "Classes you have access to."}
+        title={tr("Classes")}
+        description={seesAll ? tr("All classes at the academy.") : tr("Classes you have access to.")}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={routes.classNew}>
-                <PlusIcon aria-hidden /> New class
+                <PlusIcon aria-hidden /> {tr("New class")}
               </Link>
             </Button>
           )
@@ -70,7 +75,7 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
       <ListFilters
         basePath={routes.classes}
         values={filters}
-        searchPlaceholder="Search classes"
+        searchPlaceholder={tr("Search classes")}
         filters={[
           {
             param: "status",
@@ -97,8 +102,8 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
         empty={
           <EmptyState
             icon={PresentationIcon}
-            title={filtered ? "No classes match your filters" : "No planned or running classes"}
-            description={filtered ? "Try removing some filters." : undefined}
+            title={filtered ? tr("No classes match your filters") : tr("No planned or running classes")}
+            description={filtered ? tr("Try removing some filters.") : undefined}
           />
         }
         columns={[
@@ -141,7 +146,7 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
           { header: "Dates", cell: (c) => formatDateRange(c.start_date, c.end_date) },
           {
             header: "Status",
-            cell: (c) => <Badge variant={CLASS_STATUS[c.status].variant}>{CLASS_STATUS[c.status].label}</Badge>,
+            cell: (c) => <Badge variant={CLASS_STATUS[c.status].variant}>{tr(CLASS_STATUS[c.status].label)}</Badge>,
           },
         ]}
       />

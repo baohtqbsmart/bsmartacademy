@@ -9,10 +9,15 @@ import { getWord } from "@/features/english/server/vocabulary-service"
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit word" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit word") }
+}
 
 export default async function EditWordPage({ params }: PageProps<"/english/vocabulary/words/[id]/edit">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.wordEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -23,7 +28,7 @@ export default async function EditWordPage({ params }: PageProps<"/english/vocab
 
   return (
     <>
-      <PageHeader title={`Edit “${word.word}”`} />
+      <PageHeader title={t("Edit “{word}”", { word: word.word })} />
       <WordForm
         cancelHref={`${routes.vocabulary}?view=words`}
         initial={{

@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button"
 import { markNotificationsReadAction } from "@/features/communication/actions"
 import type { NotificationKind } from "@/features/communication/server/communication-service"
 import { cn } from "@/lib/utils"
+import { translateNotificationBody, translateNotificationTitle } from "@/features/communication/notification-text"
+import { useT } from "@/i18n/client"
 
 const ICONS: Record<NotificationKind, LucideIcon> = {
   new_assignment: ClipboardListIcon,
@@ -48,6 +50,7 @@ type Item = {
 const timeFormat = new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" })
 
 export function NotificationList({ items, showChild }: { items: Item[]; showChild: boolean }) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const unread = items.filter((i) => !i.read_at).length
   const mark = (ids: string[] | "all") =>
@@ -60,10 +63,10 @@ export function NotificationList({ items, showChild }: { items: Item[]; showChil
     <div className="grid gap-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-muted-foreground text-sm" aria-live="polite">
-          {unread} unread
+          {t("{unread} unread", { unread })}
         </span>
         <Button variant="outline" size="sm" disabled={unread === 0 || isPending} onClick={() => mark("all")}>
-          <CheckCheckIcon aria-hidden /> Mark all read
+          <CheckCheckIcon aria-hidden /> {t("Mark all read")}
         </Button>
       </div>
       <ul className="grid gap-2">
@@ -76,10 +79,10 @@ export function NotificationList({ items, showChild }: { items: Item[]; showChil
               </span>
               <span className="grid min-w-0 flex-1 gap-0.5">
                 <span className={cn("text-sm", !n.read_at && "font-semibold")}>
-                  {!n.read_at && <span className="sr-only">Unread: </span>}
-                  {n.title}
+                  {!n.read_at && <span className="sr-only">{t("Unread:")} </span>}
+                  {translateNotificationTitle(t, n.title)}
                 </span>
-                {n.body && <span className="text-muted-foreground line-clamp-2 text-sm">{n.body}</span>}
+                {n.body && <span className="text-muted-foreground line-clamp-2 text-sm">{translateNotificationBody(t, n.body)}</span>}
                 <span className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
                   {timeFormat.format(new Date(n.created_at))}
                   {showChild && n.student && <Badge variant="outline">{n.student.full_name}</Badge>}

@@ -8,10 +8,15 @@ import { reportPath, routes } from "@/config/routes"
 import { canRunReport, REPORT_KEYS, reportPrivacy, REPORTS } from "@/features/reports/catalog"
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Reports" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Reports") }
+}
 
 export default async function ReportsPage() {
+  const t = await getT()
   const user = await requireRouteAccess(routes.reports)
   const available = REPORT_KEYS.filter((k) => canRunReport(user.permissions, k))
   const academyWide = can(user.permissions, "reports.read", ["all"])
@@ -19,8 +24,8 @@ export default async function ReportsPage() {
   return (
     <>
       <PageHeader
-        title="Reports"
-        description={academyWide ? "Academy-wide reports. Filter, print or export to CSV." : "Reports on the classes you teach. Filter, print or export to CSV."}
+        title={t("Reports")}
+        description={academyWide ? t("Academy-wide reports. Filter, print or export to CSV.") : t("Reports on the classes you teach. Filter, print or export to CSV.")}
       />
       <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {available.map((key) => (
@@ -29,10 +34,10 @@ export default async function ReportsPage() {
               <Card className="hover:bg-muted/40 h-full transition-colors">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between gap-2 text-base">
-                    {REPORTS[key].title}
+                    {t(REPORTS[key].title)}
                     <ChevronRightIcon className="text-muted-foreground size-4" aria-hidden />
                   </CardTitle>
-                  <CardDescription>{REPORTS[key].description}</CardDescription>
+                  <CardDescription>{t(REPORTS[key].description)}</CardDescription>
                 </CardHeader>
                 {reportPrivacy(key) && (
                   <CardContent className="text-muted-foreground flex items-start gap-1.5 text-xs">
@@ -45,7 +50,7 @@ export default async function ReportsPage() {
         ))}
       </ul>
       {available.length < REPORT_KEYS.length && (
-        <p className="text-muted-foreground text-xs">Tuition and staff reports are available to administrators and finance staff only.</p>
+        <p className="text-muted-foreground text-xs">{t("Tuition and staff reports are available to administrators and finance staff only.")}</p>
       )}
     </>
   )

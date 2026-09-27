@@ -36,6 +36,7 @@ import {
   type Criterion,
   type Scoring,
 } from "@/features/assessments/scoring"
+import { useT } from "@/i18n/client"
 
 type LibraryComment = { id: string; kind: AssessmentKind | null; category: AnnotationCategory; body: string }
 
@@ -71,6 +72,7 @@ function selectionOffsets(container: HTMLElement) {
 }
 
 export function GradingPanel(props: GradingPanelProps) {
+  const t = useT()
   const { submissionId, kind, text, media, annotations, library, criteria, scoring, maxScore, grade, resubmission } = props
   const textRef = useRef<HTMLDivElement>(null)
   const mediaRef = useRef<HTMLMediaElement | null>(null)
@@ -88,9 +90,9 @@ export function GradingPanel(props: GradingPanelProps) {
       <div className="grid content-start gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Student&apos;s work</CardTitle>
+            <CardTitle>{t("Student's work")}</CardTitle>
             <CardDescription>
-              {text ? "Select words to highlight them, then add a comment and a suggested correction." : media ? "Pause where you want to comment and add a time-stamped comment." : "Open the document, then add general comments."}
+              {text ? t("Select words to highlight them, then add a comment and a suggested correction.") : media ? t("Pause where you want to comment and add a time-stamped comment.") : t("Open the document, then add general comments.")}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
@@ -108,16 +110,16 @@ export function GradingPanel(props: GradingPanelProps) {
             <div className="flex flex-wrap gap-2">
               {text && (
                 <Button type="button" variant="outline" size="sm" onClick={captureSelection}>
-                  <HighlighterIcon aria-hidden /> Comment on the selection
+                  <HighlighterIcon aria-hidden /> {t("Comment on the selection")}
                 </Button>
               )}
               {media && (media.mime.startsWith("audio/") || media.mime.startsWith("video/")) && (
                 <Button type="button" variant="outline" size="sm" onClick={() => setAnchor({ anchor: "time", time: mediaRef.current?.currentTime ?? 0 })}>
-                  <TimerIcon aria-hidden /> Comment at the current time
+                  <TimerIcon aria-hidden /> {t("Comment at the current time")}
                 </Button>
               )}
               <Button type="button" variant="outline" size="sm" onClick={() => setAnchor({ anchor: "general" })}>
-                <MessageSquarePlusIcon aria-hidden /> General comment
+                <MessageSquarePlusIcon aria-hidden /> {t("General comment")}
               </Button>
             </div>
             {anchor && (
@@ -138,8 +140,8 @@ export function GradingPanel(props: GradingPanelProps) {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Comments ({annotations.length})</CardTitle>
-            <CardDescription>Students see them when you return the grade.</CardDescription>
+            <CardTitle>{t("Comments ({length})", { length: annotations.length })}</CardTitle>
+            <CardDescription>{t("Students see them when you return the grade.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <AnnotationList
@@ -150,11 +152,11 @@ export function GradingPanel(props: GradingPanelProps) {
                   <ConfirmActionButton
                     variant="ghost"
                     size="icon"
-                    aria-label="Delete comment"
-                    title="Delete this comment?"
-                    description="It is removed from the student's feedback."
-                    confirmLabel="Delete"
-                    successMessage="Comment deleted."
+                    aria-label={t("Delete comment")}
+                    title={t("Delete this comment?")}
+                    description={t("It is removed from the student's feedback.")}
+                    confirmLabel={t("Delete")}
+                    successMessage={t("Comment deleted.")}
                     destructive
                     action={deleteAnnotationAction.bind(null, { annotationId: a.id })}
                   >
@@ -172,21 +174,21 @@ export function GradingPanel(props: GradingPanelProps) {
         {resubmission.isLatest && (
           <Card>
             <CardHeader>
-              <CardTitle>Resubmission</CardTitle>
+              <CardTitle>{t("Resubmission")}</CardTitle>
               <CardDescription>
-                {resubmission.allowed ? "The student may hand in a new attempt." : "Allow the student to hand in a new attempt; this one stays in the history."}
+                {resubmission.allowed ? t("The student may hand in a new attempt.") : t("Allow the student to hand in a new attempt; this one stays in the history.")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ConfirmActionButton
-                title={resubmission.allowed ? "Withdraw the resubmission?" : "Allow a resubmission?"}
-                description={resubmission.allowed ? "The student can no longer hand in a new attempt." : "The student can hand in a new attempt while the task is open."}
-                confirmLabel={resubmission.allowed ? "Withdraw" : "Allow"}
-                successMessage="Saved."
+                title={resubmission.allowed ? t("Withdraw the resubmission?") : t("Allow a resubmission?")}
+                description={resubmission.allowed ? t("The student can no longer hand in a new attempt.") : t("The student can hand in a new attempt while the task is open.")}
+                confirmLabel={resubmission.allowed ? t("Withdraw") : t("Allow")}
+                successMessage={t("Saved.")}
                 action={resubmissionAction.bind(null, { submissionId, allowed: !resubmission.allowed })}
               >
                 {resubmission.allowed ? <UndoIcon aria-hidden /> : <RotateCcwIcon aria-hidden />}
-                {resubmission.allowed ? "Withdraw resubmission" : "Allow resubmission"}
+                {resubmission.allowed ? t("Withdraw resubmission") : t("Allow resubmission")}
               </ConfirmActionButton>
             </CardContent>
           </Card>
@@ -211,6 +213,7 @@ function Composer({
   library: LibraryComment[]
   onDone: () => void
 }) {
+  const t = useT()
   const [category, setCategory] = useState<AnnotationCategory>(categories[0])
   const [comment, setComment] = useState("")
   const [suggestion, setSuggestion] = useState("")
@@ -237,7 +240,7 @@ function Composer({
         const saved = await saveCommentAction({ kind, category, body: comment, shared: false })
         if (!saved.ok) toast.error(saved.error.message)
       }
-      toast.success("Comment added.")
+      toast.success(t("Comment added."))
       onDone()
     })
   }
@@ -247,17 +250,17 @@ function Composer({
       <p className="text-sm">
         {anchor.anchor === "text" && (
           <>
-            On: <mark className="rounded-sm bg-[#fab219]/30 px-0.5">{anchor.quote}</mark>
+            {t("On:")} <mark className="rounded-sm bg-[#fab219]/30 px-0.5">{anchor.quote}</mark>
           </>
         )}
-        {anchor.anchor === "time" && <>At {formatSeconds(anchor.time)}</>}
-        {anchor.anchor === "general" && "General comment"}
+        {anchor.anchor === "time" && <>{t("At {seconds}", { seconds: formatSeconds(anchor.time) })}</>}
+        {anchor.anchor === "general" && t("General comment")}
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field id="c-cat" label="Category">
-          <OptionSelect id="c-cat" value={category} onChange={(v) => setCategory(v as AnnotationCategory)} options={categories.map((c) => ({ id: c, label: CATEGORY_LABELS[c] }))} placeholder="Category" />
+        <Field id="c-cat" label={t("Category")}>
+          <OptionSelect id="c-cat" value={category} onChange={(v) => setCategory(v as AnnotationCategory)} options={categories.map((c) => ({ id: c, label: CATEGORY_LABELS[c] }))} placeholder={t("Category")} />
         </Field>
-        <Field id="c-reuse" label="Reusable comment">
+        <Field id="c-reuse" label={t("Reusable comment")}>
           <OptionSelect
             id="c-reuse"
             value=""
@@ -268,28 +271,28 @@ function Composer({
               setComment((current) => (current ? `${current} ${picked.body}` : picked.body))
             }}
             options={reusable.map((c) => ({ id: c.id, label: `${CATEGORY_LABELS[c.category]}: ${c.body}` }))}
-            placeholder="Insert a saved comment"
+            placeholder={t("Insert a saved comment")}
           />
         </Field>
       </div>
-      <Field id="c-comment" label="Comment">
+      <Field id="c-comment" label={t("Comment")}>
         <Textarea id="c-comment" rows={2} maxLength={2000} value={comment} onChange={(e) => setComment(e.target.value)} />
       </Field>
       {anchor.anchor !== "time" && (
-        <Field id="c-suggestion" label="Suggested correction">
+        <Field id="c-suggestion" label={t("Suggested correction")}>
           <Input id="c-suggestion" maxLength={2000} value={suggestion} onChange={(e) => setSuggestion(e.target.value)} />
         </Field>
       )}
       <label className="flex items-center gap-2 text-sm">
-        <Checkbox checked={keep} onCheckedChange={(checked) => setKeep(checked === true)} /> Also save this comment to my library
+        <Checkbox checked={keep} onCheckedChange={(checked) => setKeep(checked === true)} /> {t("Also save this comment to my library")}
       </label>
       <FormAlert message={error} />
       <div className="flex gap-2">
         <Button type="button" size="sm" disabled={isPending} onClick={save}>
-          Add comment
+          {t("Add comment")}
         </Button>
         <Button type="button" size="sm" variant="ghost" onClick={onDone}>
-          Cancel
+          {t("Cancel")}
         </Button>
       </div>
     </div>
@@ -297,19 +300,20 @@ function Composer({
 }
 
 function EditAnnotation({ annotation, categories }: { annotation: AnnotationView; categories: AnnotationCategory[] }) {
+  const t = useT()
   const [category, setCategory] = useState(annotation.category)
   const [comment, setComment] = useState(annotation.comment ?? "")
   const [suggestion, setSuggestion] = useState(annotation.suggestion ?? "")
   return (
     <ActionDialog
       trigger={
-        <Button variant="ghost" size="icon" aria-label="Edit comment">
+        <Button variant="ghost" size="icon" aria-label={t("Edit comment")}>
           <PencilIcon />
         </Button>
       }
-      title="Edit comment"
-      submitLabel="Save"
-      successMessage="Comment updated."
+      title={t("Edit comment")}
+      submitLabel={t("Save")}
+      successMessage={t("Comment updated.")}
       onOpen={() => {
         setCategory(annotation.category)
         setComment(annotation.comment ?? "")
@@ -317,13 +321,13 @@ function EditAnnotation({ annotation, categories }: { annotation: AnnotationView
       }}
       onSubmit={() => updateAnnotationAction({ annotationId: annotation.id, category, comment, suggestion })}
     >
-      <Field id="e-cat" label="Category">
-        <OptionSelect id="e-cat" value={category} onChange={(v) => setCategory(v as AnnotationCategory)} options={categories.map((c) => ({ id: c, label: CATEGORY_LABELS[c] }))} placeholder="Category" />
+      <Field id="e-cat" label={t("Category")}>
+        <OptionSelect id="e-cat" value={category} onChange={(v) => setCategory(v as AnnotationCategory)} options={categories.map((c) => ({ id: c, label: CATEGORY_LABELS[c] }))} placeholder={t("Category")} />
       </Field>
-      <Field id="e-comment" label="Comment">
+      <Field id="e-comment" label={t("Comment")}>
         <Textarea id="e-comment" rows={3} value={comment} onChange={(e) => setComment(e.target.value)} />
       </Field>
-      <Field id="e-suggestion" label="Suggested correction">
+      <Field id="e-suggestion" label={t("Suggested correction")}>
         <Input id="e-suggestion" value={suggestion} onChange={(e) => setSuggestion(e.target.value)} />
       </Field>
     </ActionDialog>
@@ -347,6 +351,7 @@ function ScoreForm({
   library: LibraryComment[]
   kind: AssessmentKind
 }) {
+  const t = useT()
   const [scores, setScores] = useState<string[]>(criteria.map((_, i) => (grade.scores?.[i] !== undefined ? String(grade.scores[i]) : "")))
   const [feedback, setFeedback] = useState(grade.feedback ?? "")
   const [error, setError] = useState<string | null>(null)
@@ -359,7 +364,7 @@ function ScoreForm({
     setError(null)
     startTransition(async () => {
       const result = await gradeAction({ submissionId, scores: numbers, feedback, publish })
-      if (result.ok) toast.success(publish || grade.returned ? "Grade saved and visible to the student." : "Grade saved (not visible to the student yet).")
+      if (result.ok) toast.success(t(publish || grade.returned ? "Grade saved and visible to the student." : "Grade saved (not visible to the student yet)."))
       else setError(result.error.message)
     })
   }
@@ -367,8 +372,8 @@ function ScoreForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Score</CardTitle>
-        <CardDescription>{scoring === "ielts_band" ? IELTS_NOTICE : `Out of ${maxScore}.`}</CardDescription>
+        <CardTitle>{t("Score")}</CardTitle>
+        <CardDescription>{scoring === "ielts_band" ? IELTS_NOTICE : t("Out of {maxScore}.", { maxScore })}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div className="grid gap-2">
@@ -393,32 +398,32 @@ function ScoreForm({
           ))}
         </div>
         <p className="text-lg font-semibold tabular-nums">
-          {scoring === "ielts_band" ? "Overall band" : "Total"}: {total ?? "—"} {scoring !== "ielts_band" && `/ ${maxScore}`}
+          {scoring === "ielts_band" ? t("Overall band") : t("Total")}: {total ?? "—"} {scoring !== "ielts_band" && `/ ${maxScore}`}
         </p>
-        {scoring === "ielts_band" && <p className="text-muted-foreground text-xs">Whole bands per criterion; the overall band is their average rounded to the nearest half band.</p>}
+        {scoring === "ielts_band" && <p className="text-muted-foreground text-xs">{t("Whole bands per criterion; the overall band is their average rounded to the nearest half band.")}</p>}
         <div className="grid gap-2">
-          <Label htmlFor="overall-feedback">Feedback</Label>
+          <Label htmlFor="overall-feedback">{t("Feedback")}</Label>
           <Textarea id="overall-feedback" rows={6} maxLength={10000} value={feedback} onChange={(e) => setFeedback(e.target.value)} />
           <OptionSelect
             id="feedback-reuse"
-            ariaLabel="Insert a saved comment into the feedback"
+            ariaLabel={t("Insert a saved comment into the feedback")}
             value=""
             onChange={(id) => {
               const picked = library.find((c) => c.id === id)
               if (picked) setFeedback((f) => (f ? `${f}\n${picked.body}` : picked.body))
             }}
             options={library.filter((c) => !c.kind || c.kind === kind).map((c) => ({ id: c.id, label: `${CATEGORY_LABELS[c.category]}: ${c.body}` }))}
-            placeholder="Insert a saved comment"
+            placeholder={t("Insert a saved comment")}
           />
         </div>
         <FormAlert message={error} />
         <div className="flex flex-wrap gap-2">
           <Button type="button" disabled={!complete || isPending} onClick={() => save(true)}>
-            {grade.returned ? "Update returned grade" : "Save and return"}
+            {grade.returned ? t("Update returned grade") : t("Save and return")}
           </Button>
           {!grade.returned && (
             <Button type="button" variant="outline" disabled={!complete || isPending} onClick={() => save(false)}>
-              Save without returning
+              {t("Save without returning")}
             </Button>
           )}
         </div>

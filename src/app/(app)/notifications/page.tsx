@@ -14,11 +14,16 @@ import { can } from "@/lib/auth/permissions"
 import { requireUser } from "@/lib/auth/session"
 import { enumParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Notifications" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Notifications") }
+}
 
 // Every signed-in user has notifications; RLS returns only the caller's own.
 export default async function NotificationsPage({ searchParams }: PageProps<"/notifications">) {
+  const t = await getT()
   const user = await requireUser()
   const show = enumParam(await searchParams, "show", ["unread"] as const)
   const items = await listNotifications(await createClient(), { unreadOnly: show === "unread" })
@@ -26,18 +31,18 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/no
   return (
     <>
       <PageHeader
-        title="Notifications"
-        description="In the app only — e-mail, SMS and Zalo delivery are not connected."
+        title={t("Notifications")}
+        description={t("In the app only — e-mail, SMS and Zalo delivery are not connected.")}
         actions={
           <Button variant="outline" asChild>
             <Link href={routes.notificationSettings}>
-              <SettingsIcon aria-hidden /> Settings
+              <SettingsIcon aria-hidden /> {t("Settings")}
             </Link>
           </Button>
         }
       />
       <TabNav
-        label="Notifications"
+        label={t("Notifications")}
         active={show ?? "all"}
         tabs={[
           { value: "all", label: "All", href: routes.notifications },
@@ -47,7 +52,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/no
       {items.length === 0 ? (
         <Card>
           <CardContent>
-            <EmptyState icon={BellOffIcon} title={show ? "Nothing unread" : "No notifications yet"} />
+            <EmptyState icon={BellOffIcon} title={show ? t("Nothing unread") : t("No notifications yet")} />
           </CardContent>
         </Card>
       ) : (

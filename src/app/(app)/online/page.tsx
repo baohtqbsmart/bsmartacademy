@@ -17,13 +17,18 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { addDays, todayInAcademy } from "@/lib/dates"
 import { enumParam, firstParam, uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Online classes" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Online classes") }
+}
 
 const VIEWS = ["upcoming", "past", "calendar"] as const
 const PAST_LIMIT = 100
 
 export default async function OnlinePage({ searchParams }: PageProps<"/online">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.online)
   const params = await searchParams
   const db = await createClient()
@@ -52,17 +57,17 @@ export default async function OnlinePage({ searchParams }: PageProps<"/online">)
   return (
     <>
       <PageHeader
-        title="Online classes"
+        title={t("Online classes")}
         description={
           staff
-            ? "Lessons taught in Google Meet, Zoom or Microsoft Teams: schedule, materials, attendance, homework and notes."
-            : "Join your online lessons, and find their materials, recordings and homework."
+            ? t("Lessons taught in Google Meet, Zoom or Microsoft Teams: schedule, materials, attendance, homework and notes.")
+            : t("Join your online lessons, and find their materials, recordings and homework.")
         }
         actions={
           canWrite && (
             <Button asChild>
               <Link href={classId ? `${routes.onlineNew}?class=${classId}` : routes.onlineNew}>
-                <PlusIcon aria-hidden /> New online session
+                <PlusIcon aria-hidden /> {t("New online session")}
               </Link>
             </Button>
           )
@@ -70,7 +75,7 @@ export default async function OnlinePage({ searchParams }: PageProps<"/online">)
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <TabNav
-          label="Online sessions"
+          label={t("Online sessions")}
           active={view}
           tabs={[
             { value: "upcoming", label: "Upcoming", href: hrefFor("upcoming") },
@@ -99,13 +104,13 @@ export default async function OnlinePage({ searchParams }: PageProps<"/online">)
               <CardContent>
                 <EmptyState
                   icon={view === "past" ? HistoryIcon : VideoIcon}
-                  title={view === "past" ? "No past online sessions" : "No upcoming online sessions"}
-                  description={canWrite && view === "upcoming" ? "Schedule one with “New online session”." : undefined}
+                  title={view === "past" ? t("No past online sessions") : t("No upcoming online sessions")}
+                  description={canWrite && view === "upcoming" ? t("Schedule one with “New online session”.") : undefined}
                   action={
                     view === "upcoming" ? (
                       <Button variant="outline" asChild>
                         <Link href={hrefFor("calendar")}>
-                          <CalendarDaysIcon aria-hidden /> Open the calendar
+                          <CalendarDaysIcon aria-hidden /> {t("Open the calendar")}
                         </Link>
                       </Button>
                     ) : undefined
@@ -117,7 +122,7 @@ export default async function OnlinePage({ searchParams }: PageProps<"/online">)
         />
       )}
       {view === "past" && sessions.length === PAST_LIMIT && (
-        <p className="text-muted-foreground text-sm">Showing the latest {PAST_LIMIT}. Use the calendar or the class filter for older sessions.</p>
+        <p className="text-muted-foreground text-sm">{t("Showing the latest {PAST_LIMIT}. Use the calendar or the class filter for older sessions.", { PAST_LIMIT })}</p>
       )}
     </>
   )

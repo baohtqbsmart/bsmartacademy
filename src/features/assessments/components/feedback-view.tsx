@@ -12,6 +12,7 @@ import {
   type FeedbackSource,
 } from "@/features/assessments/scoring"
 import { cn } from "@/lib/utils"
+import { Trans } from "@/i18n/client"
 
 export type AnnotationView = {
   id: string
@@ -76,7 +77,7 @@ export function AnnotationList({ annotations, actions }: { annotations: Annotati
   const text = annotations.filter((a) => a.anchor === "text").sort((a, b) => (a.start_offset ?? 0) - (b.start_offset ?? 0))
   const timed = annotations.filter((a) => a.anchor === "time").sort((a, b) => (a.time_seconds ?? 0) - (b.time_seconds ?? 0))
   const general = annotations.filter((a) => a.anchor === "general")
-  if (annotations.length === 0) return <p className="text-muted-foreground text-sm">No comments.</p>
+  if (annotations.length === 0) return <p className="text-muted-foreground text-sm"><Trans>{"No comments."}</Trans></p>
   return (
     <ol className="grid gap-3 text-sm">
       {[...text, ...timed, ...general].map((a) => (
@@ -84,8 +85,13 @@ export function AnnotationList({ annotations, actions }: { annotations: Annotati
           <div className="flex flex-wrap items-center gap-2">
             {a.anchor === "text" && <span className="font-semibold tabular-nums">{text.indexOf(a) + 1}</span>}
             {a.anchor === "time" && <Badge variant="secondary" className="tabular-nums">{formatSeconds(Number(a.time_seconds))}</Badge>}
-            {a.anchor === "general" && <MessageSquareIcon className="text-muted-foreground size-4" aria-label="General comment" />}
-            <Badge variant="outline">{CATEGORY_LABELS[a.category]}</Badge>
+            {a.anchor === "general" && (
+              <>
+                <MessageSquareIcon className="text-muted-foreground size-4" aria-hidden />
+                <span className="sr-only"><Trans>{"General comment"}</Trans></span>
+              </>
+            )}
+            <Badge variant="outline"><Trans>{CATEGORY_LABELS[a.category]}</Trans></Badge>
             <SourceBadge source={a.source} />
             {actions && <span className="ml-auto flex gap-1">{actions(a)}</span>}
           </div>
@@ -95,7 +101,7 @@ export function AnnotationList({ annotations, actions }: { annotations: Annotati
               {a.suggestion && <span className="text-[#006300] dark:text-[#0ca30c]"> → {a.suggestion}</span>}
             </p>
           )}
-          {!a.quote && a.suggestion && <p className="text-[#006300] dark:text-[#0ca30c]">Suggested: {a.suggestion}</p>}
+          {!a.quote && a.suggestion && <p className="text-[#006300] dark:text-[#0ca30c]"><Trans values={{ suggestion: a.suggestion }}>{"Suggested: {suggestion}"}</Trans></p>}
           {a.comment && <p className="whitespace-pre-wrap">{a.comment}</p>}
           {!isOfficial(a.source) && <p className="text-muted-foreground text-xs">{AI_FEEDBACK_NOTICE}</p>}
         </li>

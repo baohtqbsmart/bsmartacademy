@@ -3,6 +3,8 @@
 import * as React from "react"
 import { cn } from "cn"
 import * as RechartsPrimitive from "recharts"
+
+import { useT } from "@/i18n/client"
 import type { TooltipValueType } from "recharts"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -57,9 +59,18 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId()
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
+  const t = useT()
+  // Series labels are English UI text; tooltips and legends read them from here.
+  const translated = React.useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(config).map(([key, item]) => [key, typeof item.label === "string" ? { ...item, label: t(item.label) } : item])
+      ) as ChartConfig,
+    [config, t]
+  )
 
   return (
-    <ChartContext.Provider value={{ config }}>
+    <ChartContext.Provider value={{ config: translated }}>
       <div
         data-slot="chart"
         data-chart={chartId}

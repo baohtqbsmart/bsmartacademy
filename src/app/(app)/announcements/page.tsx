@@ -11,10 +11,15 @@ import { listAnnouncements } from "@/features/communication/server/communication
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Announcements" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Announcements") }
+}
 
 export default async function AnnouncementsPage() {
+  const t = await getT()
   const user = await requireRouteAccess(routes.announcements)
   const db = await createClient()
   const isAdmin = can(user.permissions, "announcements.write", ["all"])
@@ -31,14 +36,14 @@ export default async function AnnouncementsPage() {
   return (
     <>
       <PageHeader
-        title="Announcements"
-        description={canWrite ? (isAdmin ? "Announce to everyone, staff, parents, students or one class." : "Announce to the classes you teach.") : "News from the academy and your classes."}
+        title={t("Announcements")}
+        description={canWrite ? (isAdmin ? t("Announce to everyone, staff, parents, students or one class.") : t("Announce to the classes you teach.")) : t("News from the academy and your classes.")}
         actions={canWrite && <NewAnnouncementDialog allAudiences={isAdmin} classes={classes} />}
       />
       {visible.length === 0 ? (
         <Card>
           <CardContent>
-            <EmptyState icon={MegaphoneIcon} title="No announcements" />
+            <EmptyState icon={MegaphoneIcon} title={t("No announcements")} />
           </CardContent>
         </Card>
       ) : (

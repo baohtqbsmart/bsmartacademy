@@ -9,8 +9,12 @@ import { getAttempt, getResponses } from "@/features/tests/server/attempt-servic
 import { getTest, listAttempts, listTestQuestions } from "@/features/tests/server/test-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Take test" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Take test") }
+}
 
 export default async function TakeTestPage({ params }: PageProps<"/tests/[id]/take">) {
   await requireRouteAccess(routes.testTake)

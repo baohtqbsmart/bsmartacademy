@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import type { ActionResult } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type ConfirmActionButtonProps = {
   /** A (bound) Server Action. */
@@ -41,6 +42,7 @@ export function ConfirmActionButton({
   size = "sm",
   "aria-label": ariaLabel,
 }: ConfirmActionButtonProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
@@ -69,10 +71,10 @@ export function ConfirmActionButton({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{t("Cancel")}</AlertDialogCancel>
           <Button variant={destructive ? "destructive" : "default"} onClick={confirm} disabled={isPending}>
             {isPending && <Loader2Icon className="animate-spin" aria-hidden />}
-            {confirmLabel}
+            {t(confirmLabel)}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

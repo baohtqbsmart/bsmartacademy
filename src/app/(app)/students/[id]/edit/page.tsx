@@ -8,10 +8,15 @@ import { StudentForm } from "@/features/students/components/student-form"
 import { getStudentProfile, listEnglishLevels } from "@/features/students/server/student-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit student" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit student") }
+}
 
 export default async function EditStudentPage({ params }: PageProps<"/students/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.studentEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -22,7 +27,7 @@ export default async function EditStudentPage({ params }: PageProps<"/students/[
 
   return (
     <>
-      <PageHeader title={`Edit ${student.full_name}`} description={`Student ID ${student.student_code}`} />
+      <PageHeader title={t("Edit {full_name}", { full_name: student.full_name })} description={t("Student ID {student_code}", { student_code: student.student_code })} />
       <StudentForm
         studentId={student.id}
         levels={levels}

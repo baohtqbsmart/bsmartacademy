@@ -20,6 +20,7 @@ import {
   type CourseFormOutput,
 } from "@/features/courses/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type SubjectOption = { id: string; name: string; levels: { id: string; name: string }[] }
 
@@ -31,6 +32,7 @@ type CourseFormProps = {
 }
 
 export function CourseForm({ courseId, defaultValues, subjects, cancelHref }: CourseFormProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
   const form = useForm<CourseFormInput, unknown, CourseFormOutput>({
@@ -56,52 +58,52 @@ export function CourseForm({ courseId, defaultValues, subjects, cancelHref }: Co
         <FormAlert message={formError} />
         <Card>
           <CardHeader>
-            <CardTitle>Course</CardTitle>
+            <CardTitle>{t("Course")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <TextField control={control} name="code" label="Course code" placeholder="ANH-PET" />
-            <TextField control={control} name="name" label="Name" />
+            <TextField control={control} name="code" label={t("Course code")} placeholder={t("ANH-PET")} />
+            <TextField control={control} name="name" label={t("Name")} />
             <SelectField
               control={control}
               name="subjectId"
-              label="Subject"
-              placeholder="Choose a subject"
+              label={t("Subject")}
+              placeholder={t("Choose a subject")}
               options={subjects.map((s) => ({ value: s.id, label: s.name }))}
             />
             <SelectField
               key={subjectId}
               control={control}
               name="levelId"
-              label="Level"
+              label={t("Level")}
               optional
               options={levels.map((l) => ({ value: l.id, label: l.name }))}
             />
-            <TextareaField control={control} name="description" label="Description" className="sm:col-span-2" />
+            <TextareaField control={control} name="description" label={t("Description")} className="sm:col-span-2" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Duration and status</CardTitle>
+            <CardTitle>{t("Duration and status")}</CardTitle>
             <CardDescription>
-              Draft courses are visible only to course editors; only active courses can start new classes.
+              {t("Draft courses are visible only to course editors; only active courses can start new classes.")}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-4">
-            <TextField control={control} name="sessionCount" label="Sessions" inputMode="numeric" />
-            <TextField control={control} name="sessionMinutes" label="Minutes each" inputMode="numeric" />
-            <TextField control={control} name="durationWeeks" label="Weeks" inputMode="numeric" />
+            <TextField control={control} name="sessionCount" label={t("Sessions")} inputMode="numeric" />
+            <TextField control={control} name="sessionMinutes" label={t("Minutes each")} inputMode="numeric" />
+            <TextField control={control} name="durationWeeks" label={t("Weeks")} inputMode="numeric" />
             <SelectField
               control={control}
               name="status"
-              label="Status"
+              label={t("Status")}
               options={COURSE_STATUSES.map((s) => ({ value: s, label: COURSE_STATUS[s].label }))}
             />
           </CardContent>
         </Card>
         <div className="flex gap-2">
-          <SubmitButton pending={isPending}>{courseId ? "Save changes" : "Create course"}</SubmitButton>
+          <SubmitButton pending={isPending}>{courseId ? t("Save changes") : t("Create course")}</SubmitButton>
           <Button variant="outline" asChild>
-            <Link href={cancelHref}>Cancel</Link>
+            <Link href={cancelHref}>{t("Cancel")}</Link>
           </Button>
         </div>
       </form>

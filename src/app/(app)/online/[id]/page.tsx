@@ -39,12 +39,17 @@ import { todayInAcademy } from "@/lib/dates"
 import { formatDateTime } from "@/lib/format"
 import { PROVIDERS } from "@/lib/meetings"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Online session" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Online session") }
+}
 
 const MAX_MATERIALS = 20
 
 export default async function OnlineSessionPage({ params }: PageProps<"/online/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.onlineSession)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -64,16 +69,16 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
   return (
     <>
       <Link href={routes.online} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Online classes
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Online classes")}
       </Link>
       <PageHeader
         title={session.title}
-        description={`${sessionWhen(session)} · ${session.class?.name ?? ""} · ${session.teacher?.full_name ?? ""}`}
+        description={t("{sessionWhen} · {value} · {value2}", { sessionWhen: sessionWhen(session), value: session.class?.name ?? "", value2: session.teacher?.full_name ?? "" })}
         actions={
           canWrite ? (
             <Button variant="outline" asChild>
               <Link href={onlineEditPath(session.id)}>
-                <PencilIcon aria-hidden /> Edit
+                <PencilIcon aria-hidden /> {t("Edit")}
               </Link>
             </Button>
           ) : undefined
@@ -88,7 +93,7 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
         )}
       </div>
       {session.status === "cancelled" && session.cancelled_reason && (
-        <p className="text-destructive text-sm">Cancelled: {session.cancelled_reason}</p>
+        <p className="text-destructive text-sm">{t("Cancelled: {cancelled_reason}", { cancelled_reason: session.cancelled_reason })}</p>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
@@ -96,7 +101,7 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
           {session.agenda && (
             <Card>
               <CardHeader>
-                <CardTitle>Agenda</CardTitle>
+                <CardTitle>{t("Agenda")}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm whitespace-pre-wrap">{session.agenda}</CardContent>
             </Card>
@@ -104,12 +109,12 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
 
           <Card>
             <CardHeader>
-              <CardTitle>Materials</CardTitle>
-              {canWrite && <CardDescription>Hidden materials are for staff only — e.g. the answer sheet.</CardDescription>}
+              <CardTitle>{t("Materials")}</CardTitle>
+              {canWrite && <CardDescription>{t("Hidden materials are for staff only — e.g. the answer sheet.")}</CardDescription>}
             </CardHeader>
             <CardContent className="grid gap-3">
               {session.materials.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No materials yet.</p>
+                <p className="text-muted-foreground text-sm">{t("No materials yet.")}</p>
               ) : (
                 <ul className="grid gap-1">
                   {session.materials.map((m) => (
@@ -125,7 +130,7 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
                         )}
                         {!m.visible_to_students && (
                           <Badge variant="outline" className="shrink-0">
-                            <EyeOffIcon aria-hidden /> Staff only
+                            <EyeOffIcon aria-hidden /> {t("Staff only")}
                           </Badge>
                         )}
                       </span>
@@ -137,21 +142,21 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
               {canWrite && (
                 <div className="flex flex-wrap items-start gap-2">
                   <AddLinkMaterialDialog sessionId={session.id} />
-                  <FileUploader target={{ kind: "online", sessionId: session.id }} remaining={MAX_MATERIALS - session.materials.length} label="Upload file" />
+                  <FileUploader target={{ kind: "online", sessionId: session.id }} remaining={MAX_MATERIALS - session.materials.length} label={t("Upload file")} />
                 </div>
               )}
-              {canWrite && <p className="text-muted-foreground text-xs">Uploaded files start hidden; show them to students when you are ready.</p>}
+              {canWrite && <p className="text-muted-foreground text-xs">{t("Uploaded files start hidden; show them to students when you are ready.")}</p>}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Homework</CardTitle>
-              {student && <CardDescription>Do it from Assignments.</CardDescription>}
+              <CardTitle>{t("Homework")}</CardTitle>
+              {student && <CardDescription>{t("Do it from Assignments.")}</CardDescription>}
             </CardHeader>
             <CardContent className="grid gap-3">
               {session.homework.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No homework linked.</p>
+                <p className="text-muted-foreground text-sm">{t("No homework linked.")}</p>
               ) : (
                 <ul className="grid gap-1">
                   {session.homework.map((h) => (
@@ -161,7 +166,7 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
                         <Link href={assignmentPath(h.id)} className="truncate underline">
                           {h.title}
                         </Link>
-                        {h.due_at && <span className="text-muted-foreground shrink-0 text-xs">due {formatDateTime(h.due_at)}</span>}
+                        {h.due_at && <span className="text-muted-foreground shrink-0 text-xs">{t("due {dateTime}", { dateTime: formatDateTime(h.due_at) })}</span>}
                       </span>
                       {canWrite && <UnlinkHomeworkButton sessionId={session.id} assignmentId={h.id} title={h.title} />}
                     </li>
@@ -173,7 +178,7 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
                   <LinkHomeworkDialog sessionId={session.id} assignments={assignments.filter((a) => !linked.has(a.id))} />
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`${routes.assignmentNew}?class=${session.class_id}`}>
-                      <PlusIcon aria-hidden /> New assignment
+                      <PlusIcon aria-hidden /> {t("New assignment")}
                     </Link>
                   </Button>
                 </div>
@@ -184,15 +189,14 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
           {canWrite && (
             <Card>
               <CardHeader>
-                <CardTitle>Teaching notes</CardTitle>
-                <CardDescription>Staff only — students and parents never see these.</CardDescription>
+                <CardTitle>{t("Teaching notes")}</CardTitle>
+                <CardDescription>{t("Staff only — students and parents never see these.")}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-2">
                 <TeachingNotesEditor sessionId={session.id} initial={session.notes?.notes ?? ""} />
                 {session.notes?.updated_at && (
                   <p className="text-muted-foreground text-xs">
-                    Last saved {formatDateTime(session.notes.updated_at)}
-                    {session.notes.updated_by_name && ` by ${session.notes.updated_by_name}`}
+                    {t("Last saved {dateTime}{value}", { dateTime: formatDateTime(session.notes.updated_at), value: session.notes.updated_by_name && ` by ${session.notes.updated_by_name}` })}
                   </p>
                 )}
               </CardContent>
@@ -204,36 +208,36 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <VideoIcon className="size-4" aria-hidden /> {provider?.label ?? "Meeting"}
+                <VideoIcon className="size-4" aria-hidden /> {provider?.label ?? t("Meeting")}
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-2 text-sm">
               {!session.meeting_url ? (
-                <p className="text-muted-foreground">No meeting link yet.</p>
+                <p className="text-muted-foreground">{t("No meeting link yet.")}</p>
               ) : canWrite ? (
                 <a href={session.meeting_url} target="_blank" rel="noreferrer" className="break-all underline">
                   {session.meeting_url}
                 </a>
               ) : (
-                <p className="text-muted-foreground">Use “Join lesson” to open the meeting.</p>
+                <p className="text-muted-foreground">{t("Use “Join lesson” to open the meeting.")}</p>
               )}
               {session.meeting_code && (
                 <p>
-                  Meeting ID: <span className="font-mono">{session.meeting_code}</span>
+                  {t("Meeting ID:")} <span className="font-mono">{session.meeting_code}</span>
                 </p>
               )}
               {session.passcode && (
                 <p>
-                  Passcode: <span className="font-mono">{session.passcode}</span>
+                  {t("Passcode:")} <span className="font-mono">{session.passcode}</span>
                 </p>
               )}
               {session.recording_url && (
                 <a href={session.recording_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
-                  Watch the recording <ExternalLinkIcon className="size-3.5" aria-hidden />
+                  {t("Watch the recording")} <ExternalLinkIcon className="size-3.5" aria-hidden />
                 </a>
               )}
-              {session.started_at && <p className="text-muted-foreground text-xs">Started {formatDateTime(session.started_at)}</p>}
-              {session.ended_at && <p className="text-muted-foreground text-xs">Ended {formatDateTime(session.ended_at)}</p>}
+              {session.started_at && <p className="text-muted-foreground text-xs">{t("Started {dateTime}", { dateTime: formatDateTime(session.started_at) })}</p>}
+              {session.ended_at && <p className="text-muted-foreground text-xs">{t("Ended {dateTime}", { dateTime: formatDateTime(session.ended_at) })}</p>}
             </CardContent>
           </Card>
 
@@ -241,13 +245,13 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <UsersIcon className="size-4" aria-hidden /> Attendance
+                  <UsersIcon className="size-4" aria-hidden /> {t("Attendance")}
                 </CardTitle>
-                <CardDescription>Students who opened the meeting from BSmart. Mark the register to record attendance.</CardDescription>
+                <CardDescription>{t("Students who opened the meeting from BSmart. Mark the register to record attendance.")}</CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 text-sm">
                 {session.joins.length === 0 ? (
-                  <p className="text-muted-foreground">Nobody has joined through BSmart yet.</p>
+                  <p className="text-muted-foreground">{t("Nobody has joined through BSmart yet.")}</p>
                 ) : (
                   <ul className="grid gap-1">
                     {session.joins.map((j) => (
@@ -266,17 +270,17 @@ export default async function OnlineSessionPage({ params }: PageProps<"/online/[
                   (started ? (
                     <Button variant="outline" asChild>
                       <Link href={classAttendancePath(session.class_id, session.session_date)}>
-                        <ClipboardCheckIcon aria-hidden /> Mark attendance
+                        <ClipboardCheckIcon aria-hidden /> {t("Mark attendance")}
                       </Link>
                     </Button>
                   ) : (
-                    <p className="text-muted-foreground text-xs">The register opens on the day of the lesson.</p>
+                    <p className="text-muted-foreground text-xs">{t("The register opens on the day of the lesson.")}</p>
                   ))}
               </CardContent>
             </Card>
           )}
 
-          {canWrite && session.created_by_name && <p className="text-muted-foreground text-xs">Scheduled by {session.created_by_name}</p>}
+          {canWrite && session.created_by_name && <p className="text-muted-foreground text-xs">{t("Scheduled by {created_by_name}", { created_by_name: session.created_by_name })}</p>}
         </div>
       </div>
     </>

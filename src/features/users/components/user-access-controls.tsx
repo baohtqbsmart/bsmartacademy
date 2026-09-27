@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { setUserActiveAction, setUserRoleAction } from "@/features/users/actions"
+import { useT } from "@/i18n/client"
 
 type UserAccessControlsProps = {
   userId: string
@@ -33,13 +34,14 @@ export function UserAccessControls({
   isActive,
   assignableRoles,
 }: UserAccessControlsProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
 
   function changeRole(nextRole: string) {
     if (nextRole === roleCode) return
     startTransition(async () => {
       const result = await setUserRoleAction({ userId, roleCode: nextRole })
-      if (result.ok) toast.success(`Updated ${userName}'s role.`)
+      if (result.ok) toast.success(t("Updated {userName}'s role.", { userName }))
       else toast.error(result.error.message)
     })
   }
@@ -47,7 +49,7 @@ export function UserAccessControls({
   function toggleActive() {
     startTransition(async () => {
       const result = await setUserActiveAction({ userId, active: !isActive })
-      if (result.ok) toast.success(`${isActive ? "Deactivated" : "Reactivated"} ${userName}.`)
+      if (result.ok) toast.success(t("{value} {userName}.", { value: isActive ? "Deactivated" : "Reactivated", userName }))
       else toast.error(result.error.message)
     })
   }
@@ -55,7 +57,7 @@ export function UserAccessControls({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select value={roleCode} onValueChange={changeRole} disabled={isPending}>
-        <SelectTrigger size="sm" className="w-44" aria-label={`Role for ${userName}`}>
+        <SelectTrigger size="sm" className="w-44" aria-label={t("Role for {userName}", { userName })}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -72,7 +74,7 @@ export function UserAccessControls({
         disabled={isPending}
         onClick={toggleActive}
       >
-        {isActive ? "Deactivate" : "Reactivate"}
+        {isActive ? t("Deactivate") : t("Reactivate")}
       </Button>
     </div>
   )

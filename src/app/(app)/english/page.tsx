@@ -23,10 +23,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "English" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("English") }
+}
 
 export default async function EnglishDashboardPage({ searchParams }: PageProps<"/english">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.english)
   const params = await searchParams
   const db = await createClient()
@@ -34,11 +39,11 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
   // Students: their own dashboard.
   if (can(user.permissions, "english.practice", ["own"])) {
     const studentId = await getOwnStudentId(db, user.id)
-    if (!studentId) return <PageHeader title="English" description="Your account is not linked to a student record yet." />
+    if (!studentId) return <PageHeader title={t("English")} description={t("Your account is not linked to a student record yet.")} />
     const [overview, sets] = await Promise.all([loadLearnerOverview(db, studentId), listSets(db)])
     return (
       <>
-        <PageHeader title="My English" description="Your progress in every skill, what to review and what to try next." />
+        <PageHeader title={t("My English")} description={t("Your progress in every skill, what to review and what to try next.")} />
         <LearnerDashboard overview={overview} sets={sets.filter((s) => s.status === "published")} canPractise />
       </>
     )
@@ -50,11 +55,11 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
   if (can(user.permissions, "english.results", ["children"])) {
     const children = await listVisibleStudents(db)
     const child = children.find((c) => c.id === requested) ?? children[0]
-    if (!child) return <PageHeader title="English" description="No children are linked to your account." />
+    if (!child) return <PageHeader title={t("English")} description={t("No children are linked to your account.")} />
     const overview = await loadLearnerOverview(db, child.id)
     return (
       <>
-        <PageHeader title={`${child.full_name}'s English`} description="Progress by skill, recent practice and teacher feedback." />
+        <PageHeader title={t("{full_name}'s English", { full_name: child.full_name })} description={t("Progress by skill, recent practice and teacher feedback.")} />
         {children.length > 1 && (
           <div className="flex flex-wrap gap-2">
             {children.map((c) => (
@@ -78,9 +83,9 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
       return (
         <>
           <Link href={routes.english} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-            <ArrowLeftIcon className="size-4" aria-hidden /> English overview
+            <ArrowLeftIcon className="size-4" aria-hidden /> {t("English overview")}
           </Link>
-          <PageHeader title={`${student.full_name} · English`} description={student.student_code} />
+          <PageHeader title={t("{full_name} · English", { full_name: student.full_name })} description={student.student_code} />
           <LearnerDashboard overview={overview} sets={[]} canPractise={false} />
         </>
       )
@@ -99,15 +104,15 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
 
   return (
     <>
-      <PageHeader title="English" description="Skills of the students you teach, and work waiting for your feedback." />
+      <PageHeader title={t("English")} description={t("Skills of the students you teach, and work waiting for your feedback.")} />
       <Card>
         <CardHeader>
-          <CardTitle>Waiting for feedback</CardTitle>
-          <CardDescription>Speaking, writing and pronunciation work from your students, oldest first.</CardDescription>
+          <CardTitle>{t("Waiting for feedback")}</CardTitle>
+          <CardDescription>{t("Speaking, writing and pronunciation work from your students, oldest first.")}</CardDescription>
         </CardHeader>
         <CardContent>
           {queue.length === 0 ? (
-            <EmptyState icon={InboxIcon} title="Nothing to review" />
+            <EmptyState icon={InboxIcon} title={t("Nothing to review")} />
           ) : (
             <ul className="grid gap-2 text-sm">
               {[...queue].reverse().map((s) => (
@@ -119,7 +124,7 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
                   <span className="flex items-center gap-2">
                     <span className="text-muted-foreground tabular-nums">{formatDateTime(s.submitted_at)}</span>
                     <Button size="sm" asChild>
-                      <Link href={lessonSubmissionPath(s.id)}>Review</Link>
+                      <Link href={lessonSubmissionPath(s.id)}>{t("Review")}</Link>
                     </Button>
                   </span>
                 </li>
@@ -130,7 +135,7 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
       </Card>
 
       <section className="grid gap-3">
-        <h2 className="font-semibold">Skills by student</h2>
+        <h2 className="font-semibold">{t("Skills by student")}</h2>
         <ListFilters
           basePath={routes.english}
           values={{ class: classId }}
@@ -139,8 +144,8 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
         <SimpleTable
           rows={students}
           rowKey={(s) => s.id}
-          empty="No students."
-          footer={<p className="text-muted-foreground text-sm">Average percentage per skill; “—” means no activity yet.</p>}
+          empty={t("No students.")}
+          footer={<p className="text-muted-foreground text-sm">{t("Average percentage per skill; “—” means no activity yet.")}</p>}
           columns={[
             {
               header: "Student",
@@ -158,7 +163,7 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
                 return p?.average_percent == null ? (
                   <span className="text-muted-foreground">—</span>
                 ) : (
-                  <span className="tabular-nums" title={`${p.activities} activities`}>
+                  <span className="tabular-nums" title={t("{activities} activities", { activities: p.activities })}>
                     {Math.round(Number(p.average_percent))}%
                   </span>
                 )
@@ -171,7 +176,7 @@ export default async function EnglishDashboardPage({ searchParams }: PageProps<"
   )
 }
 
-function LearnerDashboard({
+async function LearnerDashboard({
   overview,
   sets,
   canPractise,
@@ -180,6 +185,7 @@ function LearnerDashboard({
   sets: { id: string; title: string; wordCount: number }[]
   canPractise: boolean
 }) {
+  const t = await getT()
   const weakest = weakestSkill(overview.profile)
   const suggestions = [...overview.nextLessons].sort((a, b) => Number(b.skill === weakest) - Number(a.skill === weakest)).slice(0, 6)
   const practised = overview.profile.filter((p) => p.average_percent !== null)
@@ -199,28 +205,28 @@ function LearnerDashboard({
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Skills</CardTitle>
-            <CardDescription>Average score of vocabulary practice, exercises, reviewed work and returned assignments.</CardDescription>
+            <CardTitle>{t("Skills")}</CardTitle>
+            <CardDescription>{t("Average score of vocabulary practice, exercises, reviewed work and returned assignments.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <SkillChart
               data={overview.profile.map((p) => ({ skill: SKILL_LABELS[p.skill], average: p.average_percent, activities: p.activities }))}
             />
             <details>
-              <summary className="text-muted-foreground cursor-pointer text-sm">Show as table</summary>
+              <summary className="text-muted-foreground cursor-pointer text-sm">{t("Show as table")}</summary>
               <table className="mt-2 w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-left">
-                    <th className="py-1 font-normal">Skill</th>
-                    <th className="py-1 text-right font-normal">Average</th>
-                    <th className="py-1 text-right font-normal">Activities</th>
-                    <th className="py-1 text-right font-normal">Last</th>
+                    <th className="py-1 font-normal">{t("Skill")}</th>
+                    <th className="py-1 text-right font-normal">{t("Average")}</th>
+                    <th className="py-1 text-right font-normal">{t("Activities")}</th>
+                    <th className="py-1 text-right font-normal">{t("Last")}</th>
                   </tr>
                 </thead>
                 <tbody className="tabular-nums">
                   {overview.profile.map((p) => (
                     <tr key={p.skill} className="border-t">
-                      <td className="py-1">{SKILL_LABELS[p.skill]}</td>
+                      <td className="py-1">{t(SKILL_LABELS[p.skill])}</td>
                       <td className="py-1 text-right">{p.average_percent === null ? "—" : `${p.average_percent}%`}</td>
                       <td className="py-1 text-right">{p.activities}</td>
                       <td className="py-1 text-right">{formatDateTime(p.last_activity)}</td>
@@ -233,18 +239,18 @@ function LearnerDashboard({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Recent activity</CardTitle>
+            <CardTitle>{t("Recent activity")}</CardTitle>
           </CardHeader>
           <CardContent>
             {overview.activity.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No activity yet.</p>
+              <p className="text-muted-foreground text-sm">{t("No activity yet.")}</p>
             ) : (
               <ul className="grid gap-2 text-sm">
                 {overview.activity.map((a) => (
                   <li key={a.id} className="grid">
                     <span>
                       <Badge variant="outline" className="mr-1">
-                        {SKILL_LABELS[a.skill]}
+                        {t(SKILL_LABELS[a.skill])}
                       </Badge>
                       {a.href ? (
                         <Link href={a.href} className="font-medium hover:underline">
@@ -269,18 +275,18 @@ function LearnerDashboard({
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Try next</CardTitle>
-              <CardDescription>{weakest ? `Starting with your weakest skill: ${SKILL_LABELS[weakest]}.` : "Lessons you have not done yet."}</CardDescription>
+              <CardTitle>{t("Try next")}</CardTitle>
+              <CardDescription>{weakest ? t("Starting with your weakest skill: {value}.", { value: SKILL_LABELS[weakest] }) : t("Lessons you have not done yet.")}</CardDescription>
             </CardHeader>
             <CardContent>
               {suggestions.length === 0 ? (
-                <p className="text-muted-foreground text-sm">You have done every lesson. Well done!</p>
+                <p className="text-muted-foreground text-sm">{t("You have done every lesson. Well done!")}</p>
               ) : (
                 <ul className="grid gap-2 text-sm">
                   {suggestions.map((l) => (
                     <li key={l.id}>
                       <Badge variant="outline" className="mr-1">
-                        {SKILL_LABELS[l.skill]}
+                        {t(SKILL_LABELS[l.skill])}
                       </Badge>
                       <Link href={lessonPath(l.id)} className="font-medium hover:underline">
                         {l.title}
@@ -293,8 +299,8 @@ function LearnerDashboard({
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Vocabulary</CardTitle>
-              <CardDescription>Words come back for review when you are about to forget them.</CardDescription>
+              <CardTitle>{t("Vocabulary")}</CardTitle>
+              <CardDescription>{t("Words come back for review when you are about to forget them.")}</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="grid gap-2 text-sm">
@@ -303,7 +309,7 @@ function LearnerDashboard({
                     <Link href={wordSetPath(s.id)} className="font-medium hover:underline">
                       {s.title}
                     </Link>
-                    <span className="text-muted-foreground tabular-nums">{s.wordCount} words</span>
+                    <span className="text-muted-foreground tabular-nums">{t("{wordCount} words", { wordCount: s.wordCount })}</span>
                   </li>
                 ))}
               </ul>

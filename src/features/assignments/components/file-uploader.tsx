@@ -12,6 +12,7 @@ import { recordSpokenAnswerAction } from "@/features/tests/actions"
 import { BUCKETS } from "@/lib/storage"
 import { createClient } from "@/lib/supabase/client"
 import { ACCEPT_ATTRIBUTE, checkFile, describeAcceptedTypes, fileExtension, UPLOAD_RULES } from "@/lib/uploads"
+import { useT } from "@/i18n/client"
 
 export type UploadTarget =
   | { kind: "submission"; submissionId: string }
@@ -34,6 +35,7 @@ type FileUploaderProps = {
  * (type/size) for quick feedback; the server and database decide.
  */
 export function FileUploader({ target, remaining, label = "Add files", accept = ACCEPT_ATTRIBUTE }: FileUploaderProps) {
+  const t = useT()
   // Storage RLS allows these folders only for the right person.
   const folder = folderOf(target)
   const record = (input: { objectPath: string; fileName: string }) => {
@@ -58,29 +60,29 @@ export function FileUploader({ target, remaining, label = "Add files", accept = 
   function handleFiles(list: FileList) {
     const files = [...list]
     if (files.length > remaining) {
-      toast.error(remaining === 0 ? "No more files can be added." : `You can add ${remaining} more file${remaining === 1 ? "" : "s"}.`)
+      toast.error(t(remaining === 0 ? "No more files can be added." : `You can add ${remaining} more file${remaining === 1 ? "" : "s"}.`))
       return
     }
     const problems = files.map(checkFile).filter((check) => !check.ok)
     if (problems.length > 0) {
-      for (const problem of problems) if (!problem.ok) toast.error(problem.message)
+      for (const problem of problems) if (!problem.ok) toast.error(t(problem.message))
       return
     }
 
     startTransition(async () => {
       const storage = createClient().storage.from(BUCKETS.assignmentFiles)
       for (const [index, file] of files.entries()) {
-        setProgress(`Uploading ${index + 1} of ${files.length}…`)
+        setProgress(t("Uploading {n} of {total}…", { n: index + 1, total: files.length }))
         const check = checkFile(file)
         if (!check.ok) continue
         const objectPath = `${folder}/${crypto.randomUUID()}.${fileExtension(file.name)}`
         const { error } = await storage.upload(objectPath, file, { contentType: check.mimeType, upsert: false })
         if (error) {
-          toast.error(`"${file.name}" could not be uploaded. Please try again.`)
+          toast.error(t("\"{name}\" could not be uploaded. Please try again.", { name: file.name }))
           continue
         }
         const result = await record({ objectPath, fileName: file.name })
-        if (result.ok) toast.success(`"${file.name}" added.`)
+        if (result.ok) toast.success(t("\"{name}\" added.", { name: file.name }))
         else toast.error(result.error.message)
       }
       setProgress(null)
@@ -110,7 +112,7 @@ export function FileUploader({ target, remaining, label = "Add files", accept = 
         </Button>
       </div>
       <p className="text-muted-foreground text-xs">
-        {describeAcceptedTypes()}; up to {UPLOAD_RULES.maxBytes / 1024 / 1024} MB each.
+        {t("{describeAcceptedTypes}; up to {value} MB each.", { describeAcceptedTypes: describeAcceptedTypes(), value: UPLOAD_RULES.maxBytes / 1024 / 1024 })}
       </p>
     </div>
   )

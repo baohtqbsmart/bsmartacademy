@@ -10,10 +10,15 @@ import { academyDate, academyTime } from "@/features/online/sessions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { detectProvider } from "@/lib/meetings"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit online session" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit online session") }
+}
 
 export default async function EditOnlineSessionPage({ params }: PageProps<"/online/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.onlineEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -28,7 +33,7 @@ export default async function EditOnlineSessionPage({ params }: PageProps<"/onli
 
   return (
     <>
-      <PageHeader title="Edit online session" description={session.title} />
+      <PageHeader title={t("Edit online session")} description={session.title} />
       <SessionForm
         classes={options}
         editing

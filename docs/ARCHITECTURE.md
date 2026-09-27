@@ -887,3 +887,28 @@ See [AUDIT-2026-09.md](AUDIT-2026-09.md) for the production-readiness audit: wha
 fixes (redirect validation, security headers and CSP in `next.config.ts`, password policy, rate
 limits, same-site sign-out) and the remaining risks. Regression tests from the audit:
 `tests/db/idor.test.ts`, `tests/app/action-guards.test.ts`, `tests/db/rate-limits.test.ts`.
+
+## 31. Interface language (Vietnamese / English)
+
+Vietnamese is the default interface language; English is the second language, chosen per
+browser in **Settings → My profile → Language** (and on the sign-in page). The choice is the
+`locale` cookie, set by the public `setLocaleAction`.
+
+- **English text is the key.** Code keeps writing English; `src/i18n/messages/vi*.ts` maps it
+  to Vietnamese. A missing entry falls back to English, so English needs no dictionary.
+- **Where to translate:** Server Components, Server Actions and route handlers use
+  `const t = await getT()` (`@/i18n/server`); Client Components use `const t = useT()`
+  (`@/i18n/client`); components rendered on both sides use `<Trans>{"…"}</Trans>`.
+  Placeholders use `{name}`: `t("Signed in as {email}.", { email })`.
+- **Translated centrally:** `runAction` translates every error and field message it returns;
+  `FormMessage` and `FormAlert` translate client-side validation; `ChartContainer` translates
+  series labels; notification texts written by database triggers are translated by
+  `features/communication/notification-text.ts`.
+- **Never translate data.** Names, titles, vocabulary and answers entered by people are shown
+  as entered — wrap only UI text (labels, messages, label maps), never database fields.
+- **Messages with numbers or quoted file names** can be matched without placeholders: the key
+  `"{q0}" is larger than {#0} MB.` translates `"a.pdf" is larger than 20 MB.` (see `lookup`).
+- Dates and money are already formatted the Vietnamese way (`vi-VN`) in both languages.
+
+**Tests:** `tests/app/i18n.test.ts` fails when a string passed to `t()` or `<Trans>` has no
+Vietnamese entry, or when a translation uses a placeholder the English text does not provide.

@@ -17,8 +17,12 @@ import { formatDate } from "@/lib/format"
 import { formatVnd } from "@/lib/money"
 import { enumParam, firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Invoices" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Invoices") }
+}
 
 const STATUS_LABELS: Record<(typeof INVOICE_STATUS_FILTERS)[number], string> = {
   outstanding: "Outstanding (not fully paid)",
@@ -31,6 +35,7 @@ const STATUS_LABELS: Record<(typeof INVOICE_STATUS_FILTERS)[number], string> = {
 }
 
 export default async function InvoicesPage({ searchParams }: PageProps<"/tuition/invoices">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.invoices)
   const canWrite = can(user.permissions, "tuition.write")
   const params = await searchParams
@@ -48,11 +53,11 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/tuition
   return (
     <>
       <PageHeader
-        title={isOutstanding ? "Outstanding fees" : "Invoices"}
+        title={isOutstanding ? t("Outstanding fees") : t("Invoices")}
         description={
           isOutstanding
-            ? "Invoices not yet fully paid, oldest due date first."
-            : "Every installment and charge issued to students."
+            ? t("Invoices not yet fully paid, oldest due date first.")
+            : t("Every installment and charge issued to students.")
         }
         actions={
           canWrite && (
@@ -63,7 +68,7 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/tuition
       <ListFilters
         basePath={routes.invoices}
         values={{ q, status }}
-        searchPlaceholder="Search invoice or student"
+        searchPlaceholder={t("Search invoice or student")}
         filters={[
           {
             param: "status",
@@ -76,11 +81,11 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/tuition
       <SimpleTable
         rows={invoices}
         rowKey={(i) => i.id}
-        empty={<EmptyState icon={FileTextIcon} title={isOutstanding ? "Nothing outstanding" : "No invoices match"} />}
+        empty={<EmptyState icon={FileTextIcon} title={isOutstanding ? t("Nothing outstanding") : t("No invoices match")} />}
         footer={
           invoices.length > 0 && (
             <p className="text-muted-foreground text-sm tabular-nums">
-              {invoices.length} invoices · remaining {formatVnd(remaining)}
+              {t("{length} invoices · remaining {vnd}", { length: invoices.length, vnd: formatVnd(remaining) })}
             </p>
           )
         }

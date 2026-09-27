@@ -7,17 +7,22 @@ import { listAssignableClasses } from "@/features/assignments/server/assignment-
 import { requireRouteAccess } from "@/lib/auth/session"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "New assignment" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("New assignment") }
+}
 
 export default async function NewAssignmentPage({ searchParams }: PageProps<"/assignments/new">) {
+  const t = await getT()
   await requireRouteAccess(routes.assignmentNew)
   const classes = await listAssignableClasses(await createClient())
   const requested = uuidParam(await searchParams, "class")
 
   return (
     <>
-      <PageHeader title="New assignment" description="Saved as a draft. Students see it only once you publish it." />
+      <PageHeader title={t("New assignment")} description={t("Saved as a draft. Students see it only once you publish it.")} />
       <AssignmentForm
         classes={classes.map((c) => ({ id: c.id, name: c.name, course: c.course?.name ?? null, level: c.course?.level?.name ?? null }))}
         cancelHref={routes.assignments}

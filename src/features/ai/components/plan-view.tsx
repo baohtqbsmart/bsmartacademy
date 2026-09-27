@@ -1,31 +1,33 @@
 import { EXERCISE_LABELS, STAGE_NAMES, STAGES, type LessonPlan } from "@/features/ai/content"
+import { getT } from "@/i18n/server"
 
 /** Read-only, printable lesson plan (approved or discarded drafts, and print). */
-export function PlanView({ plan }: { plan: LessonPlan }) {
+export async function PlanView({ plan }: { plan: LessonPlan }) {
+  const t = await getT()
   return (
     <article className="grid gap-6 text-sm">
       <section>
-        <h2 className="text-xl font-semibold">{plan.title}</h2>
-        <p className="text-muted-foreground mt-1">{plan.summary}</p>
+        <h2 className="text-xl font-semibold">{t(plan.title)}</h2>
+        <p className="text-muted-foreground mt-1">{t(plan.summary)}</p>
       </section>
-      <Block title="Learning objectives">
+      <Block title={t("Learning objectives")}>
         <List items={plan.objectives} />
       </Block>
       {STAGES.map((s) => (
-        <Block key={s} title={`${STAGE_NAMES[s]} · ${plan[s].minutes} min`}>
+        <Block key={s} title={t("{value} · {minutes} min", { value: STAGE_NAMES[s], minutes: plan[s].minutes })}>
           <List items={plan[s].steps} ordered />
-          {plan[s].materials.length > 0 && <p className="text-muted-foreground mt-1">Materials: {plan[s].materials.join(", ")}</p>}
-          {plan[s].teacherNotes && <p className="text-muted-foreground mt-1 italic">Notes: {plan[s].teacherNotes}</p>}
+          {plan[s].materials.length > 0 && <p className="text-muted-foreground mt-1">{t("Materials: {materials}", { materials: plan[s].materials.join(", ") })}</p>}
+          {plan[s].teacherNotes && <p className="text-muted-foreground mt-1 italic">{t("Notes: {teacherNotes}", { teacherNotes: plan[s].teacherNotes })}</p>}
         </Block>
       ))}
       {plan.vocabulary.length > 0 && (
-        <Block title="Vocabulary">
+        <Block title={t("Vocabulary")}>
           <table className="w-full text-left">
             <thead className="text-muted-foreground text-xs">
               <tr>
-                <th className="py-1 pr-2 font-medium">Word</th>
-                <th className="py-1 pr-2 font-medium">Meaning</th>
-                <th className="py-1 font-medium">Example</th>
+                <th className="py-1 pr-2 font-medium">{t("Word")}</th>
+                <th className="py-1 pr-2 font-medium">{t("Meaning")}</th>
+                <th className="py-1 font-medium">{t("Example")}</th>
               </tr>
             </thead>
             <tbody>
@@ -44,24 +46,24 @@ export function PlanView({ plan }: { plan: LessonPlan }) {
         </Block>
       )}
       {plan.readingText && (
-        <Block title="Reading text">
+        <Block title={t("Reading text")}>
           <p className="font-serif whitespace-pre-wrap">{plan.readingText}</p>
         </Block>
       )}
       {plan.listeningScript && (
-        <Block title="Listening script (for the teacher)">
+        <Block title={t("Listening script (for the teacher)")}>
           <p className="whitespace-pre-wrap">{plan.listeningScript}</p>
         </Block>
       )}
       {plan.exercises.length > 0 && (
-        <Block title="Exercises">
+        <Block title={t("Exercises")}>
           <ol className="grid list-decimal gap-2 pl-5">
             {plan.exercises.map((e, i) => (
               <li key={i}>
-                <span className="text-muted-foreground text-xs">{EXERCISE_LABELS[e.type]} · </span>
+                <span className="text-muted-foreground text-xs">{t(EXERCISE_LABELS[e.type])} · </span>
                 {e.prompt}
                 {e.options.length > 0 && <span className="block text-xs">{e.options.join(" · ")}</span>}
-                <span className="block text-xs text-emerald-700 dark:text-emerald-400">Answer: {e.answer}</span>
+                <span className="block text-xs text-emerald-700 dark:text-emerald-400">{t("Answer: {answer}", { answer: e.answer })}</span>
                 {e.explanation && <span className="text-muted-foreground block text-xs">{e.explanation}</span>}
               </li>
             ))}
@@ -69,20 +71,20 @@ export function PlanView({ plan }: { plan: LessonPlan }) {
         </Block>
       )}
       {plan.speakingPrompts.length > 0 && (
-        <Block title="Speaking prompts">
+        <Block title={t("Speaking prompts")}>
           <List items={plan.speakingPrompts} />
         </Block>
       )}
       {plan.writingPrompt && (
-        <Block title="Writing task">
+        <Block title={t("Writing task")}>
           <p>{plan.writingPrompt.task}</p>
           <p className="text-muted-foreground mt-1">
-            {plan.writingPrompt.minWords}–{plan.writingPrompt.maxWords} words · Criteria: {plan.writingPrompt.criteria.join("; ")}
+            {t("{minWords}–{maxWords} words · Criteria: {criteria}", { minWords: plan.writingPrompt.minWords, maxWords: plan.writingPrompt.maxWords, criteria: plan.writingPrompt.criteria.join("; ") })}
           </p>
         </Block>
       )}
       {plan.differentiation && (
-        <Block title="Differentiated activities">
+        <Block title={t("Differentiated activities")}>
           <div className="grid gap-3 sm:grid-cols-3">
             {(["support", "core", "challenge"] as const).map((k) => (
               <div key={k}>
@@ -93,7 +95,7 @@ export function PlanView({ plan }: { plan: LessonPlan }) {
           </div>
         </Block>
       )}
-      <Block title="Homework">
+      <Block title={t("Homework")}>
         <p>{plan.homework.instructions}</p>
         <List items={plan.homework.tasks} ordered />
       </Block>
@@ -101,7 +103,7 @@ export function PlanView({ plan }: { plan: LessonPlan }) {
   )
 }
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
+async function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="break-inside-avoid">
       <h3 className="mb-1.5 font-semibold">{title}</h3>

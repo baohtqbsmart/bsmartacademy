@@ -22,10 +22,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam, firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Vocabulary" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Vocabulary") }
+}
 
 export default async function VocabularyPage({ searchParams }: PageProps<"/english/vocabulary">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.vocabulary)
   const params = await searchParams
   const view = enumParam(params, "view", ["sets", "words"] as const) ?? "sets"
@@ -35,15 +40,15 @@ export default async function VocabularyPage({ searchParams }: PageProps<"/engli
   return (
     <>
       <PageHeader
-        title="Vocabulary"
-        description="Word sets to practise, and the word bank behind them."
+        title={t("Vocabulary")}
+        description={t("Word sets to practise, and the word bank behind them.")}
         actions={
           canWrite && (
             <>
               <SetDialog />
               <Button asChild>
                 <Link href={routes.wordNew}>
-                  <PlusIcon aria-hidden /> New word
+                  <PlusIcon aria-hidden /> {t("New word")}
                 </Link>
               </Button>
             </>
@@ -51,7 +56,7 @@ export default async function VocabularyPage({ searchParams }: PageProps<"/engli
         }
       />
       <TabNav
-        label="Vocabulary sections"
+        label={t("Vocabulary sections")}
         active={view}
         tabs={[
           { value: "sets", label: "Word sets", href: routes.vocabulary },
@@ -64,8 +69,9 @@ export default async function VocabularyPage({ searchParams }: PageProps<"/engli
 }
 
 async function Sets({ db, canWrite }: { db: Awaited<ReturnType<typeof createClient>>; canWrite: boolean }) {
+  const t = await getT()
   const sets = await listSets(db)
-  if (sets.length === 0) return <EmptyState icon={BookAIcon} title="No word sets yet" />
+  if (sets.length === 0) return <EmptyState icon={BookAIcon} title={t("No word sets yet")} />
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {sets.map((s) => (
@@ -79,10 +85,10 @@ async function Sets({ db, canWrite }: { db: Awaited<ReturnType<typeof createClie
             <CardDescription>{s.description}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="tabular-nums">{s.wordCount} words</span>
-            {s.cefr_level && <Badge variant="secondary">{CEFR_LABELS[s.cefr_level]}</Badge>}
+            <span className="tabular-nums">{t("{wordCount} words", { wordCount: s.wordCount })}</span>
+            {s.cefr_level && <Badge variant="secondary">{t(CEFR_LABELS[s.cefr_level])}</Badge>}
             {s.topic && <Badge variant="outline">{s.topic}</Badge>}
-            {canWrite && s.status !== "published" && <Badge variant="outline">{STATUS_LABELS[s.status]}</Badge>}
+            {canWrite && s.status !== "published" && <Badge variant="outline">{t(STATUS_LABELS[s.status])}</Badge>}
           </CardContent>
         </Card>
       ))}
@@ -103,6 +109,7 @@ async function Words({
   userId: string
   writeAll: boolean
 }) {
+  const tr = await getT()
   const filters = {
     q: firstParam(params, "q"),
     topic: firstParam(params, "topic"),
@@ -119,7 +126,7 @@ async function Words({
         basePath={routes.vocabulary}
         preserve={{ view: "words" }}
         values={{ q: filters.q, topic: filters.topic, cefr: filters.cefr, pos: filters.pos, status: filters.status }}
-        searchPlaceholder="Search words or meanings"
+        searchPlaceholder={tr("Search words or meanings")}
         filters={[
           { param: "topic", allLabel: "All topics", options: topics.map((t) => ({ value: t, label: t })) },
           { param: "cefr", allLabel: "All levels", options: CEFR_LEVELS.map((l) => ({ value: l, label: CEFR_LABELS[l] })) },
@@ -130,8 +137,8 @@ async function Words({
       <SimpleTable
         rows={rows}
         rowKey={(w) => w.id}
-        empty={<EmptyState icon={BookAIcon} title="No words match" />}
-        footer={rows.length > 0 && <p className="text-muted-foreground text-sm">{rows.length} words</p>}
+        empty={<EmptyState icon={BookAIcon} title={tr("No words match")} />}
+        footer={rows.length > 0 && <p className="text-muted-foreground text-sm">{tr("{length} words", { length: rows.length })}</p>}
         columns={[
           {
             header: "Word",
@@ -141,7 +148,7 @@ async function Words({
                 <div className="grid">
                   <span className="font-medium">{w.word}</span>
                   <span className="text-muted-foreground text-xs">
-                    {w.ipa} <span className="italic">{PART_OF_SPEECH_LABELS[w.part_of_speech]}</span>
+                    {w.ipa} <span className="italic">{tr(PART_OF_SPEECH_LABELS[w.part_of_speech])}</span>
                   </span>
                 </div>
               </div>
@@ -156,9 +163,9 @@ async function Words({
                 {w.example && <span className="text-muted-foreground italic">“{w.example}”</span>}
                 {(w.synonyms.length > 0 || w.antonyms.length > 0 || w.collocations.length > 0) && (
                   <span className="text-muted-foreground text-xs">
-                    {w.collocations.length > 0 && `Collocations: ${w.collocations.join(", ")}. `}
-                    {w.synonyms.length > 0 && `Synonyms: ${w.synonyms.join(", ")}. `}
-                    {w.antonyms.length > 0 && `Opposites: ${w.antonyms.join(", ")}.`}
+                    {w.collocations.length > 0 && tr("Collocations: {collocations}. ", { collocations: w.collocations.join(", ") })}
+                    {w.synonyms.length > 0 && tr("Synonyms: {synonyms}. ", { synonyms: w.synonyms.join(", ") })}
+                    {w.antonyms.length > 0 && tr("Opposites: {antonyms}.", { antonyms: w.antonyms.join(", ") })}
                   </span>
                 )}
               </div>
@@ -190,22 +197,22 @@ async function Words({
                   cell: (w: (typeof rows)[number]) =>
                     writeAll || w.created_by === userId ? (
                       <div className="flex flex-wrap gap-1">
-                        <Button variant="ghost" size="icon" asChild aria-label={`Edit ${w.word}`}>
+                        <Button variant="ghost" size="icon" asChild aria-label={tr("Edit {word}", { word: w.word })}>
                           <Link href={wordEditPath(w.id)}>
                             <PencilIcon />
                           </Link>
                         </Button>
-                        <ContentMediaUpload target={{ kind: "word", wordId: w.id, field: "audio" }} accept=".mp3,.m4a,.wav,.webm" label="Audio" />
-                        <ContentMediaUpload target={{ kind: "word", wordId: w.id, field: "image" }} accept=".png,.jpg,.jpeg,.webp" label="Picture" />
+                        <ContentMediaUpload target={{ kind: "word", wordId: w.id, field: "audio" }} accept=".mp3,.m4a,.wav,.webm" label={tr("Audio")} />
+                        <ContentMediaUpload target={{ kind: "word", wordId: w.id, field: "image" }} accept=".png,.jpg,.jpeg,.webp" label={tr("Picture")} />
                         {w.status !== "archived" && (
                           <ConfirmActionButton
                             variant="ghost"
                             size="icon"
-                            aria-label={`Archive ${w.word}`}
-                            title={`Archive "${w.word}"?`}
-                            description="It disappears from students' lists and new sets; sets and practice history keep it."
-                            confirmLabel="Archive"
-                            successMessage="Word archived."
+                            aria-label={tr("Archive {word}", { word: w.word })}
+                            title={tr("Archive \"{word}\"?", { word: w.word })}
+                            description={tr("It disappears from students' lists and new sets; sets and practice history keep it.")}
+                            confirmLabel={tr("Archive")}
+                            successMessage={tr("Word archived.")}
                             action={setWordStatusAction.bind(null, { wordId: w.id, status: "archived" })}
                           >
                             <ArchiveIcon />

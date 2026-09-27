@@ -26,10 +26,12 @@ import {
 } from "@/features/designer/model"
 import type { FieldErrors } from "@/lib/action-result"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n/client"
 
 type Template = { key: string; category: TemplateCategory; kind: DesignKind; name: string; description: string; content: DesignContent }
 
 export function NewDesignForm({ templates, initialTemplate }: { templates: Template[]; initialTemplate: string | null }) {
+  const tr = useT()
   const start = templates.find((t) => t.key === initialTemplate) ?? null
   const [templateKey, setTemplateKey] = useState<string | null>(start?.key ?? null)
   const [kind, setKind] = useState<DesignKind>(start?.kind ?? "presentation")
@@ -66,17 +68,17 @@ export function NewDesignForm({ templates, initialTemplate }: { templates: Templ
       <FormAlert message={error} />
       <Card className="max-w-3xl">
         <CardHeader>
-          <CardTitle>Design</CardTitle>
-          <CardDescription>{templateKey ? "The template's type and page size are used; you can change them in the editor." : "A blank design of the chosen type."}</CardDescription>
+          <CardTitle>{tr("Design")}</CardTitle>
+          <CardDescription>{templateKey ? tr("The template's type and page size are used; you can change them in the editor.") : tr("A blank design of the chosen type.")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-3">
-            <Field id="d-title" label="Title">
-              <Input id="d-title" maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Unit 5 – Food vocabulary" />
-              {fieldErrors.title?.[0] && <p className="text-destructive text-sm">{fieldErrors.title[0]}</p>}
+            <Field id="d-title" label={tr("Title")}>
+              <Input id="d-title" maxLength={200} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr("Unit 5 – Food vocabulary")} />
+              {fieldErrors.title?.[0] && <p className="text-destructive text-sm">{tr(fieldErrors.title[0])}</p>}
             </Field>
           </div>
-          <Field id="d-kind" label="Type">
+          <Field id="d-kind" label={tr("Type")}>
             <OptionSelect
               id="d-kind"
               value={kind}
@@ -85,15 +87,15 @@ export function NewDesignForm({ templates, initialTemplate }: { templates: Templ
                 if (!templateKey) setPageSize(DEFAULT_PAGE_SIZE[v as DesignKind])
               }}
               options={DESIGN_KINDS.map((k) => ({ id: k, label: KIND_LABELS[k] }))}
-              placeholder="Type"
+              placeholder={tr("Type")}
             />
           </Field>
-          <Field id="d-size" label="Page size">
-            <OptionSelect id="d-size" value={pageSize} onChange={(v) => setPageSize(v as PageSizeId)} options={PAGE_SIZE_IDS.map((id) => ({ id, label: PAGE_SIZES[id].label }))} placeholder="Page size" disabled={Boolean(templateKey)} />
+          <Field id="d-size" label={tr("Page size")}>
+            <OptionSelect id="d-size" value={pageSize} onChange={(v) => setPageSize(v as PageSizeId)} options={PAGE_SIZE_IDS.map((id) => ({ id, label: PAGE_SIZES[id].label }))} placeholder={tr("Page size")} disabled={Boolean(templateKey)} />
           </Field>
           <div className="flex items-end">
             <SubmitButton pending={isPending} className="w-full">
-              Create and open
+              {tr("Create and open")}
             </SubmitButton>
           </div>
         </CardContent>
@@ -101,10 +103,10 @@ export function NewDesignForm({ templates, initialTemplate }: { templates: Templ
 
       <section className="grid gap-3" aria-labelledby="start-from">
         <h2 id="start-from" className="text-lg font-semibold">
-          Start from
+          {tr("Start from")}
         </h2>
         <div role="radiogroup" aria-labelledby="start-from" className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3">
-          <TemplateOption selected={templateKey === null} onSelect={() => chooseTemplate(null)} title="Blank" subtitle={KIND_LABELS[kind]} description="An empty design (flashcards and quizzes start with a sample card or question).">
+          <TemplateOption selected={templateKey === null} onSelect={() => chooseTemplate(null)} title={tr("Blank")} subtitle={tr(KIND_LABELS[kind])} description={tr("An empty design (flashcards and quizzes start with a sample card or question).")}>
             <div className="text-muted-foreground flex aspect-video items-center justify-center rounded border border-dashed bg-white">
               <FileIcon className="size-8" aria-hidden />
             </div>
@@ -113,7 +115,7 @@ export function NewDesignForm({ templates, initialTemplate }: { templates: Templ
             templates
               .filter((t) => t.category === category)
               .map((t) => (
-                <TemplateOption key={t.key} selected={templateKey === t.key} onSelect={() => chooseTemplate(t)} title={t.name} subtitle={CATEGORY_LABELS[category]} description={t.description}>
+                <TemplateOption key={t.key} selected={templateKey === t.key} onSelect={() => chooseTemplate(t)} title={t.name} subtitle={tr(CATEGORY_LABELS[category])} description={tr(t.description)}>
                   <div className="flex aspect-video items-center justify-center overflow-hidden rounded border bg-white">
                     <PageThumbnail page={t.content.pages[0]} pageSize={t.content.pageSize} assets={{}} width={t.content.pageSize === "a4_portrait" ? 110 : 208} />
                   </div>
@@ -127,6 +129,7 @@ export function NewDesignForm({ templates, initialTemplate }: { templates: Templ
 }
 
 function TemplateOption({ selected, onSelect, title, subtitle, description, children }: { selected: boolean; onSelect: () => void; title: string; subtitle: string; description: string; children: React.ReactNode }) {
+  const t = useT()
   return (
     <button
       type="button"
@@ -140,7 +143,7 @@ function TemplateOption({ selected, onSelect, title, subtitle, description, chil
         <span className="flex items-center justify-between gap-2">
           <span className="text-sm font-medium">{title}</span>
           <Badge variant="secondary" className="shrink-0">
-            {subtitle}
+            {t(subtitle)}
           </Badge>
         </span>
         <span className="text-muted-foreground line-clamp-2 text-xs">{description}</span>

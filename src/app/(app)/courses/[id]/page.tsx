@@ -20,10 +20,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateRange } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Course" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Course") }
+}
 
 export default async function CoursePage({ params }: PageProps<"/courses/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.courseDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -39,42 +44,42 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
   return (
     <>
       <Link href={routes.courses} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Courses
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Courses")}
       </Link>
       <PageHeader
         title={course.name}
         description={[course.code, course.subject?.name, course.level?.name].filter(Boolean).join(" · ")}
         actions={
           <>
-            <Badge variant={COURSE_STATUS[course.status].variant}>{COURSE_STATUS[course.status].label}</Badge>
-            {course.deleted_at && <Badge variant="destructive">Archived</Badge>}
+            <Badge variant={COURSE_STATUS[course.status].variant}>{t(COURSE_STATUS[course.status].label)}</Badge>
+            {course.deleted_at && <Badge variant="destructive">{t("Archived")}</Badge>}
             {canWrite && (
               <>
                 <Button variant="outline" size="sm" asChild>
                   <Link href={courseEditPath(course.id)}>
-                    <PencilIcon aria-hidden /> Edit
+                    <PencilIcon aria-hidden /> {t("Edit")}
                   </Link>
                 </Button>
                 {course.deleted_at ? (
                   <ConfirmActionButton
-                    title="Restore course?"
-                    description="The course returns to the catalogue."
-                    confirmLabel="Restore"
-                    successMessage="Course restored."
+                    title={t("Restore course?")}
+                    description={t("The course returns to the catalogue.")}
+                    confirmLabel={t("Restore")}
+                    successMessage={t("Course restored.")}
                     action={restoreCourseAction.bind(null, { courseId: course.id })}
                   >
-                    <ArchiveRestoreIcon aria-hidden /> Restore
+                    <ArchiveRestoreIcon aria-hidden /> {t("Restore")}
                   </ConfirmActionButton>
                 ) : (
                   <ConfirmActionButton
-                    title="Archive course?"
-                    description="Only possible when no planned or running class uses it."
-                    confirmLabel="Archive"
-                    successMessage="Course archived."
+                    title={t("Archive course?")}
+                    description={t("Only possible when no planned or running class uses it.")}
+                    confirmLabel={t("Archive")}
+                    successMessage={t("Course archived.")}
                     destructive
                     action={archiveCourseAction.bind(null, { courseId: course.id })}
                   >
-                    <ArchiveIcon aria-hidden /> Archive
+                    <ArchiveIcon aria-hidden /> {t("Archive")}
                   </ConfirmActionButton>
                 )}
               </>
@@ -85,10 +90,10 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
 
       <Card>
         <CardContent className="grid gap-4 sm:grid-cols-4">
-          <Stat label="Duration" value={course.duration_weeks ? `${course.duration_weeks} weeks` : "—"} />
-          <Stat label="Sessions" value={course.session_count ? String(course.session_count) : "—"} />
-          <Stat label="Session length" value={course.session_minutes ? `${course.session_minutes} min` : "—"} />
-          <Stat label="Units" value={`${units.length} (${plannedSessions} sessions planned)`} />
+          <Stat label={t("Duration")} value={course.duration_weeks ? `${course.duration_weeks} weeks` : "—"} />
+          <Stat label={t("Sessions")} value={course.session_count ? String(course.session_count) : "—"} />
+          <Stat label={t("Session length")} value={course.session_minutes ? `${course.session_minutes} min` : "—"} />
+          <Stat label={t("Units")} value={`${units.length} (${plannedSessions} sessions planned)`} />
           {course.description && <p className="text-sm whitespace-pre-line sm:col-span-4">{course.description}</p>}
         </CardContent>
       </Card>
@@ -96,15 +101,15 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
       <section className="grid gap-2">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-semibold">Course structure</h2>
-            <p className="text-muted-foreground text-sm">Shared by every class of this course.</p>
+            <h2 className="font-semibold">{t("Course structure")}</h2>
+            <p className="text-muted-foreground text-sm">{t("Shared by every class of this course.")}</p>
           </div>
           {canWrite && <UnitDialog courseId={course.id} />}
         </div>
         <SimpleTable
           rows={units}
           rowKey={(u) => u.id}
-          empty={<EmptyState icon={ListTreeIcon} title="No units yet" description="Add units to outline the syllabus." />}
+          empty={<EmptyState icon={ListTreeIcon} title={t("No units yet")} description={t("Add units to outline the syllabus.")} />}
           columns={[
             { header: "#", cell: (u) => units.indexOf(u) + 1, className: "w-10" },
             {
@@ -139,11 +144,11 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
       </section>
 
       <section className="grid gap-2">
-        <h2 className="font-semibold">Classes</h2>
+        <h2 className="font-semibold">{t("Classes")}</h2>
         <SimpleTable
           rows={classes}
           rowKey={(c) => c.id}
-          empty="No classes you can see run this course."
+          empty={t("No classes you can see run this course.")}
           columns={[
             {
               header: "Class",
@@ -156,7 +161,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
             { header: "Dates", cell: (c) => formatDateRange(c.start_date, c.end_date) },
             {
               header: "Status",
-              cell: (c) => <Badge variant={CLASS_STATUS[c.status].variant}>{CLASS_STATUS[c.status].label}</Badge>,
+              cell: (c) => <Badge variant={CLASS_STATUS[c.status].variant}>{t(CLASS_STATUS[c.status].label)}</Badge>,
             },
           ]}
         />
@@ -165,10 +170,11 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+async function Stat({ label, value }: { label: string; value: string }) {
+  const t = await getT()
   return (
     <div className="grid gap-0.5">
-      <span className="text-muted-foreground text-xs">{label}</span>
+      <span className="text-muted-foreground text-xs">{t(label)}</span>
       <span className="text-sm font-medium">{value}</span>
     </div>
   )

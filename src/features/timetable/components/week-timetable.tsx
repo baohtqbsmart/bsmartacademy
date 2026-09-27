@@ -7,6 +7,7 @@ import type { TimetableEntry } from "@/features/timetable/server/timetable-servi
 import { formatTime, isWithin, weekDates } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
 type WeekTimetableProps = {
   monday: string
@@ -20,7 +21,8 @@ type WeekTimetableProps = {
  * One calendar week. A class appears on a day only if that date falls inside
  * the class's start/end dates, so the grid reflects the real calendar.
  */
-export function WeekTimetable({ monday, today, entries, childrenByClass }: WeekTimetableProps) {
+export async function WeekTimetable({ monday, today, entries, childrenByClass }: WeekTimetableProps) {
+  const t = await getT()
   const days = weekDates(monday).map((day) => ({
     ...day,
     entries: entries.filter((e) => e.weekday === day.value && isWithin(day.date, e.start_date, e.end_date)),
@@ -31,15 +33,15 @@ export function WeekTimetable({ monday, today, entries, childrenByClass }: WeekT
       {days.map((day) => (
         <section
           key={day.date}
-          aria-label={`${day.label} ${formatDate(day.date)}`}
+          aria-label={t("{label} {date}", { label: day.label, date: formatDate(day.date) })}
           className={cn("bg-card grid content-start gap-2 rounded-lg border p-2", day.date === today && "border-primary")}
         >
           <header className="flex items-baseline justify-between px-1">
-            <span className="text-sm font-semibold">{day.short}</span>
+            <span className="text-sm font-semibold">{t(day.short)}</span>
             <span className="text-muted-foreground text-xs">{formatDate(day.date).slice(0, 5)}</span>
           </header>
           {day.entries.length === 0 ? (
-            <p className="text-muted-foreground px-1 text-xs">No classes</p>
+            <p className="text-muted-foreground px-1 text-xs">{t("No classes")}</p>
           ) : (
             day.entries.map((entry) => (
               <article key={entry.slot_id} className="bg-muted/60 grid gap-1 rounded-md p-2 text-xs">
@@ -53,7 +55,7 @@ export function WeekTimetable({ monday, today, entries, childrenByClass }: WeekT
                 {entry.lead_teacher_name && <span>{entry.lead_teacher_name}</span>}
                 {entry.delivery_mode !== "in_person" && entry.meeting_url ? (
                   <a href={entry.meeting_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
-                    <VideoIcon className="size-3" aria-hidden /> Join online
+                    <VideoIcon className="size-3" aria-hidden /> {t("Join online")}
                   </a>
                 ) : null}
                 {entry.delivery_mode !== "online" && entry.room && (

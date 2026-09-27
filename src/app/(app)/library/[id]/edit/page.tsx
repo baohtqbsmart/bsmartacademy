@@ -10,10 +10,15 @@ import { getMaterial, listCatalogOptions, listFolders } from "@/features/library
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit material" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit material") }
+}
 
 export default async function EditMaterialPage({ params }: PageProps<"/library/[id]/edit">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.libraryEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -26,7 +31,7 @@ export default async function EditMaterialPage({ params }: PageProps<"/library/[
 
   return (
     <>
-      <PageHeader title="Edit material" description={`${m.title} · the file itself cannot be replaced; upload a new material instead.`} />
+      <PageHeader title={t("Edit material")} description={t("{title} · the file itself cannot be replaced; upload a new material instead.", { title: m.title })} />
       <MaterialForm
         userId={m.owner_id}
         canManageAcademy={isAdmin}

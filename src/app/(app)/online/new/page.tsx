@@ -11,10 +11,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { todayInAcademy } from "@/lib/dates"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "New online session" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("New online session") }
+}
 
 export default async function NewOnlineSessionPage({ searchParams }: PageProps<"/online/new">) {
+  const tr = await getT()
   await requireRouteAccess(routes.onlineNew)
   // Teachers only see the classes they teach.
   const classes = await listOnlineClasses(await createClient())
@@ -24,11 +29,11 @@ export default async function NewOnlineSessionPage({ searchParams }: PageProps<"
 
   return (
     <>
-      <PageHeader title="New online session" description="Schedule a lesson and attach its meeting link. Materials and homework are added on the next page." />
+      <PageHeader title={tr("New online session")} description={tr("Schedule a lesson and attach its meeting link. Materials and homework are added on the next page.")} />
       {classes.length === 0 ? (
         <Card>
           <CardContent>
-            <EmptyState icon={VideoOffIcon} title="No planned or active classes" description="Online sessions can only be scheduled for classes you teach that are planned or running." />
+            <EmptyState icon={VideoOffIcon} title={tr("No planned or active classes")} description={tr("Online sessions can only be scheduled for classes you teach that are planned or running.")} />
           </CardContent>
         </Card>
       ) : (

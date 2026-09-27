@@ -20,6 +20,7 @@ import {
   type WorkStatus,
 } from "@/features/assignments/status"
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
 // Status palette (good / warning / critical), always icon + label.
 const GOOD = "border-transparent bg-[#0ca30c]/12 text-[#006300] dark:text-[#0ca30c]"
@@ -34,12 +35,13 @@ const ASSIGNMENT: Record<AssignmentStatus, { icon: LucideIcon; className: string
   archived: { icon: ArchiveIcon, className: "text-muted-foreground" },
 }
 
-export function AssignmentStatusBadge({ status }: { status: AssignmentStatus }) {
+export async function AssignmentStatusBadge({ status }: { status: AssignmentStatus }) {
+  const t = await getT()
   const { icon: Icon, className } = ASSIGNMENT[status]
   return (
     <Badge variant="outline" className={cn("gap-1", className)}>
       <Icon className="size-3" aria-hidden />
-      {ASSIGNMENT_STATUS_LABELS[status]}
+      {t(ASSIGNMENT_STATUS_LABELS[status])}
     </Badge>
   )
 }
@@ -54,12 +56,13 @@ const WORK: Record<WorkStatus, { icon: LucideIcon; className: string }> = {
   returned: { icon: MailCheckIcon, className: GOOD },
 }
 
-export function WorkStatusBadge({ status }: { status: WorkStatus }) {
+export async function WorkStatusBadge({ status }: { status: WorkStatus }) {
+  const t = await getT()
   const { icon: Icon, className } = WORK[status]
   return (
     <Badge variant="outline" className={cn("gap-1", className)}>
       <Icon className="size-3" aria-hidden />
-      {WORK_STATUS_LABELS[status]}
+      {t(WORK_STATUS_LABELS[status])}
     </Badge>
   )
 }

@@ -41,12 +41,17 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { enumParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Test" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Test") }
+}
 
 const VIEWS = ["questions", "results", "analytics"] as const
 
 export default async function TestPage({ params, searchParams }: PageProps<"/tests/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.testDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -64,7 +69,7 @@ export default async function TestPage({ params, searchParams }: PageProps<"/tes
   return (
     <>
       <Link href={routes.tests} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Tests
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Tests")}
       </Link>
       <PageHeader
         title={test.title}
@@ -75,7 +80,7 @@ export default async function TestPage({ params, searchParams }: PageProps<"/tes
             {isEditor && test.status !== "archived" && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={testEditPath(test.id)}>
-                  <PencilIcon aria-hidden /> Settings
+                  <PencilIcon aria-hidden /> {t("Settings")}
                 </Link>
               </Button>
             )}
@@ -87,7 +92,7 @@ export default async function TestPage({ params, searchParams }: PageProps<"/tes
       {isStaff ? (
         <>
           <TabNav
-            label="Test sections"
+            label={t("Test sections")}
             active={view}
             tabs={[
               { value: "questions", label: "Questions", href: testPath(test.id) },
@@ -106,7 +111,8 @@ export default async function TestPage({ params, searchParams }: PageProps<"/tes
   )
 }
 
-function Settings({ test }: { test: TestDetail }) {
+async function Settings({ test }: { test: TestDetail }) {
+  const t = await getT()
   const items = [
     ["Opens", formatDateTime(test.available_from)],
     ["Closes", formatDateTime(test.available_until)],
@@ -122,7 +128,7 @@ function Settings({ test }: { test: TestDetail }) {
       <CardContent className="grid gap-4 sm:grid-cols-4">
         {items.map(([label, value]) => (
           <div key={label} className="grid gap-0.5">
-            <span className="text-muted-foreground text-xs">{label}</span>
+            <span className="text-muted-foreground text-xs">{t(label)}</span>
             <span className="text-sm">{value}</span>
           </div>
         ))}
@@ -135,6 +141,7 @@ function Settings({ test }: { test: TestDetail }) {
 // ---------------------------------------------------------------------------
 
 async function QuestionsView({ test, isEditor }: { test: TestDetail; isEditor: boolean }) {
+  const t = await getT()
   const db = await createClient()
   const questions = await listTestQuestions(db, test.id)
   const [keys, bank] = await Promise.all([
@@ -152,12 +159,12 @@ async function QuestionsView({ test, isEditor }: { test: TestDetail; isEditor: b
       <Card>
         <CardHeader>
           <CardTitle>
-            {questions.length} question{questions.length === 1 ? "" : "s"} · {totalPoints} points → scaled to {Number(test.total_score)}
+            {t("{length} question{value} · {totalPoints} points → scaled to {number}", { length: questions.length, value: questions.length === 1 ? "" : "s", totalPoints, number: Number(test.total_score) })}
           </CardTitle>
           <CardDescription>
             {draft
-              ? "Questions are copies from the bank; they freeze when the test is published."
-              : "The test is published: its questions no longer change."}
+              ? t("Questions are copies from the bank; they freeze when the test is published.")
+              : t("The test is published: its questions no longer change.")}
           </CardDescription>
           {draft && (
             <CardAction>
@@ -181,7 +188,7 @@ async function QuestionsView({ test, isEditor }: { test: TestDetail; isEditor: b
         </CardHeader>
         <CardContent>
           {questions.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No questions yet.</p>
+            <p className="text-muted-foreground text-sm">{t("No questions yet.")}</p>
           ) : (
             <ol className="grid gap-4">
               {questions.map((q, index) => (
@@ -212,6 +219,7 @@ async function QuestionsView({ test, isEditor }: { test: TestDetail; isEditor: b
 }
 
 async function ResultsView({ test, isEditor }: { test: TestDetail; isEditor: boolean }) {
+  const t = await getT()
   const db = await createClient()
   const [attempts, students] = await Promise.all([listAttempts(db, test.id), test.class ? listClassStudents(db, test.class.id) : []])
   const byStudent = new Map<string, AttemptRow[]>()
@@ -224,20 +232,20 @@ async function ResultsView({ test, isEditor }: { test: TestDetail; isEditor: boo
       {isEditor && expired > 0 && (
         <div>
           <ConfirmActionButton
-            title={`Hand in ${expired} expired attempt${expired === 1 ? "" : "s"}?`}
-            description="These students ran out of time without submitting; their saved answers are marked."
-            confirmLabel="Hand in"
-            successMessage="Expired attempts handed in."
+            title={t("Hand in {expired} expired attempt{value}?", { expired, value: expired === 1 ? "" : "s" })}
+            description={t("These students ran out of time without submitting; their saved answers are marked.")}
+            confirmLabel={t("Hand in")}
+            successMessage={t("Expired attempts handed in.")}
             action={closeExpiredAttemptsAction.bind(null, { testId: test.id })}
           >
-            <ClockIcon aria-hidden /> Hand in expired attempts ({expired})
+            <ClockIcon aria-hidden /> {t("Hand in expired attempts ({expired})", { expired })}
           </ConfirmActionButton>
         </div>
       )}
       <SimpleTable
         rows={rows}
         rowKey={(r) => r.student.id}
-        empty={<EmptyState icon={UsersIcon} title="No students in this class" />}
+        empty={<EmptyState icon={UsersIcon} title={t("No students in this class")} />}
         columns={[
           { header: "Student", cell: (r) => <span className="font-medium">{r.student.full_name}</span> },
           { header: "Attempts", cell: (r) => <span className="tabular-nums">{`${r.attempts.length} / ${test.max_attempts}`}</span> },
@@ -253,7 +261,7 @@ async function ResultsView({ test, isEditor }: { test: TestDetail; isEditor: boo
             key: "attempts",
             cell: (r) =>
               r.attempts.length === 0 ? (
-                <span className="text-muted-foreground">Not attempted</span>
+                <span className="text-muted-foreground">{t("Not attempted")}</span>
               ) : (
                 <ul className="grid gap-0.5">
                   {r.attempts.map((a) => (
@@ -263,8 +271,8 @@ async function ResultsView({ test, isEditor }: { test: TestDetail; isEditor: boo
                       </Link>
                       <AttemptStatusText status={a.status} score={a.score} total={test.total_score} />
                       <span className="text-muted-foreground text-xs tabular-nums">
-                        {a.submitted_at ? formatDateTime(a.submitted_at) : `started ${formatDateTime(a.started_at)}`}
-                        {a.auto_submitted && " · handed in automatically"}
+                        {a.submitted_at ? formatDateTime(a.submitted_at) : t("started {dateTime}", { dateTime: formatDateTime(a.started_at) })}
+                        {a.auto_submitted && t(" · handed in automatically")}
                       </span>
                     </li>
                   ))}
@@ -278,6 +286,7 @@ async function ResultsView({ test, isEditor }: { test: TestDetail; isEditor: boo
 }
 
 async function AnalyticsView({ test }: { test: TestDetail }) {
+  const t = await getT()
   const db = await createClient()
   const [attempts, stats, students] = await Promise.all([
     listAttempts(db, test.id),
@@ -305,24 +314,24 @@ async function AnalyticsView({ test }: { test: TestDetail }) {
       />
       <Card>
         <CardHeader>
-          <CardTitle>Score distribution</CardTitle>
-          <CardDescription>Students by their best fully marked attempt, as a share of the total score.</CardDescription>
+          <CardTitle>{t("Score distribution")}</CardTitle>
+          <CardDescription>{t("Students by their best fully marked attempt, as a share of the total score.")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <ScoreDistributionChart data={bands} />
           <details>
-            <summary className="text-muted-foreground cursor-pointer text-sm">Show as table</summary>
+            <summary className="text-muted-foreground cursor-pointer text-sm">{t("Show as table")}</summary>
             <table className="mt-2 w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground text-left">
-                  <th className="py-1 font-normal">Score</th>
-                  <th className="py-1 text-right font-normal">Students</th>
+                  <th className="py-1 font-normal">{t("Score")}</th>
+                  <th className="py-1 text-right font-normal">{t("Students")}</th>
                 </tr>
               </thead>
               <tbody className="tabular-nums">
                 {bands.map((b) => (
                   <tr key={b.label} className="border-t">
-                    <td className="py-1">{b.label}</td>
+                    <td className="py-1">{t(b.label)}</td>
                     <td className="py-1 text-right">{b.students}</td>
                   </tr>
                 ))}
@@ -332,12 +341,12 @@ async function AnalyticsView({ test }: { test: TestDetail }) {
         </CardContent>
       </Card>
       <section className="grid gap-2">
-        <h2 className="font-semibold">By question</h2>
-        <p className="text-muted-foreground text-sm">Average mark over handed-in attempts. Low averages point to hard or unclear questions.</p>
+        <h2 className="font-semibold">{t("By question")}</h2>
+        <p className="text-muted-foreground text-sm">{t("Average mark over handed-in attempts. Low averages point to hard or unclear questions.")}</p>
         <SimpleTable
           rows={stats}
           rowKey={(s) => s.test_question_id}
-          empty="No questions."
+          empty={t("No questions.")}
           columns={[
             { header: "#", cell: (s) => <span className="tabular-nums">{s.question_position}</span> },
             { header: "Question", cell: (s) => <span className="line-clamp-2 max-w-sm whitespace-normal">{s.prompt}</span> },
@@ -351,7 +360,7 @@ async function AnalyticsView({ test }: { test: TestDetail }) {
                   <span className="tabular-nums">{`${Math.round((s.average_score / s.points) * 100)}% (${s.average_score} / ${s.points})`}</span>
                 ),
             },
-            { header: "Full marks", cell: (s) => <span className="tabular-nums">{`${s.full_marks} of ${s.attempts}`}</span> },
+            { header: "Full marks", cell: (s) => <span className="tabular-nums">{t("{full_marks} of {attempts}", { full_marks: s.full_marks, attempts: s.attempts })}</span> },
             { header: "Left blank", cell: (s) => <span className="tabular-nums">{s.attempts - s.answered}</span> },
             { header: "To mark", cell: (s) => <span className="tabular-nums">{s.awaiting_review || "—"}</span> },
           ]}
@@ -364,6 +373,7 @@ async function AnalyticsView({ test }: { test: TestDetail }) {
 // ---------------------------------------------------------------------------
 
 async function FamilyView({ test, isStudent }: { test: TestDetail; isStudent: boolean }) {
+  const t = await getT()
   const attempts = await listAttempts(await createClient(), test.id)
   const open = attempts.find((a) => a.status === "in_progress")
   const now = new Date()
@@ -377,31 +387,31 @@ async function FamilyView({ test, isStudent }: { test: TestDetail; isStudent: bo
       action = (
         <Button asChild>
           <Link href={testTakePath(test.id)}>
-            <PlayIcon aria-hidden /> Continue attempt {open.attempt_number}
+            <PlayIcon aria-hidden /> {t("Continue attempt {attempt_number}", { attempt_number: open.attempt_number })}
           </Link>
         </Button>
       )
     } else if (over) {
-      action = <p className="text-muted-foreground text-sm">This test is closed.</p>
+      action = <p className="text-muted-foreground text-sm">{t("This test is closed.")}</p>
     } else if (notYet) {
-      action = <p className="text-muted-foreground text-sm">Opens {formatDateTime(test.available_from)}.</p>
+      action = <p className="text-muted-foreground text-sm">{t("Opens {dateTime}.", { dateTime: formatDateTime(test.available_from) })}</p>
     } else if (mine >= test.max_attempts) {
-      action = <p className="text-muted-foreground text-sm">You have used all your attempts.</p>
+      action = <p className="text-muted-foreground text-sm">{t("You have used all your attempts.")}</p>
     } else {
       action = (
         <ConfirmActionButton
           variant="default"
-          title={mine === 0 ? "Start the test?" : `Start attempt ${mine + 1}?`}
+          title={mine === 0 ? t("Start the test?") : t("Start attempt {value}?", { value: mine + 1 })}
           description={
             test.time_limit_minutes
-              ? `You will have ${test.time_limit_minutes} minutes. The timer keeps running if you leave the page.`
-              : "Your answers are saved as you go; submit when you are done."
+              ? t("You will have {time_limit_minutes} minutes. The timer keeps running if you leave the page.", { time_limit_minutes: test.time_limit_minutes })
+              : t("Your answers are saved as you go; submit when you are done.")
           }
-          confirmLabel="Start"
-          successMessage="Good luck!"
+          confirmLabel={t("Start")}
+          successMessage={t("Good luck!")}
           action={startTestAction.bind(null, { testId: test.id })}
         >
-          <PlayIcon aria-hidden /> {mine === 0 ? "Start test" : "Start a new attempt"}
+          <PlayIcon aria-hidden /> {mine === 0 ? t("Start test") : t("Start a new attempt")}
         </ConfirmActionButton>
       )
     }
@@ -410,26 +420,26 @@ async function FamilyView({ test, isStudent }: { test: TestDetail; isStudent: bo
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isStudent ? "Your attempts" : "Attempts"}</CardTitle>
+        <CardTitle>{isStudent ? t("Your attempts") : t("Attempts")}</CardTitle>
         <CardDescription>
-          {isStudent && `${mine} of ${test.max_attempts} used. `}
-          Answers and marks per question are shown {REVIEW_POLICY_LABELS[test.review_policy].toLowerCase()}.
+          {isStudent && t("{mine} of {max_attempts} used. ", { mine, max_attempts: test.max_attempts })}
+          {t("Answers and marks per question are shown {value}.", { value: REVIEW_POLICY_LABELS[test.review_policy].toLowerCase() })}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         {action && <div>{action}</div>}
         {attempts.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No attempts yet.</p>
+          <p className="text-muted-foreground text-sm">{t("No attempts yet.")}</p>
         ) : (
           <ul className="grid gap-2 text-sm">
             {attempts.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center gap-2">
                 {!isStudent && <span className="font-medium">{a.student?.full_name}</span>}
                 {a.status === "in_progress" ? (
-                  <span>Attempt {a.attempt_number}</span>
+                  <span>{t("Attempt {attempt_number}", { attempt_number: a.attempt_number })}</span>
                 ) : (
                   <Link href={testAttemptPath(test.id, a.id)} className="hover:underline">
-                    Attempt {a.attempt_number}
+                    {t("Attempt {attempt_number}", { attempt_number: a.attempt_number })}
                   </Link>
                 )}
                 <AttemptStatusText status={a.status} score={a.score} total={test.total_score} />

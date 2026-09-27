@@ -3,6 +3,7 @@ import { createElement } from "react"
 
 import { designIcon } from "@/features/designer/icons"
 import { FONTS, PAGE_SIZES, type DesignElement, type DesignPage, type ElementOf, type PageSizeId } from "@/features/designer/model"
+import { Trans } from "@/i18n/client"
 
 /**
  * Draws a page at its real size (page pixels). Callers scale it with CSS.
@@ -90,7 +91,7 @@ export function ElementBody({ el, assets, showAnswers = false }: { el: DesignEle
         // eslint-disable-next-line @next/next/no-img-element -- signed storage URLs, sized by the design
         <img src={url} alt={el.alt} draggable={false} style={{ width: "100%", height: "100%", objectFit: el.fit, borderRadius: el.radius, display: "block" }} />
       ) : (
-        <Placeholder icon={<ImageIcon style={{ width: "30%", height: "30%" }} />} label="Picture unavailable" radius={el.radius} />
+        <Placeholder icon={<ImageIcon style={{ width: "30%", height: "30%" }} />} label={<Trans>{"Picture unavailable"}</Trans>} radius={el.radius} />
       )
     }
     case "shape":
@@ -101,12 +102,12 @@ export function ElementBody({ el, assets, showAnswers = false }: { el: DesignEle
       // Icons come from a fixed module-level map (features/designer/icons).
       return createElement(designIcon(el.icon), { "aria-hidden": true, style: { width: "100%", height: "100%", color: el.color }, strokeWidth: 1.75 })
     case "audio":
-      return <MediaCard icon={<Volume2Icon style={{ width: 28, height: 28 }} />} label={el.label || "Audio"} />
+      return <MediaCard icon={<Volume2Icon style={{ width: 28, height: 28 }} />} label={el.label || <Trans>{"Audio"}</Trans>} />
     case "video":
       return (
         <div style={{ width: "100%", height: "100%", background: "#0f172a", color: "#f8fafc", borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
           {el.url ? <PlayIcon style={{ width: 56, height: 56 }} /> : <FilmIcon style={{ width: 56, height: 56 }} />}
-          <span style={{ fontSize: 20 }}>{el.label || "Video"}</span>
+          <span style={{ fontSize: 20 }}>{el.label || <Trans>{"Video"}</Trans>}</span>
         </div>
       )
     case "question":
@@ -286,12 +287,12 @@ export function ButtonBody({ el }: { el: ElementOf<"button"> }) {
         whiteSpace: "nowrap",
       }}
     >
-      {el.label}
+      <Trans>{el.label}</Trans>
     </div>
   )
 }
 
-export function MediaCard({ icon, label }: { icon: React.ReactNode; label: string }) {
+export function MediaCard({ icon, label }: { icon: React.ReactNode; label: React.ReactNode }) {
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", gap: 12, padding: "0 16px", borderRadius: 999, background: "#e0f2fe", color: "#0c4a6e", fontSize: 22, fontWeight: 600, overflow: "hidden", boxSizing: "border-box" }}>
       {icon}
@@ -300,7 +301,7 @@ export function MediaCard({ icon, label }: { icon: React.ReactNode; label: strin
   )
 }
 
-function Placeholder({ icon, label, radius }: { icon: React.ReactNode; label: string; radius: number }) {
+function Placeholder({ icon, label, radius }: { icon: React.ReactNode; label: React.ReactNode; radius: number }) {
   return (
     <div style={{ width: "100%", height: "100%", background: "#f1f5f9", color: "#94a3b8", borderRadius: radius, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 16 }}>
       {icon}

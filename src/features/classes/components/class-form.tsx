@@ -21,6 +21,7 @@ import {
   type ClassFormOutput,
 } from "@/features/classes/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type ClassFormProps = {
   classId?: string
@@ -30,6 +31,7 @@ type ClassFormProps = {
 }
 
 export function ClassForm({ classId, defaultValues, courses, cancelHref }: ClassFormProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
   const form = useForm<ClassFormInput, unknown, ClassFormOutput>({
@@ -54,58 +56,58 @@ export function ClassForm({ classId, defaultValues, courses, cancelHref }: Class
         <FormAlert message={formError} />
         <Card>
           <CardHeader>
-            <CardTitle>Class</CardTitle>
-            <CardDescription>Subject and level come from the course.</CardDescription>
+            <CardTitle>{t("Class")}</CardTitle>
+            <CardDescription>{t("Subject and level come from the course.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <TextField control={control} name="code" label="Class code" placeholder="PET-2026A" />
-            <TextField control={control} name="name" label="Name" />
+            <TextField control={control} name="code" label={t("Class code")} placeholder={t("PET-2026A")} />
+            <TextField control={control} name="name" label={t("Name")} />
             <SelectField
               control={control}
               name="courseId"
-              label="Course"
-              placeholder="Choose an active course"
+              label={t("Course")}
+              placeholder={t("Choose an active course")}
               options={courses.map((c) => ({ value: c.id, label: `${c.name} (${c.code})` }))}
             />
             <SelectField
               control={control}
               name="status"
-              label="Status"
+              label={t("Status")}
               options={CLASS_STATUSES.map((s) => ({ value: s, label: CLASS_STATUS[s].label }))}
             />
-            <TextField control={control} name="startDate" label="Start date" type="date" />
-            <TextField control={control} name="endDate" label="End date" type="date" />
-            <TextField control={control} name="capacity" label="Capacity" inputMode="numeric" />
+            <TextField control={control} name="startDate" label={t("Start date")} type="date" />
+            <TextField control={control} name="endDate" label={t("End date")} type="date" />
+            <TextField control={control} name="capacity" label={t("Capacity")} inputMode="numeric" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Where</CardTitle>
-            <CardDescription>Time slots are added on the class page after saving.</CardDescription>
+            <CardTitle>{t("Where")}</CardTitle>
+            <CardDescription>{t("Time slots are added on the class page after saving.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <SelectField
               control={control}
               name="deliveryMode"
-              label="Delivery"
+              label={t("Delivery")}
               options={DELIVERY_MODES.map((m) => ({ value: m, label: DELIVERY_MODE_LABELS[m] }))}
             />
-            {deliveryMode !== "online" && <TextField control={control} name="room" label="Room" placeholder="P202" />}
+            {deliveryMode !== "online" && <TextField control={control} name="room" label={t("Room")} placeholder="P202" />}
             {deliveryMode !== "in_person" && (
               <TextField
                 control={control}
                 name="meetingUrl"
-                label="Meeting link"
-                placeholder="https://…"
+                label={t("Meeting link")}
+                placeholder={t("https://…")}
                 className="sm:col-span-2"
               />
             )}
           </CardContent>
         </Card>
         <div className="flex gap-2">
-          <SubmitButton pending={isPending}>{classId ? "Save changes" : "Create class"}</SubmitButton>
+          <SubmitButton pending={isPending}>{classId ? t("Save changes") : t("Create class")}</SubmitButton>
           <Button variant="outline" asChild>
-            <Link href={cancelHref}>Cancel</Link>
+            <Link href={cancelHref}>{t("Cancel")}</Link>
           </Button>
         </div>
       </form>

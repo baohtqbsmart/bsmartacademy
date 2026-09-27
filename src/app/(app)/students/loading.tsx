@@ -1,9 +1,11 @@
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { getT } from "@/i18n/server"
 
-export default function StudentsLoading() {
+export default async function StudentsLoading() {
+  const t = await getT()
   return (
-    <div className="grid gap-6" aria-busy="true" aria-label="Loading students">
+    <div className="grid gap-6" aria-busy="true" aria-label={t("Loading students")}>
       <div className="grid gap-2">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-4 w-64" />

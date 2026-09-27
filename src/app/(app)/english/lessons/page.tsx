@@ -17,10 +17,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "English lessons" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("English lessons") }
+}
 
 export default async function LessonsPage({ searchParams }: PageProps<"/english/lessons">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.lessons)
   const skill = enumParam(await searchParams, "skill", LESSON_SKILLS)
   const db = await createClient()
@@ -40,20 +45,20 @@ export default async function LessonsPage({ searchParams }: PageProps<"/english/
   return (
     <>
       <PageHeader
-        title="Lessons"
-        description="Grammar, reading, listening, speaking, writing and pronunciation."
+        title={t("Lessons")}
+        description={t("Grammar, reading, listening, speaking, writing and pronunciation.")}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={skill ? `${routes.lessonNew}?skill=${skill}` : routes.lessonNew}>
-                <PlusIcon aria-hidden /> New lesson
+                <PlusIcon aria-hidden /> {t("New lesson")}
               </Link>
             </Button>
           )
         }
       />
       <TabNav
-        label="Skills"
+        label={t("Skills")}
         active={skill ?? "all"}
         tabs={[
           { value: "all", label: "All", href: routes.lessons },
@@ -63,7 +68,7 @@ export default async function LessonsPage({ searchParams }: PageProps<"/english/
       <SimpleTable
         rows={lessons}
         rowKey={(l) => l.id}
-        empty={<EmptyState icon={NotebookTextIcon} title="No lessons yet" />}
+        empty={<EmptyState icon={NotebookTextIcon} title={t("No lessons yet")} />}
         columns={[
           {
             header: "Lesson",
@@ -76,7 +81,7 @@ export default async function LessonsPage({ searchParams }: PageProps<"/english/
               </div>
             ),
           },
-          { header: "Skill", cell: (l) => <Badge variant="outline">{SKILL_LABELS[l.skill]}</Badge> },
+          { header: "Skill", cell: (l) => <Badge variant="outline">{t(SKILL_LABELS[l.skill])}</Badge> },
           { header: "Level", cell: (l) => (l.cefr_level ? CEFR_LABELS[l.cefr_level] : "—") },
           { header: "Topic", cell: (l) => l.topic ?? "—" },
           {
@@ -90,10 +95,10 @@ export default async function LessonsPage({ searchParams }: PageProps<"/english/
                 cell: (l) =>
                   done.has(l.id) ? (
                     <span className="inline-flex items-center gap-1 text-sm">
-                      <CheckIcon className="size-4" aria-hidden /> Done
+                      <CheckIcon className="size-4" aria-hidden /> {t("Done")}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground text-sm">Not yet</span>
+                    <span className="text-muted-foreground text-sm">{t("Not yet")}</span>
                   ),
               }
             : { header: "Status", cell: (l) => (canWrite ? STATUS_LABELS[l.status] : "—") },

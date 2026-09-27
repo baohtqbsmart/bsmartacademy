@@ -7,20 +7,25 @@ import { routes } from "@/config/routes"
 import { listParents } from "@/features/parents/server/parent-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Parents" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Parents") }
+}
 
 export default async function ParentsPage() {
+  const t = await getT()
   await requireRouteAccess(routes.parents)
   const parents = await listParents(await createClient())
 
   return (
     <>
-      <PageHeader title="Parents" description="Parents and guardians with their children." />
+      <PageHeader title={t("Parents")} description={t("Parents and guardians with their children.")} />
       <SimpleTable
         rows={parents}
         rowKey={(parent) => parent.id}
-        empty="No parents to show."
+        empty={t("No parents to show.")}
         columns={[
           { header: "Name", cell: (p) => <span className="font-medium">{p.full_name}</span> },
           { header: "Phone", cell: (p) => p.phone ?? "—" },
@@ -35,7 +40,7 @@ export default async function ParentsPage() {
                   {children.map((link) => (
                     <li key={link.student!.student_code}>
                       {link.student!.full_name}{" "}
-                      <span className="text-muted-foreground">({RELATIONSHIP_LABELS[link.relationship]})</span>
+                      <span className="text-muted-foreground">({t(RELATIONSHIP_LABELS[link.relationship])})</span>
                     </li>
                   ))}
                 </ul>

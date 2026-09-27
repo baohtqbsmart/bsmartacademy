@@ -16,10 +16,15 @@ import { addDays, parseWeek, todayInAcademy } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 import { uuidParam, withParams } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Timetable" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Timetable") }
+}
 
 export default async function TimetablePage({ searchParams }: PageProps<"/timetable">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.timetable)
   const params = await searchParams
   const monday = parseWeek(Array.isArray(params.week) ? params.week[0] : params.week)
@@ -47,21 +52,21 @@ export default async function TimetablePage({ searchParams }: PageProps<"/timeta
 
   return (
     <>
-      <PageHeader title="Timetable" description={description} />
+      <PageHeader title={tr("Timetable")} description={description} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" asChild>
-            <Link href={weekHref(addDays(monday, -7))} aria-label="Previous week" scroll={false}>
+            <Link href={weekHref(addDays(monday, -7))} aria-label={tr("Previous week")} scroll={false}>
               <ChevronLeftIcon />
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href={weekHref(today)} scroll={false}>
-              This week
+              {tr("This week")}
             </Link>
           </Button>
           <Button variant="outline" size="icon" asChild>
-            <Link href={weekHref(addDays(monday, 7))} aria-label="Next week" scroll={false}>
+            <Link href={weekHref(addDays(monday, 7))} aria-label={tr("Next week")} scroll={false}>
               <ChevronRightIcon />
             </Link>
           </Button>
@@ -87,11 +92,11 @@ export default async function TimetablePage({ searchParams }: PageProps<"/timeta
       {entries.length === 0 ? (
         <EmptyState
           icon={CalendarDaysIcon}
-          title="Nothing scheduled"
+          title={tr("Nothing scheduled")}
           description={
             seesAll
-              ? "No planned or running class has timetable slots yet."
-              : "You have no planned or running classes with a timetable."
+              ? tr("No planned or running class has timetable slots yet.")
+              : tr("You have no planned or running classes with a timetable.")
           }
         />
       ) : (

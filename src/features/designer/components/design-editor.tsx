@@ -79,6 +79,7 @@ import {
 import type { AssetInfo } from "@/features/designer/server/design-service"
 import type { Media } from "@/features/designer/uploads"
 import { cn } from "@/lib/utils"
+import { useT } from "@/i18n/client"
 
 type SaveStatus = { state: "saved" | "dirty" | "saving" } | { state: "invalid" | "error" | "conflict"; message: string }
 
@@ -123,6 +124,7 @@ export function DesignEditor({
   design: { id: string; title: string; kind: DesignKind; content: DesignContent; version: number; share_token: string | null }
   initialAssets: Record<string, AssetInfo>
 }) {
+  const t = useT()
   const [history, setHistory] = useState<History>(() => createHistory(design.content))
   const content = history.present
   const [title, setTitle] = useState(design.title)
@@ -308,19 +310,19 @@ export function DesignEditor({
       designSection={
         <>
           <div className="grid gap-1.5">
-            <Label htmlFor="design-kind">Type</Label>
-            <OptionSelect id="design-kind" value={kind} onChange={(v) => setKind(v as DesignKind)} options={DESIGN_KINDS.map((k) => ({ id: k, label: KIND_LABELS[k] }))} placeholder="Type" />
+            <Label htmlFor="design-kind">{t("Type")}</Label>
+            <OptionSelect id="design-kind" value={kind} onChange={(v) => setKind(v as DesignKind)} options={DESIGN_KINDS.map((k) => ({ id: k, label: KIND_LABELS[k] }))} placeholder={t("Type")} />
           </div>
           <ConfirmActionButton
             variant="ghost"
-            title="Delete this design?"
-            description="The design, its uploaded files and its share link are deleted permanently."
-            confirmLabel="Delete design"
-            successMessage="Design deleted."
+            title={t("Delete this design?")}
+            description={t("The design, its uploaded files and its share link are deleted permanently.")}
+            confirmLabel={t("Delete design")}
+            successMessage={t("Design deleted.")}
             destructive
             action={() => deleteDesignAction({ designId: design.id })}
           >
-            <Trash2Icon aria-hidden /> Delete design
+            <Trash2Icon aria-hidden /> {t("Delete design")}
           </ConfirmActionButton>
         </>
       }
@@ -328,7 +330,7 @@ export function DesignEditor({
   )
 
   const pageList = (
-    <ol className="flex gap-3 lg:flex-col" aria-label="Pages">
+    <ol className="flex gap-3 lg:flex-col" aria-label={t("Pages")}>
       {content.pages.map((p, i) => (
         <li
           key={p.id}
@@ -355,7 +357,7 @@ export function DesignEditor({
               setSelectedId(null)
             }}
             aria-current={p.id === page.id ? "page" : undefined}
-            aria-label={`Page ${i + 1}`}
+            aria-label={t("Page {value}", { value: i + 1 })}
             className={cn("overflow-hidden rounded border-2 bg-white", p.id === page.id ? "border-primary" : "hover:border-muted-foreground/40 border-border")}
           >
             <PageThumbnail page={p} pageSize={content.pageSize} assets={assetUrls} width={120} />
@@ -364,10 +366,10 @@ export function DesignEditor({
             <span className="text-muted-foreground text-xs tabular-nums">{i + 1}</span>
             {p.id === page.id && (
               <span className="flex">
-                <IconButton label="Move page up" disabled={i === 0} onClick={() => change((c) => movePage(c, i, i - 1))} icon={<ChevronUpIcon />} />
-                <IconButton label="Move page down" disabled={i === content.pages.length - 1} onClick={() => change((c) => movePage(c, i, i + 1))} icon={<ChevronDownIcon />} />
+                <IconButton label={t("Move page up")} disabled={i === 0} onClick={() => change((c) => movePage(c, i, i - 1))} icon={<ChevronUpIcon />} />
+                <IconButton label={t("Move page down")} disabled={i === content.pages.length - 1} onClick={() => change((c) => movePage(c, i, i + 1))} icon={<ChevronDownIcon />} />
                 <IconButton
-                  label="Duplicate page"
+                  label={t("Duplicate page")}
                   onClick={() => {
                     const [next, copy] = duplicatePageAfter(content, p.id)
                     apply(next)
@@ -376,7 +378,7 @@ export function DesignEditor({
                   icon={<CopyIcon />}
                 />
                 <IconButton
-                  label="Delete page"
+                  label={t("Delete page")}
                   disabled={content.pages.length <= 1}
                   onClick={() => {
                     const neighbour = content.pages[i + 1] ?? content.pages[i - 1]
@@ -402,7 +404,7 @@ export function DesignEditor({
             setSelectedId(null)
           }}
         >
-          <PlusIcon aria-hidden /> Page
+          <PlusIcon aria-hidden /> {t("Page")}
         </Button>
       </li>
     </ol>
@@ -415,20 +417,20 @@ export function DesignEditor({
       {/* Top bar */}
       <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
         <Button variant="ghost" size="icon" asChild>
-          <Link href={routes.designs} aria-label="Back to designs">
+          <Link href={routes.designs} aria-label={t("Back to designs")}>
             <ArrowLeftIcon />
           </Link>
         </Button>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} aria-label="Design title" className="h-8 w-44 font-medium sm:w-64" />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} aria-label={t("Design title")} className="h-8 w-44 font-medium sm:w-64" />
         <SaveIndicator status={status} onRetry={() => void save()} />
         <div className="ml-auto flex flex-wrap items-center gap-1">
-          <IconButton label="Undo (Ctrl+Z)" disabled={history.past.length === 0} onClick={() => setHistory(undo)} icon={<Undo2Icon />} />
-          <IconButton label="Redo (Ctrl+Y)" disabled={history.future.length === 0} onClick={() => setHistory(redo)} icon={<Redo2Icon />} />
+          <IconButton label={t("Undo (Ctrl+Z)")} disabled={history.past.length === 0} onClick={() => setHistory(undo)} icon={<Undo2Icon />} />
+          <IconButton label={t("Redo (Ctrl+Y)")} disabled={history.future.length === 0} onClick={() => setHistory(redo)} icon={<Redo2Icon />} />
           <div className="hidden w-24 sm:block">
-            <OptionSelect ariaLabel="Zoom" id="zoom" value={zoom} onChange={setZoom} options={ZOOMS} placeholder="Zoom" />
+            <OptionSelect ariaLabel={t("Zoom level")} id="zoom" value={zoom} onChange={setZoom} options={ZOOMS} placeholder={t("Zoom level")} />
           </div>
           <Button variant="outline" size="sm" onClick={() => setPresenting(true)}>
-            <PlayIcon aria-hidden /> Preview
+            <PlayIcon aria-hidden /> {t("Preview")}
           </Button>
           <ShareDialog designId={design.id} initialToken={design.share_token} />
           <ExportDialog
@@ -439,7 +441,7 @@ export function DesignEditor({
             allowAnswers
             trigger={
               <Button size="sm">
-                <DownloadIcon aria-hidden /> Export
+                <DownloadIcon aria-hidden /> {t("Export")}
               </Button>
             }
           />
@@ -448,20 +450,20 @@ export function DesignEditor({
 
       {status.state === "conflict" && (
         <div role="alert" className="bg-destructive/10 text-destructive flex flex-wrap items-center gap-2 border-b px-3 py-2 text-sm">
-          <AlertTriangleIcon className="size-4" aria-hidden /> {status.message}
+          <AlertTriangleIcon className="size-4" aria-hidden /> {t(status.message)}
           <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
-            Reload
+            {t("Reload")}
           </Button>
         </div>
       )}
 
       {/* Tools: a column on large screens, a scrolling row on small ones. */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <nav aria-label="Tools" className="flex shrink-0 gap-1 overflow-x-auto border-b p-2 lg:w-20 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0">
+        <nav aria-label={t("Tools")} className="flex shrink-0 gap-1 overflow-x-auto border-b p-2 lg:w-20 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0">
           {TOOLS.map(({ id, label, icon: Icon }) => (
             <button key={id} type="button" onClick={() => add(id)} className="hover:bg-muted flex min-w-16 flex-col items-center gap-1 rounded-md px-2 py-2 text-xs">
               <Icon className="size-5" aria-hidden />
-              {label}
+              {t(label)}
             </button>
           ))}
         </nav>
@@ -508,19 +510,19 @@ export function DesignEditor({
                 if (problem.elementId) setSelectedId(problem.elementId)
               }}
             >
-              <AlertTriangleIcon className="size-3.5 shrink-0" aria-hidden /> Not saved until fixed — {problem.message}
+              <AlertTriangleIcon className="size-3.5 shrink-0" aria-hidden /> {t("Not saved until fixed — {message}", { message: problem.message })}
             </button>
           )}
           {/* Small screens: pages under the canvas, properties in a sheet. */}
           <div className="flex items-start gap-2 overflow-x-auto border-t p-2 lg:hidden">{pageList}</div>
           <div className="border-t p-2 lg:hidden">
             <Button variant="outline" className="w-full" onClick={() => setPanelOpen(true)}>
-              <SlidersHorizontalIcon aria-hidden /> {selected ? `Edit ${elementLabel(selected)}` : "Page and design settings"}
+              <SlidersHorizontalIcon aria-hidden /> {selected ? t("Edit {elementLabel}", { elementLabel: elementLabel(selected) }) : t("Page and design settings")}
             </Button>
           </div>
         </div>
 
-        <aside aria-label="Properties" className="hidden w-80 shrink-0 overflow-y-auto border-l p-4 lg:block">
+        <aside aria-label={t("Properties")} className="hidden w-80 shrink-0 overflow-y-auto border-l p-4 lg:block">
           {panel}
         </aside>
       </div>
@@ -528,8 +530,8 @@ export function DesignEditor({
       <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
         <SheetContent side="bottom" className="max-h-[80dvh] overflow-y-auto p-4 lg:hidden">
           <SheetHeader className="p-0">
-            <SheetTitle>{selected ? elementLabel(selected) : "Page and design"}</SheetTitle>
-            <SheetDescription className="sr-only">Settings for the selected item</SheetDescription>
+            <SheetTitle>{selected ? elementLabel(selected) : t("Page and design")}</SheetTitle>
+            <SheetDescription className="sr-only">{t("Settings for the selected item")}</SheetDescription>
           </SheetHeader>
           {panel}
         </SheetContent>
@@ -546,8 +548,8 @@ export function DesignEditor({
       />
 
       {presenting && (
-        <div className="fixed inset-0 z-50 flex flex-col" role="dialog" aria-modal="true" aria-label={`Preview of ${title}`}>
-          <Presenter content={content} assets={assetUrls} title={`Preview · ${title}`} onClose={() => setPresenting(false)} className="flex-1" />
+        <div className="fixed inset-0 z-50 flex flex-col" role="dialog" aria-modal="true" aria-label={t("Preview of {title}", { title })}>
+          <Presenter content={content} assets={assetUrls} title={t("Preview · {title}", { title })} onClose={() => setPresenting(false)} className="flex-1" />
         </div>
       )}
     </div>
@@ -555,53 +557,55 @@ export function DesignEditor({
 }
 
 function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () => void }) {
+  const t = useT()
   const base = "flex items-center gap-1 text-xs"
   switch (status.state) {
     case "saved":
       return (
         <span className={cn(base, "text-muted-foreground")} role="status">
-          <CheckIcon className="size-3.5" aria-hidden /> Saved
+          <CheckIcon className="size-3.5" aria-hidden /> {t("Saved")}
         </span>
       )
     case "dirty":
       return (
         <span className={cn(base, "text-muted-foreground")} role="status">
-          <CloudIcon className="size-3.5" aria-hidden /> Unsaved changes
+          <CloudIcon className="size-3.5" aria-hidden /> {t("Unsaved changes")}
         </span>
       )
     case "saving":
       return (
         <span className={cn(base, "text-muted-foreground")} role="status">
-          <Loader2Icon className="size-3.5 animate-spin" aria-hidden /> Saving…
+          <Loader2Icon className="size-3.5 animate-spin" aria-hidden /> {t("Saving…")}
         </span>
       )
     case "invalid":
       return (
-        <span className={cn(base, "text-amber-700 dark:text-amber-300")} role="status" title={status.message}>
-          <AlertTriangleIcon className="size-3.5" aria-hidden /> Not saved
+        <span className={cn(base, "text-amber-700 dark:text-amber-300")} role="status" title={t(status.message)}>
+          <AlertTriangleIcon className="size-3.5" aria-hidden /> {t("Not saved")}
         </span>
       )
     case "error":
       return (
         <span className={cn(base, "text-destructive")} role="alert">
-          <AlertTriangleIcon className="size-3.5" aria-hidden /> {status.message}
+          <AlertTriangleIcon className="size-3.5" aria-hidden /> {t(status.message)}
           <Button variant="link" size="sm" className="h-auto p-0 text-xs" onClick={onRetry}>
-            Retry
+            {t("Retry")}
           </Button>
         </span>
       )
     case "conflict":
       return (
         <span className={cn(base, "text-destructive")} role="status">
-          <AlertTriangleIcon className="size-3.5" aria-hidden /> Not saved
+          <AlertTriangleIcon className="size-3.5" aria-hidden /> {t("Not saved")}
         </span>
       )
   }
 }
 
 function IconButton({ label, icon, onClick, disabled }: { label: string; icon: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  const t = useT()
   return (
-    <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={label} title={label} onClick={onClick} disabled={disabled}>
+    <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={t(label)} title={t(label)} onClick={onClick} disabled={disabled}>
       {icon}
     </Button>
   )

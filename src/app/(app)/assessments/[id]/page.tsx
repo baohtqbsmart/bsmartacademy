@@ -24,10 +24,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Writing or speaking task" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Writing or speaking task") }
+}
 
 export default async function TaskPage({ params }: PageProps<"/assessments/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.assessmentDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -41,19 +46,19 @@ export default async function TaskPage({ params }: PageProps<"/assessments/[id]"
   return (
     <>
       <Link href={routes.assessments} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Writing & speaking
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Writing & speaking")}
       </Link>
       <PageHeader
         title={task.title}
         description={[task.class?.name, task.cefr_level && CEFR_LABELS[task.cefr_level]].filter(Boolean).join(" · ")}
         actions={
           <>
-            <Badge variant="outline">{KIND_LABELS[task.kind]}</Badge>
-            {task.closed_at && <Badge variant="outline">Closed</Badge>}
+            <Badge variant="outline">{t(KIND_LABELS[task.kind])}</Badge>
+            {task.closed_at && <Badge variant="outline">{t("Closed")}</Badge>}
             {canWrite && task.status !== "archived" && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={assessmentEditPath(task.id)}>
-                  <PencilIcon aria-hidden /> Edit
+                  <PencilIcon aria-hidden /> {t("Edit")}
                 </Link>
               </Button>
             )}
@@ -69,19 +74,20 @@ export default async function TaskPage({ params }: PageProps<"/assessments/[id]"
   )
 }
 
-function TaskDetails({ task }: { task: Task }) {
+async function TaskDetails({ task }: { task: Task }) {
+  const t = await getT()
   return (
     <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
       <Card>
         <CardHeader>
-          <CardTitle>{task.kind === "writing" ? "Task" : "Prompt"}</CardTitle>
+          <CardTitle>{task.kind === "writing" ? t("Task") : t("Prompt")}</CardTitle>
           <CardDescription>
-            {RESPONSE_LABELS[task.response_mode]}
-            {task.min_words && ` · at least ${task.min_words} words`}
-            {task.max_words && ` · at most ${task.max_words} words`}
-            {task.max_duration_seconds && ` · about ${Math.round(task.max_duration_seconds / 60) || 1} min`}
-            {task.due_at && ` · due ${formatDateTime(task.due_at)}`}
-            {` · ${task.max_attempts} attempt${task.max_attempts === 1 ? "" : "s"}`}
+            {t(RESPONSE_LABELS[task.response_mode])}
+            {task.min_words && t(" · at least {min_words} words", { min_words: task.min_words })}
+            {task.max_words && t(" · at most {max_words} words", { max_words: task.max_words })}
+            {task.max_duration_seconds && t(" · about {value} min", { value: Math.round(task.max_duration_seconds / 60) || 1 })}
+            {task.due_at && t(" · due {dateTime}", { dateTime: formatDateTime(task.due_at) })}
+            {t(" · {max_attempts} attempt{value}", { max_attempts: task.max_attempts, value: task.max_attempts === 1 ? "" : "s" })}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
@@ -95,8 +101,8 @@ function TaskDetails({ task }: { task: Task }) {
       </Card>
       <Card className="content-start">
         <CardHeader>
-          <CardTitle>How it is marked</CardTitle>
-          <CardDescription>{task.scoring === "ielts_band" ? IELTS_NOTICE : `Out of ${Number(task.max_score)} points.`}</CardDescription>
+          <CardTitle>{t("How it is marked")}</CardTitle>
+          <CardDescription>{task.scoring === "ielts_band" ? IELTS_NOTICE : t("Out of {number} points.", { number: Number(task.max_score) })}</CardDescription>
         </CardHeader>
         <CardContent>
           <ul className="grid gap-2 text-sm">
@@ -104,7 +110,7 @@ function TaskDetails({ task }: { task: Task }) {
               <li key={c.name} className="grid">
                 <span className="flex justify-between gap-2">
                   <span className="font-medium">{c.name}</span>
-                  <span className="tabular-nums">{task.scoring === "ielts_band" ? "band 0–9" : `${c.max_points} pts`}</span>
+                  <span className="tabular-nums">{task.scoring === "ielts_band" ? t("band 0–9") : t("{max_points} pts", { max_points: c.max_points })}</span>
                 </span>
                 {c.description && <span className="text-muted-foreground">{c.description}</span>}
               </li>
@@ -123,6 +129,7 @@ function statusLabel(s: SubmissionRow, family: boolean) {
 }
 
 async function Roster({ task }: { task: Task }) {
+  const t = await getT()
   const db = await createClient()
   const [submissions, students] = await Promise.all([listTaskSubmissions(db, task.id), listVisibleStudents(db, task.class_id)])
   const latest = new Map<string, SubmissionRow>()
@@ -132,23 +139,23 @@ async function Roster({ task }: { task: Task }) {
   return (
     <section className="grid gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-semibold">Students&apos; work</h2>
+        <h2 className="font-semibold">{t("Students' work")}</h2>
         {graded > 0 && (
           <ConfirmActionButton
-            title={`Return ${graded} grade${graded === 1 ? "" : "s"}?`}
-            description="Students and parents will see the scores, feedback and comments."
-            confirmLabel="Return"
-            successMessage="Grades returned."
+            title={t("Return {graded} grade{value}?", { graded, value: graded === 1 ? "" : "s" })}
+            description={t("Students and parents will see the scores, feedback and comments.")}
+            confirmLabel={t("Return")}
+            successMessage={t("Grades returned.")}
             action={returnGradesAction.bind(null, { taskId: task.id })}
           >
-            <SendIcon aria-hidden /> Return all graded ({graded})
+            <SendIcon aria-hidden /> {t("Return all graded ({graded})", { graded })}
           </ConfirmActionButton>
         )}
       </div>
       <SimpleTable
         rows={students}
         rowKey={(s) => s.id}
-        empty={<EmptyState icon={UsersIcon} title="No students in this class" />}
+        empty={<EmptyState icon={UsersIcon} title={t("No students in this class")} />}
         columns={[
           { header: "Student", cell: (s) => <span className="font-medium">{s.full_name}</span> },
           {
@@ -157,12 +164,12 @@ async function Roster({ task }: { task: Task }) {
               const w = latest.get(s.id)
               return w ? (
                 <span>
-                  {statusLabel(w, false)}
-                  {w.is_late && <Badge variant="outline" className="ml-1">Late</Badge>}
-                  {w.resubmission_allowed && <Badge variant="outline" className="ml-1">May resubmit</Badge>}
+                  {t(statusLabel(w, false))}
+                  {w.is_late && <Badge variant="outline" className="ml-1">{t("Late")}</Badge>}
+                  {w.resubmission_allowed && <Badge variant="outline" className="ml-1">{t("May resubmit")}</Badge>}
                 </span>
               ) : (
-                <span className="text-muted-foreground">Not handed in</span>
+                <span className="text-muted-foreground">{t("Not handed in")}</span>
               )
             },
           },
@@ -182,7 +189,7 @@ async function Roster({ task }: { task: Task }) {
               const w = latest.get(s.id)
               return w ? (
                 <Button size="sm" variant={w.status === "submitted" ? "default" : "outline"} asChild>
-                  <Link href={assessmentSubmissionPath(w.id)}>{w.status === "submitted" ? "Grade" : "Open"}</Link>
+                  <Link href={assessmentSubmissionPath(w.id)}>{w.status === "submitted" ? t("Grade") : t("Open")}</Link>
                 </Button>
               ) : null
             },
@@ -194,6 +201,7 @@ async function Roster({ task }: { task: Task }) {
 }
 
 async function StudentPanel({ task, studentId }: { task: Task; studentId: string }) {
+  const t = await getT()
   const submissions = await listTaskSubmissions(await createClient(), task.id, studentId)
   const latest = submissions[0]
   const attemptsLeft = task.max_attempts - submissions.length
@@ -204,19 +212,19 @@ async function StudentPanel({ task, studentId }: { task: Task; studentId: string
     <>
       <Card>
         <CardHeader>
-          <CardTitle>{submissions.length === 0 ? "Your answer" : "Hand in again"}</CardTitle>
+          <CardTitle>{submissions.length === 0 ? t("Your answer") : t("Hand in again")}</CardTitle>
           <CardDescription>
             {canSubmit
               ? submissions.length === 0
-                ? "You can hand in once" + (task.max_attempts > 1 ? ` (up to ${task.max_attempts} attempts).` : ".")
+                ? "You can hand in once" + (task.max_attempts > 1 ? t(" (up to {max_attempts} attempts).", { max_attempts: task.max_attempts }) : ".")
                 : latest?.resubmission_allowed
-                  ? "Your teacher has allowed you to resubmit."
-                  : `${attemptsLeft} attempt${attemptsLeft === 1 ? "" : "s"} left.`
+                  ? t("Your teacher has allowed you to resubmit.")
+                  : t("{attemptsLeft} attempt{value} left.", { attemptsLeft, value: attemptsLeft === 1 ? "" : "s" })
               : task.closed_at
-                ? "This task is closed."
+                ? t("This task is closed.")
                 : lateBlocked
-                  ? "The due date has passed and late work is not accepted."
-                  : "You have handed this in. Your teacher will return your feedback."}
+                  ? t("The due date has passed and late work is not accepted.")
+                  : t("You have handed this in. Your teacher will return your feedback.")}
           </CardDescription>
         </CardHeader>
         {canSubmit && (
@@ -243,12 +251,13 @@ async function FamilyPanel({ task }: { task: Task }) {
   return <Attempts submissions={submissions} maxScore={Number(task.max_score)} family showStudent />
 }
 
-function Attempts({ submissions, maxScore, family, showStudent = false }: { submissions: SubmissionRow[]; maxScore: number; family: boolean; showStudent?: boolean }) {
+async function Attempts({ submissions, maxScore, family, showStudent = false }: { submissions: SubmissionRow[]; maxScore: number; family: boolean; showStudent?: boolean }) {
+  const t = await getT()
   if (submissions.length === 0) return null
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Attempts</CardTitle>
+        <CardTitle>{t("Attempts")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ul className="grid gap-2 text-sm">
@@ -256,12 +265,12 @@ function Attempts({ submissions, maxScore, family, showStudent = false }: { subm
             <li key={s.id} className="flex flex-wrap items-center gap-2">
               {showStudent && <span className="font-medium">{s.student?.full_name}</span>}
               <Link href={assessmentSubmissionPath(s.id)} className="hover:underline">
-                Attempt {s.attempt}
+                {t("Attempt {attempt}", { attempt: s.attempt })}
               </Link>
               <span className="text-muted-foreground tabular-nums">{formatDateTime(s.submitted_at)}</span>
-              <span>{statusLabel(s, family)}</span>
+              <span>{t(statusLabel(s, family))}</span>
               {s.assessment_grades && <span className="font-medium tabular-nums">{`${Number(s.assessment_grades.total_score)} / ${maxScore}`}</span>}
-              {s.is_late && <Badge variant="outline">Late</Badge>}
+              {s.is_late && <Badge variant="outline">{t("Late")}</Badge>}
             </li>
           ))}
         </ul>

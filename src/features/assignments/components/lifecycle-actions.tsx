@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { changeAssignmentStatusAction, deleteDraftAction } from "@/features/assignments/actions"
 import { availableActions, type AssignmentStatus } from "@/features/assignments/status"
 import { isoToAcademyInput } from "@/lib/dates"
+import { useT } from "@/i18n/client"
 
 type LifecycleActionsProps = {
   assignmentId: string
@@ -21,6 +22,7 @@ type LifecycleActionsProps = {
 
 /** Buttons for the moves the database allows from the current state. */
 export function LifecycleActions({ assignmentId, state, publishAt, canDelete }: LifecycleActionsProps) {
+  const t = useT()
   const actions = availableActions(state)
   const run = (action: string) => changeAssignmentStatusAction.bind(null, { assignmentId, action })
 
@@ -29,82 +31,82 @@ export function LifecycleActions({ assignmentId, state, publishAt, canDelete }: 
       {actions.includes("publish") && (
         <ConfirmActionButton
           variant="default"
-          title="Publish now?"
-          description="Students in the class will see the assignment straight away."
-          confirmLabel="Publish"
-          successMessage="Assignment published."
+          title={t("Publish now?")}
+          description={t("Students in the class will see the assignment straight away.")}
+          confirmLabel={t("Publish")}
+          successMessage={t("Assignment published.")}
           action={run("publish")}
         >
-          <SendIcon aria-hidden /> Publish
+          <SendIcon aria-hidden /> {t("Publish")}
         </ConfirmActionButton>
       )}
       {actions.includes("schedule") && <ScheduleDialog assignmentId={assignmentId} publishAt={publishAt} rescheduling={state === "scheduled"} />}
       {actions.includes("unschedule") && (
         <ConfirmActionButton
-          title="Back to draft?"
-          description="The scheduled publication is cancelled."
-          confirmLabel="Back to draft"
-          successMessage="Moved back to draft."
+          title={t("Back to draft?")}
+          description={t("The scheduled publication is cancelled.")}
+          confirmLabel={t("Back to draft")}
+          successMessage={t("Moved back to draft.")}
           action={run("unschedule")}
         >
-          <Undo2Icon aria-hidden /> Unschedule
+          <Undo2Icon aria-hidden /> {t("Unschedule")}
         </ConfirmActionButton>
       )}
       {actions.includes("close") && (
         <ConfirmActionButton
-          title="Close the assignment?"
-          description="Students can still see it and their grades, but can no longer start or hand in work. You can reopen it later."
-          confirmLabel="Close"
-          successMessage="Assignment closed."
+          title={t("Close the assignment?")}
+          description={t("Students can still see it and their grades, but can no longer start or hand in work. You can reopen it later.")}
+          confirmLabel={t("Close")}
+          successMessage={t("Assignment closed.")}
           action={run("close")}
         >
-          <LockIcon aria-hidden /> Close
+          <LockIcon aria-hidden /> {t("Close")}
         </ConfirmActionButton>
       )}
       {actions.includes("reopen") && (
         <ConfirmActionButton
-          title="Reopen the assignment?"
-          description="Students can hand in work again."
-          confirmLabel="Reopen"
-          successMessage="Assignment reopened."
+          title={t("Reopen the assignment?")}
+          description={t("Students can hand in work again.")}
+          confirmLabel={t("Reopen")}
+          successMessage={t("Assignment reopened.")}
           action={run("reopen")}
         >
-          <LockOpenIcon aria-hidden /> Reopen
+          <LockOpenIcon aria-hidden /> {t("Reopen")}
         </ConfirmActionButton>
       )}
       {actions.includes("archive") && (
         <ConfirmActionButton
-          title="Archive the assignment?"
-          description="It disappears from students' and parents' lists. Submissions and grades are kept, and you can restore it."
-          confirmLabel="Archive"
-          successMessage="Assignment archived."
+          title={t("Archive the assignment?")}
+          description={t("It disappears from students' and parents' lists. Submissions and grades are kept, and you can restore it.")}
+          confirmLabel={t("Archive")}
+          successMessage={t("Assignment archived.")}
           action={run("archive")}
         >
-          <ArchiveIcon aria-hidden /> Archive
+          <ArchiveIcon aria-hidden /> {t("Archive")}
         </ConfirmActionButton>
       )}
       {actions.includes("restore") && (
         <ConfirmActionButton
-          title="Restore the assignment?"
-          description="It comes back as closed (if students saw it before) or as a draft."
-          confirmLabel="Restore"
-          successMessage="Assignment restored."
+          title={t("Restore the assignment?")}
+          description={t("It comes back as closed (if students saw it before) or as a draft.")}
+          confirmLabel={t("Restore")}
+          successMessage={t("Assignment restored.")}
           action={run("restore")}
         >
-          <ArchiveRestoreIcon aria-hidden /> Restore
+          <ArchiveRestoreIcon aria-hidden /> {t("Restore")}
         </ConfirmActionButton>
       )}
       {canDelete && (
         <ConfirmActionButton
           variant="ghost"
-          title="Delete this draft?"
-          description="The draft, its questions and attachments are deleted permanently."
-          confirmLabel="Delete"
-          successMessage="Draft deleted."
+          title={t("Delete this draft?")}
+          description={t("The draft, its questions and attachments are deleted permanently.")}
+          confirmLabel={t("Delete")}
+          successMessage={t("Draft deleted.")}
           destructive
           action={deleteDraftAction.bind(null, { assignmentId })}
         >
-          <Trash2Icon aria-hidden /> Delete draft
+          <Trash2Icon aria-hidden /> {t("Delete draft")}
         </ConfirmActionButton>
       )}
     </div>
@@ -112,22 +114,23 @@ export function LifecycleActions({ assignmentId, state, publishAt, canDelete }: 
 }
 
 function ScheduleDialog({ assignmentId, publishAt, rescheduling }: { assignmentId: string; publishAt: string | null; rescheduling: boolean }) {
+  const t = useT()
   const [value, setValue] = useState(isoToAcademyInput(publishAt))
   return (
     <ActionDialog
       trigger={
         <Button variant="outline">
-          <ClockIcon aria-hidden /> {rescheduling ? "Reschedule" : "Schedule"}
+          <ClockIcon aria-hidden /> {rescheduling ? t("Reschedule") : t("Schedule")}
         </Button>
       }
-      title={rescheduling ? "Change the publication time" : "Schedule publication"}
-      description="The assignment becomes visible to students at this time (Vietnam time)."
-      submitLabel="Schedule"
-      successMessage="Publication scheduled."
+      title={rescheduling ? t("Change the publication time") : t("Schedule publication")}
+      description={t("The assignment becomes visible to students at this time (Vietnam time).")}
+      submitLabel={t("Schedule")}
+      successMessage={t("Publication scheduled.")}
       onOpen={() => setValue(isoToAcademyInput(publishAt))}
       onSubmit={() => changeAssignmentStatusAction({ assignmentId, action: "schedule", publishAt: value })}
     >
-      <Field id="publish-at" label="Publish at">
+      <Field id="publish-at" label={t("Publish at")}>
         <Input id="publish-at" type="datetime-local" value={value} onChange={(e) => setValue(e.target.value)} required />
       </Field>
     </ActionDialog>

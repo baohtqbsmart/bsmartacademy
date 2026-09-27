@@ -21,6 +21,7 @@ import { routes } from "@/config/routes"
 import { signInAction } from "@/features/auth/actions"
 import { signInSchema } from "@/features/auth/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type LoginFormProps = {
   next?: string
@@ -28,6 +29,7 @@ type LoginFormProps = {
 }
 
 export function LoginForm({ next, initialError }: LoginFormProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState(initialError ?? null)
 
@@ -53,9 +55,9 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t("Email or login name")}</FormLabel>
               <FormControl>
-                <Input type="email" autoComplete="email" autoFocus {...field} />
+                <Input type="text" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} autoFocus {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -67,12 +69,12 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{t("Password")}</FormLabel>
                 <Link
                   href={routes.forgotPassword}
                   className="text-muted-foreground text-sm underline-offset-4 hover:underline"
                 >
-                  Forgot password?
+                  {t("Forgot password?")}
                 </Link>
               </div>
               <FormControl>
@@ -83,7 +85,7 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
           )}
         />
         <SubmitButton pending={isPending} className="w-full">
-          Sign in
+          {t("Sign in")}
         </SubmitButton>
       </form>
     </Form>

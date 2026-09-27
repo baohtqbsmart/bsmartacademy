@@ -14,12 +14,17 @@ import { todayInAcademy } from "@/lib/dates"
 import { formatVnd } from "@/lib/money"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Tuition reports" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Tuition reports") }
+}
 
 const percent = (part: number, whole: number) => (whole > 0 ? `${Math.round((part / whole) * 100)}%` : "—")
 
 export default async function TuitionReportsPage({ searchParams }: PageProps<"/tuition/reports">) {
+  const t = await getT()
   await requireRouteAccess(routes.tuitionReports)
   const currentYear = Number(todayInAcademy().slice(0, 4))
   const requested = Number(firstParam(await searchParams, "year"))
@@ -31,7 +36,7 @@ export default async function TuitionReportsPage({ searchParams }: PageProps<"/t
 
   return (
     <>
-      <PageHeader title="Tuition reports" description={`Billing and collection for ${year}.`} />
+      <PageHeader title={t("Tuition reports")} description={t("Billing and collection for {year}.", { year })} />
       <ListFilters
         basePath={routes.tuitionReports}
         values={{ year: year === currentYear ? undefined : String(year) }}
@@ -56,8 +61,8 @@ export default async function TuitionReportsPage({ searchParams }: PageProps<"/t
 
       <Card>
         <CardHeader>
-          <CardTitle>Monthly billing and collection</CardTitle>
-          <CardDescription>Invoices falling due vs payments received each month.</CardDescription>
+          <CardTitle>{t("Monthly billing and collection")}</CardTitle>
+          <CardDescription>{t("Invoices falling due vs payments received each month.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <MonthlyRevenueChart data={report.monthly} />
@@ -66,7 +71,7 @@ export default async function TuitionReportsPage({ searchParams }: PageProps<"/t
       <SimpleTable
         rows={report.monthly}
         rowKey={(m) => m.month}
-        empty="No data."
+        empty={t("No data.")}
         columns={[
           { header: "Month", cell: (m) => `${m.label}/${year}` },
           { header: "Expected", cell: (m) => money(m.expected) },
@@ -78,7 +83,7 @@ export default async function TuitionReportsPage({ searchParams }: PageProps<"/t
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Collected by payment method</CardTitle>
+            <CardTitle>{t("Collected by payment method")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4">
             <MethodChart data={report.methods.map((m) => ({ label: PAYMENT_METHOD_LABELS[m.method], amount: m.amount }))} />
@@ -86,8 +91,8 @@ export default async function TuitionReportsPage({ searchParams }: PageProps<"/t
               <tbody className="tabular-nums">
                 {report.methods.map((m) => (
                   <tr key={m.method} className="border-t">
-                    <td className="py-1">{PAYMENT_METHOD_LABELS[m.method]}</td>
-                    <td className="py-1 text-right">{m.count} payments</td>
+                    <td className="py-1">{t(PAYMENT_METHOD_LABELS[m.method])}</td>
+                    <td className="py-1 text-right">{t("{count} payments", { count: m.count })}</td>
                     <td className="py-1 text-right">{formatVnd(m.amount)}</td>
                   </tr>
                 ))}
@@ -97,18 +102,18 @@ export default async function TuitionReportsPage({ searchParams }: PageProps<"/t
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>By course</CardTitle>
-            <CardDescription>All assigned tuition (not only this year), cancelled excluded.</CardDescription>
+            <CardTitle>{t("By course")}</CardTitle>
+            <CardDescription>{t("All assigned tuition (not only this year), cancelled excluded.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-muted-foreground text-left">
-                  <th className="py-1 font-normal">Course</th>
-                  <th className="py-1 text-right font-normal">Students</th>
-                  <th className="py-1 text-right font-normal">Billed</th>
-                  <th className="py-1 text-right font-normal">Paid</th>
-                  <th className="py-1 text-right font-normal">Remaining</th>
+                  <th className="py-1 font-normal">{t("Course")}</th>
+                  <th className="py-1 text-right font-normal">{t("Students")}</th>
+                  <th className="py-1 text-right font-normal">{t("Billed")}</th>
+                  <th className="py-1 text-right font-normal">{t("Paid")}</th>
+                  <th className="py-1 text-right font-normal">{t("Remaining")}</th>
                 </tr>
               </thead>
               <tbody className="tabular-nums">
@@ -124,7 +129,7 @@ export default async function TuitionReportsPage({ searchParams }: PageProps<"/t
                 {report.courses.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-muted-foreground py-4 text-center">
-                      No tuition assigned yet.
+                      {t("No tuition assigned yet.")}
                     </td>
                   </tr>
                 )}

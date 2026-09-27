@@ -10,10 +10,15 @@ import { getBankQuestion, listSubjects } from "@/features/question-bank/server/b
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit question" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit question") }
+}
 
 export default async function EditQuestionPage({ params }: PageProps<"/question-bank/[id]/edit">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.questionEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -28,8 +33,8 @@ export default async function EditQuestionPage({ params }: PageProps<"/question-
   return (
     <>
       <PageHeader
-        title="Edit question"
-        description={question.usedIn.length > 0 ? "Tests that already use it keep their own copy; this edit applies to future tests." : undefined}
+        title={t("Edit question")}
+        description={question.usedIn.length > 0 ? t("Tests that already use it keep their own copy; this edit applies to future tests.") : undefined}
       />
       <QuestionForm initial={toFormValues(question)} subjects={subjects} cancelHref={questionPath(id)} />
     </>

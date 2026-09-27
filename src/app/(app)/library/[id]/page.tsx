@@ -21,10 +21,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
 import { formatFileSize } from "@/lib/uploads"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Material" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Material") }
+}
 
 export default async function MaterialPage({ params }: PageProps<"/library/[id]">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.libraryMaterial)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -58,11 +63,11 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
   return (
     <>
       <Link href={routes.library} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Material library
+        <ArrowLeftIcon className="size-4" aria-hidden /> {tr("Material library")}
       </Link>
       <PageHeader
         title={m.title}
-        description={m.scope === "academy" ? "Academy library" : `By ${m.owner_id === user.id ? "you" : m.owner_name}`}
+        description={m.scope === "academy" ? tr("Academy library") : tr("By {value}", { value: m.owner_id === user.id ? "you" : m.owner_name })}
         actions={
           <>
             <FavoriteButton materialId={m.id} favorite={m.favorite} />
@@ -70,7 +75,7 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
             {canManage && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={libraryEditPath(m.id)}>
-                  <PencilIcon aria-hidden /> Edit
+                  <PencilIcon aria-hidden /> {tr("Edit")}
                 </Link>
               </Button>
             )}
@@ -79,7 +84,7 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
       />
       {m.archived_at && (
         <p className="bg-muted rounded-md px-3 py-2 text-sm">
-          Archived {formatDateTime(m.archived_at)} — hidden from students and other teachers.
+          {tr("Archived {dateTime} — hidden from students and other teachers.", { dateTime: formatDateTime(m.archived_at) })}
         </p>
       )}
 
@@ -92,7 +97,7 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
         <div className="grid content-start gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Details</CardTitle>
+              <CardTitle>{tr("Details")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               <dl className="grid grid-cols-[6rem_1fr] gap-x-3 gap-y-1.5">
@@ -100,7 +105,7 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
                   .filter(([, value]) => value)
                   .map(([label, value]) => (
                     <div key={label} className="contents">
-                      <dt className="text-muted-foreground">{label}</dt>
+                      <dt className="text-muted-foreground">{tr(label)}</dt>
                       <dd className="min-w-0 break-words">{value}</dd>
                     </div>
                   ))}
@@ -120,27 +125,26 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
           {staff && (
             <Card>
               <CardHeader>
-                <CardTitle>Access</CardTitle>
+                <CardTitle>{tr("Access")}</CardTitle>
                 <CardDescription>
-                  {m.scope === "academy" ? "Academy resource, managed by administrators. " : ""}
-                  {m.visibility === "staff" ? "All teachers can find and use it." : "Only its manager and administrators can find it."} Students see it only where it is assigned.
+                  {tr("{value}{value2} Students see it only where it is assigned.", { value: m.scope === "academy" ? "Academy resource, managed by administrators. " : "", value2: m.visibility === "staff" ? "All teachers can find and use it." : "Only its manager and administrators can find it." })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 text-sm">
                 <div className="grid gap-1">
-                  <span className="font-medium">Assigned to</span>
+                  <span className="font-medium">{tr("Assigned to")}</span>
                   {m.classes.length === 0 && m.students.length === 0 ? (
-                    <span className="text-muted-foreground">No class or student yet.</span>
+                    <span className="text-muted-foreground">{tr("No class or student yet.")}</span>
                   ) : (
                     <ul className="grid gap-0.5">
                       {m.classes.map((c) => (
                         <li key={c.class_id}>
-                          {c.class?.name ?? "Class"} <span className="text-muted-foreground text-xs">by {c.shared_by_name || "staff"}</span>
+                          {c.class?.name ?? tr("Class")} <span className="text-muted-foreground text-xs">{tr("by {value}", { value: c.shared_by_name || "staff" })}</span>
                         </li>
                       ))}
                       {m.students.map((s) => (
                         <li key={s.student_id}>
-                          {s.student?.full_name ?? "Student"} <span className="text-muted-foreground text-xs">(student) by {s.shared_by_name || "staff"}</span>
+                          {s.student?.full_name ?? tr("Student")} <span className="text-muted-foreground text-xs">{tr("(student) by {value}", { value: s.shared_by_name || "staff" })}</span>
                         </li>
                       ))}
                     </ul>
@@ -164,7 +168,7 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
           {canManage && (
             <Card>
               <CardHeader>
-                <CardTitle>Manage</CardTitle>
+                <CardTitle>{tr("Manage")}</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3">
                 <MoveToFolder materialId={m.id} folderId={m.folder_id} folders={moveTargets} />

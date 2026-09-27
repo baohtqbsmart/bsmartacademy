@@ -9,10 +9,15 @@ import { getAssignment, listAssignableClasses } from "@/features/assignments/ser
 import { requireRouteAccess } from "@/lib/auth/session"
 import { isoToAcademyInput } from "@/lib/dates"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit assignment" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit assignment") }
+}
 
 export default async function EditAssignmentPage({ params }: PageProps<"/assignments/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.assignmentEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -35,7 +40,7 @@ export default async function EditAssignmentPage({ params }: PageProps<"/assignm
 
   return (
     <>
-      <PageHeader title="Edit assignment" description={assignment.title} />
+      <PageHeader title={t("Edit assignment")} description={assignment.title} />
       <AssignmentForm
         assignmentId={assignment.id}
         classes={options}

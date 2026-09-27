@@ -78,6 +78,7 @@ export type Database = {
           phone: string | null
           avatar_path: string | null
           is_active: boolean
+          must_change_password: boolean
         } & Timestamps
         Insert: {
           id: string
@@ -87,6 +88,7 @@ export type Database = {
           phone?: string | null
           avatar_path?: string | null
           is_active?: boolean
+          must_change_password?: boolean
         } & TimestampsInsert
         Update: {
           id?: string
@@ -96,6 +98,7 @@ export type Database = {
           phone?: string | null
           avatar_path?: string | null
           is_active?: boolean
+          must_change_password?: boolean
         } & TimestampsInsert
         Relationships: [
           {

@@ -18,8 +18,12 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Writing or speaking work" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Writing or speaking work") }
+}
 
 const EVENT_LABELS = {
   submitted: "Handed in",
@@ -29,6 +33,7 @@ const EVENT_LABELS = {
 } as const
 
 export default async function SubmissionPage({ params, searchParams }: PageProps<"/assessments/submissions/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.assessmentSubmission)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -56,15 +61,15 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
         <ArrowLeftIcon className="size-4" aria-hidden /> {task.title}
       </Link>
       <PageHeader
-        title={`${submission.student?.full_name ?? ""} · attempt ${submission.attempt}`}
-        description={`${task.title} · handed in ${formatDateTime(submission.submitted_at)}${submission.word_count !== null ? ` · ${submission.word_count} words` : ""}`}
+        title={t("{value} · attempt {attempt}", { value: submission.student?.full_name ?? "", attempt: submission.attempt })}
+        description={t("{title} · handed in {dateTime}{value}", { title: task.title, dateTime: formatDateTime(submission.submitted_at), value: submission.word_count !== null ? ` · ${submission.word_count} words` : "" })}
         actions={
           <>
-            <Badge variant="outline">{KIND_LABELS[task.kind]}</Badge>
-            {submission.is_late && <Badge variant="outline">Late</Badge>}
+            <Badge variant="outline">{t(KIND_LABELS[task.kind])}</Badge>
+            {submission.is_late && <Badge variant="outline">{t("Late")}</Badge>}
             {submission.student && (
               <Link href={assessmentHistoryPath(submission.student.id)} className="inline-flex items-center gap-1 text-sm underline">
-                <HistoryIcon className="size-4" aria-hidden /> History
+                <HistoryIcon className="size-4" aria-hidden /> {t("History")}
               </Link>
             )}
           </>
@@ -73,9 +78,9 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
       {justSubmitted && (
         <Alert>
           <CircleCheckIcon />
-          <AlertTitle>Handed in</AlertTitle>
+          <AlertTitle>{t("Handed in")}</AlertTitle>
           <AlertDescription>
-            Your teacher will return feedback here. Reference: {submission.id.slice(0, 8).toUpperCase()}.
+            {t("Your teacher will return feedback here. Reference: {value}.", { value: submission.id.slice(0, 8).toUpperCase() })}
           </AlertDescription>
         </Alert>
       )}
@@ -112,17 +117,17 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
 
       <Card>
         <CardHeader>
-          <CardTitle>History</CardTitle>
+          <CardTitle>{t("History")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 text-sm">
           <ul className="grid gap-1">
             {attempts.map((a) => (
               <li key={a.id}>
                 {a.id === submission.id ? (
-                  <span className="font-medium">Attempt {a.attempt} (shown)</span>
+                  <span className="font-medium">{t("Attempt {attempt} (shown)", { attempt: a.attempt })}</span>
                 ) : (
                   <Link href={assessmentSubmissionPath(a.id)} className="hover:underline">
-                    Attempt {a.attempt}
+                    {t("Attempt {attempt}", { attempt: a.attempt })}
                   </Link>
                 )}{" "}
                 <span className="text-muted-foreground tabular-nums">· {formatDateTime(a.submitted_at)}</span>
@@ -135,7 +140,7 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
               .sort((a, b) => a.created_at.localeCompare(b.created_at))
               .map((e) => (
                 <li key={e.id}>
-                  <span className="tabular-nums">{formatDateTime(e.created_at)}</span> · {EVENT_LABELS[e.event]}
+                  <span className="tabular-nums">{formatDateTime(e.created_at)}</span> · {t(EVENT_LABELS[e.event])}
                   {e.actor_name && ` · ${e.actor_name}`}
                 </li>
               ))}
@@ -146,14 +151,15 @@ export default async function SubmissionPage({ params, searchParams }: PageProps
   )
 }
 
-function FamilyView({ submission, task }: { submission: Submission; task: Task }) {
+async function FamilyView({ submission, task }: { submission: Submission; task: Task }) {
+  const t = await getT()
   const grade = submission.assessment_grades
   const scores = (grade?.criterion_scores ?? []) as number[]
   return (
     <div className="grid gap-6 xl:grid-cols-[3fr_2fr]">
       <Card>
         <CardHeader>
-          <CardTitle>Work</CardTitle>
+          <CardTitle>{t("Work")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3">
           {submission.playUrl && submission.file_mime?.startsWith("video/") && <video controls src={submission.playUrl} className="max-h-96 w-full rounded-md" />}
@@ -161,7 +167,7 @@ function FamilyView({ submission, task }: { submission: Submission; task: Task }
           {submission.text_response && <AnnotatedText text={submission.text_response} annotations={submission.annotations} />}
           {grade && (
             <div className="grid gap-2">
-              <h3 className="font-medium">Comments</h3>
+              <h3 className="font-medium">{t("Comments")}</h3>
               <AnnotationList annotations={submission.annotations} />
             </div>
           )}
@@ -169,7 +175,7 @@ function FamilyView({ submission, task }: { submission: Submission; task: Task }
       </Card>
       <Card className="content-start">
         <CardHeader>
-          <CardTitle>Feedback</CardTitle>
+          <CardTitle>{t("Feedback")}</CardTitle>
           {grade && (
             <CardDescription>
               {grade.graded_by_name} · {formatDateTime(grade.returned_at)}
@@ -178,11 +184,11 @@ function FamilyView({ submission, task }: { submission: Submission; task: Task }
         </CardHeader>
         <CardContent className="grid gap-3">
           {!grade ? (
-            <p className="text-muted-foreground text-sm">Your teacher has not returned feedback yet.</p>
+            <p className="text-muted-foreground text-sm">{t("Your teacher has not returned feedback yet.")}</p>
           ) : (
             <>
               <p className="text-3xl font-semibold tabular-nums">
-                {task.scoring === "ielts_band" ? `Band ${Number(grade.total_score)}` : `${Number(grade.total_score)} / ${Number(task.max_score)}`}
+                {task.scoring === "ielts_band" ? t("Band {number}", { number: Number(grade.total_score) }) : `${Number(grade.total_score)} / ${Number(task.max_score)}`}
               </p>
               {task.scoring === "ielts_band" && <p className="text-muted-foreground text-xs">{IELTS_NOTICE}</p>}
               <ul className="grid gap-1 text-sm">

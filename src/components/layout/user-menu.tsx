@@ -1,6 +1,6 @@
 "use client"
 
-import { LogOutIcon, UserRoundIcon } from "lucide-react"
+import { KeyRoundIcon, LogOutIcon, UserRoundIcon } from "lucide-react"
 import Link from "next/link"
 
 import { UserAvatar } from "@/components/shared/user-avatar"
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { routes } from "@/config/routes"
 import { signOutAction } from "@/features/auth/actions"
+import { useT } from "@/i18n/client"
 
 type UserMenuProps = {
   name: string
@@ -24,12 +25,13 @@ type UserMenuProps = {
 }
 
 export function UserMenu({ name, email, roleLabel, avatarUrl }: UserMenuProps) {
+  const t = useT()
   const displayName = name || email
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full" aria-label="Open user menu">
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("Open user menu")}>
           <UserAvatar name={displayName} avatarUrl={avatarUrl} className="size-8" />
         </Button>
       </DropdownMenuTrigger>
@@ -43,7 +45,13 @@ export function UserMenu({ name, email, roleLabel, avatarUrl }: UserMenuProps) {
         <DropdownMenuItem asChild>
           <Link href={routes.profile}>
             <UserRoundIcon aria-hidden />
-            My profile
+            {t("My profile")}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={routes.setPassword}>
+            <KeyRoundIcon aria-hidden />
+            {t("Change password")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -51,7 +59,7 @@ export function UserMenu({ name, email, roleLabel, avatarUrl }: UserMenuProps) {
           <DropdownMenuItem asChild>
             <button type="submit" className="w-full">
               <LogOutIcon aria-hidden />
-              Sign out
+              {t("Sign out")}
             </button>
           </DropdownMenuItem>
         </form>

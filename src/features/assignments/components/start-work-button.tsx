@@ -6,9 +6,11 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { startSubmissionAction } from "@/features/assignments/actions"
+import { useT } from "@/i18n/client"
 
 /** Starts an attempt (the action redirects to the work page). */
 export function StartWorkButton({ assignmentId, label }: { assignmentId: string; label: string }) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   return (
     <Button
@@ -21,7 +23,7 @@ export function StartWorkButton({ assignmentId, label }: { assignmentId: string;
       }
     >
       {isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : <PlayIcon aria-hidden />}
-      {label}
+      {t(label)}
     </Button>
   )
 }

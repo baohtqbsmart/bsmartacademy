@@ -12,10 +12,15 @@ import { can } from "@/lib/auth/permissions"
 import { roleLabel } from "@/lib/auth/roles"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Users & roles" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Users & roles") }
+}
 
 export default async function UsersPage() {
+  const t = await getT()
   const user = await requireRouteAccess(routes.users)
   const db = await createClient()
   const [users, roles, grants, permissions] = await Promise.all([
@@ -36,13 +41,13 @@ export default async function UsersPage() {
   return (
     <>
       <PageHeader
-        title="Users & roles"
-        description="Accounts are created by invitation. Roles decide what each account can access."
+        title={t("Users & roles")}
+        description={t("Accounts are created by invitation. Roles decide what each account can access.")}
       />
       <SimpleTable
         rows={users}
         rowKey={(account) => account.id}
-        empty="No accounts yet."
+        empty={t("No accounts yet.")}
         columns={[
           {
             header: "Account",
@@ -55,12 +60,12 @@ export default async function UsersPage() {
           },
           {
             header: "Role",
-            cell: (u) => <Badge variant="secondary">{roleLabel(u.role_code)}</Badge>,
+            cell: (u) => <Badge variant="secondary">{t(roleLabel(u.role_code))}</Badge>,
           },
           {
             header: "Status",
             cell: (u) =>
-              u.is_active ? <Badge>Active</Badge> : <Badge variant="outline">Deactivated</Badge>,
+              u.is_active ? <Badge>{t("Active")}</Badge> : <Badge variant="outline">{t("Deactivated")}</Badge>,
           },
           {
             header: "Manage",
@@ -83,7 +88,7 @@ export default async function UsersPage() {
                 </div>
               ) : (
                 <span className="text-muted-foreground text-xs">
-                  {u.id === user.id ? "You" : "—"}
+                  {u.id === user.id ? t("You") : "—"}
                 </span>
               ),
           },

@@ -12,6 +12,7 @@ import type { PaymentListRow } from "@/features/tuition/server/payment-service"
 import type { listStudentTuitions, listTuitionDiscounts } from "@/features/tuition/server/tuition-service"
 import { formatDate } from "@/lib/format"
 import { formatVnd } from "@/lib/money"
+import { getT } from "@/i18n/server"
 
 type Tuition = Awaited<ReturnType<typeof listStudentTuitions>>[number]
 type Discount = Awaited<ReturnType<typeof listTuitionDiscounts>>[number]
@@ -30,7 +31,8 @@ type TuitionOverviewProps = {
 const money = (value: number) => <span className="tabular-nums">{formatVnd(value)}</span>
 
 /** Tuition, invoices and payments for one student or a family. */
-export function TuitionOverview({ tuitions, discounts, invoices, payments, showStudent, staff }: TuitionOverviewProps) {
+export async function TuitionOverview({ tuitions, discounts, invoices, payments, showStudent, staff }: TuitionOverviewProps) {
+  const tr = await getT()
   const studentColumn = <T extends { student_name?: string | null; student?: { full_name: string } | null }>() => ({
     header: "Student",
     cell: (row: T) => row.student_name ?? row.student?.full_name ?? "—",
@@ -39,11 +41,11 @@ export function TuitionOverview({ tuitions, discounts, invoices, payments, showS
   return (
     <div className="grid gap-6">
       <section className="grid gap-2">
-        <h2 className="font-semibold">Tuition</h2>
+        <h2 className="font-semibold">{tr("Tuition")}</h2>
         <SimpleTable
           rows={tuitions}
           rowKey={(t) => t.id}
-          empty={<EmptyState icon={WalletIcon} title="No tuition assigned" />}
+          empty={<EmptyState icon={WalletIcon} title={tr("No tuition assigned")} />}
           columns={[
             ...(showStudent ? [studentColumn<Tuition>()] : []),
             {
@@ -91,11 +93,11 @@ export function TuitionOverview({ tuitions, discounts, invoices, payments, showS
       </section>
 
       <section className="grid gap-2">
-        <h2 className="font-semibold">Invoices</h2>
+        <h2 className="font-semibold">{tr("Invoices")}</h2>
         <SimpleTable
           rows={invoices}
           rowKey={(i) => i.id}
-          empty={<EmptyState icon={FileTextIcon} title="No invoices" />}
+          empty={<EmptyState icon={FileTextIcon} title={tr("No invoices")} />}
           columns={[
             {
               header: "Invoice",
@@ -120,11 +122,11 @@ export function TuitionOverview({ tuitions, discounts, invoices, payments, showS
       </section>
 
       <section className="grid gap-2">
-        <h2 className="font-semibold">Payment history</h2>
+        <h2 className="font-semibold">{tr("Payment history")}</h2>
         <SimpleTable
           rows={payments}
           rowKey={(p) => p.id}
-          empty={<EmptyState icon={ReceiptIcon} title="No payments yet" />}
+          empty={<EmptyState icon={ReceiptIcon} title={tr("No payments yet")} />}
           columns={[
             {
               header: "Receipt",

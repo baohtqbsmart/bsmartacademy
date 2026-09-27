@@ -10,6 +10,7 @@ import { FavoriteButton } from "@/features/library/components/material-controls"
 import type { MaterialListItem } from "@/features/library/server/library-service"
 import { formatDate } from "@/lib/format"
 import { formatFileSize } from "@/lib/uploads"
+import { getT } from "@/i18n/server"
 
 export const KIND_ICONS: Record<FileKind, LucideIcon> = {
   pdf: FileTextIcon,
@@ -20,7 +21,8 @@ export const KIND_ICONS: Record<FileKind, LucideIcon> = {
   video: FileVideoIcon,
 }
 
-export function MaterialList({ materials, userId }: { materials: MaterialListItem[]; userId: string }) {
+export async function MaterialList({ materials, userId }: { materials: MaterialListItem[]; userId: string }) {
+  const tr = await getT()
   return (
     <ul className="grid gap-2">
       {materials.map((m) => {
@@ -43,16 +45,16 @@ export function MaterialList({ materials, userId }: { materials: MaterialListIte
                     <Badge variant="outline">
                       {FILE_KIND_LABELS[kind] ?? kind} · {formatFileSize(m.size_bytes)}
                     </Badge>
-                    {m.scope === "academy" && <Badge variant="secondary">Academy</Badge>}
-                    {m.visibility === "staff" && m.owner_id === userId && <Badge variant="outline">All teachers</Badge>}
-                    {m.archived_at && <Badge variant="outline">Archived</Badge>}
+                    {m.scope === "academy" && <Badge variant="secondary">{tr("Academy")}</Badge>}
+                    {m.visibility === "staff" && m.owner_id === userId && <Badge variant="outline">{tr("All teachers")}</Badge>}
+                    {m.archived_at && <Badge variant="outline">{tr("Archived")}</Badge>}
                     {m.tags.slice(0, 5).map((t) => (
                       <Badge key={t} variant="outline" className="text-muted-foreground font-normal">
                         #{t}
                       </Badge>
                     ))}
                     <span className="text-muted-foreground">
-                      {m.owner_id === userId ? "You" : m.owner_name} · {formatDate(m.created_at.slice(0, 10))}
+                      {m.owner_id === userId ? tr("You") : m.owner_name} · {formatDate(m.created_at.slice(0, 10))}
                     </span>
                   </span>
                 </div>

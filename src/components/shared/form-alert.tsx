@@ -1,6 +1,7 @@
 import { CircleAlertIcon, CircleCheckIcon } from "lucide-react"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Trans } from "@/i18n/client"
 
 type FormAlertProps = {
   message: string | null | undefined
@@ -14,7 +15,7 @@ export function FormAlert({ message, variant = "error" }: FormAlertProps) {
   return (
     <Alert variant={variant === "error" ? "destructive" : "default"} role="alert">
       <Icon />
-      <AlertDescription>{message}</AlertDescription>
+      <AlertDescription><Trans>{message}</Trans></AlertDescription>
     </Alert>
   )
 }

@@ -34,8 +34,12 @@ import { formatDate } from "@/lib/format"
 import { enumParam, firstParam, uuidParam, withParams, type RawSearchParams } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
 import type { DbClient } from "@/lib/supabase/types"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Attendance" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Attendance") }
+}
 
 const GROUPINGS = ["student", "class", "teacher"] as const
 const GROUPING_LABELS: Record<ReportGrouping, string> = { student: "By student", class: "By class", teacher: "By teacher" }
@@ -63,6 +67,7 @@ type ViewProps = {
 }
 
 async function StaffAttendance({ user, db, params, range, today }: ViewProps & { params: RawSearchParams }) {
+  const tr = await getT()
   const academyWide = can(user.permissions, "attendance.read", ["all"])
   const canTake = can(user.permissions, "attendance.write")
   const groupings = academyWide ? GROUPINGS : GROUPINGS.filter((g) => g !== "teacher")
@@ -94,15 +99,15 @@ async function StaffAttendance({ user, db, params, range, today }: ViewProps & {
   return (
     <>
       <PageHeader
-        title="Attendance"
-        description={academyWide ? "Attendance across the academy." : "Attendance in the classes you teach."}
+        title={tr("Attendance")}
+        description={academyWide ? tr("Attendance across the academy.") : tr("Attendance in the classes you teach.")}
       />
 
       {registerClasses.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Take attendance</CardTitle>
-            <CardDescription>Open a class register; classes meeting today are listed first.</CardDescription>
+            <CardTitle>{tr("Take attendance")}</CardTitle>
+            <CardDescription>{tr("Open a class register; classes meeting today are listed first.")}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {[...registerClasses]
@@ -111,7 +116,7 @@ async function StaffAttendance({ user, db, params, range, today }: ViewProps & {
                 <Button key={c.id} variant={meetsOn(c, today) ? "default" : "outline"} size="sm" asChild>
                   <Link href={classAttendancePath(c.id)}>
                     {c.name}
-                    {meetsOn(c, today) && " · today"}
+                    {meetsOn(c, today) && tr(" · today")}
                   </Link>
                 </Button>
               ))}
@@ -159,23 +164,23 @@ async function StaffAttendance({ user, db, params, range, today }: ViewProps & {
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Attendance rate by week</CardTitle>
-            <CardDescription>Share of students present or late, per week (Monday to Sunday).</CardDescription>
+            <CardTitle>{tr("Attendance rate by week")}</CardTitle>
+            <CardDescription>{tr("Share of students present or late, per week (Monday to Sunday).")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <AttendanceTrendChart data={report.weekly} />
             <details>
-              <summary className="text-muted-foreground cursor-pointer text-sm">Show as table</summary>
+              <summary className="text-muted-foreground cursor-pointer text-sm">{tr("Show as table")}</summary>
               <div className="overflow-x-auto">
                 <table className="mt-2 w-full text-sm">
                   <thead>
                     <tr className="text-muted-foreground text-left">
-                      <th className="py-1 font-normal">Week of</th>
-                      <th className="py-1 text-right font-normal">Present</th>
-                      <th className="py-1 text-right font-normal">Late</th>
-                      <th className="py-1 text-right font-normal">Absent</th>
-                      <th className="py-1 text-right font-normal">Excused</th>
-                      <th className="py-1 text-right font-normal">Rate</th>
+                      <th className="py-1 font-normal">{tr("Week of")}</th>
+                      <th className="py-1 text-right font-normal">{tr("Present")}</th>
+                      <th className="py-1 text-right font-normal">{tr("Late")}</th>
+                      <th className="py-1 text-right font-normal">{tr("Absent")}</th>
+                      <th className="py-1 text-right font-normal">{tr("Excused")}</th>
+                      <th className="py-1 text-right font-normal">{tr("Rate")}</th>
                     </tr>
                   </thead>
                   <tbody className="tabular-nums">
@@ -199,9 +204,9 @@ async function StaffAttendance({ user, db, params, range, today }: ViewProps & {
       </div>
 
       <section className="grid gap-3">
-        <h2 className="font-semibold">Report</h2>
+        <h2 className="font-semibold">{tr("Report")}</h2>
         <TabNav
-          label="Group the report"
+          label={tr("Group the report")}
           active={by}
           tabs={groupings.map((g) => ({
             value: g,
@@ -215,7 +220,8 @@ async function StaffAttendance({ user, db, params, range, today }: ViewProps & {
   )
 }
 
-function ReportTable({ rows, by, canTake }: { rows: ReportRow[]; by: ReportGrouping; canTake: boolean }) {
+async function ReportTable({ rows, by, canTake }: { rows: ReportRow[]; by: ReportGrouping; canTake: boolean }) {
+  const t = await getT()
   const href = (row: ReportRow) => {
     if (by === "student") return studentPath(row.id, "attendance")
     if (by === "class") return canTake ? classAttendancePath(row.id) : `${routes.attendance}?class=${row.id}`
@@ -226,8 +232,8 @@ function ReportTable({ rows, by, canTake }: { rows: ReportRow[]; by: ReportGroup
     <SimpleTable
       rows={rows}
       rowKey={(r) => r.id}
-      empty={<EmptyState icon={CalendarCheckIcon} title="No attendance recorded for these filters" />}
-      footer={by === "student" && rows.length > 0 && <p className="text-muted-foreground text-sm">Lowest attendance first.</p>}
+      empty={<EmptyState icon={CalendarCheckIcon} title={t("No attendance recorded for these filters")} />}
+      footer={by === "student" && rows.length > 0 && <p className="text-muted-foreground text-sm">{t("Lowest attendance first.")}</p>}
       columns={[
         {
           header: { student: "Student", class: "Class", teacher: "Teacher" }[by],
@@ -253,6 +259,7 @@ function ReportTable({ rows, by, canTake }: { rows: ReportRow[]; by: ReportGroup
 }
 
 async function FamilyAttendance({ user, db, range, today }: ViewProps) {
+  const t = await getT()
   const isParent = can(user.permissions, "attendance.read", ["children"])
   const filters = { from: range.from, to: range.to }
   const [report, alerts, history] = await Promise.all([
@@ -264,8 +271,8 @@ async function FamilyAttendance({ user, db, range, today }: ViewProps) {
   return (
     <>
       <PageHeader
-        title="Attendance"
-        description={isParent ? "Your children's attendance in class." : "Your attendance in class."}
+        title={t("Attendance")}
+        description={isParent ? t("Your children's attendance in class.") : t("Your attendance in class.")}
       />
       <DateRangeFilter basePath={routes.attendance} from={range.from} to={range.to} max={today} />
       {isParent ? (
@@ -281,9 +288,9 @@ async function FamilyAttendance({ user, db, range, today }: ViewProps) {
           ]}
         />
       )}
-      {alerts.length > 0 && <AbsenceAlerts alerts={alerts} title="Absence warnings" />}
+      {alerts.length > 0 && <AbsenceAlerts alerts={alerts} title={t("Absence warnings")} />}
       <section className="grid gap-2">
-        <h2 className="font-semibold">History</h2>
+        <h2 className="font-semibold">{t("History")}</h2>
         <AttendanceHistory rows={history} showStudent={isParent} />
       </section>
     </>

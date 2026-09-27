@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { setUserPermissionAction } from "@/features/users/actions"
+import { useT } from "@/i18n/client"
 
 type UserGrantsDialogProps = {
   userId: string
@@ -22,6 +23,7 @@ type UserGrantsDialogProps = {
  * teacher. The database refuses grants the current user does not hold.
  */
 export function UserGrantsDialog({ userId, userName, grantable, granted }: UserGrantsDialogProps) {
+  const t = useT()
   const [selected, setSelected] = useState<string[]>(granted)
 
   async function save() {
@@ -39,18 +41,18 @@ export function UserGrantsDialog({ userId, userName, grantable, granted }: UserG
     <ActionDialog
       trigger={
         <Button variant="ghost" size="sm">
-          <KeyRoundIcon aria-hidden /> Extra access{granted.length > 0 ? ` (${granted.length})` : ""}
+          <KeyRoundIcon aria-hidden /> {t("Extra access{value}", { value: granted.length > 0 ? ` (${granted.length})` : "" })}
         </Button>
       }
-      title={`Extra access for ${userName}`}
-      description="Granted in addition to their role, for the whole academy. Use sparingly, e.g. finance access for one teacher."
-      submitLabel="Save access"
-      successMessage="Access updated."
+      title={t("Extra access for {userName}", { userName })}
+      description={t("Granted in addition to their role, for the whole academy. Use sparingly, e.g. finance access for one teacher.")}
+      submitLabel={t("Save access")}
+      successMessage={t("Access updated.")}
       onOpen={() => setSelected(granted)}
       onSubmit={save}
     >
       <fieldset className="grid max-h-80 gap-2 overflow-y-auto">
-        <legend className="sr-only">Permissions</legend>
+        <legend className="sr-only">{t("Permissions")}</legend>
         {grantable.map((permission) => (
           <div key={permission.code} className="flex items-start gap-2">
             <Checkbox
@@ -63,7 +65,7 @@ export function UserGrantsDialog({ userId, userName, grantable, granted }: UserG
               }
             />
             <Label htmlFor={`grant-${userId}-${permission.code}`} className="grid gap-0.5 font-normal">
-              <span>{permission.description}</span>
+              <span>{t(permission.description)}</span>
               <span className="text-muted-foreground font-mono text-xs">{permission.code}</span>
             </Label>
           </div>

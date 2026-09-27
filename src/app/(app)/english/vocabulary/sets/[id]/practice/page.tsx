@@ -12,10 +12,15 @@ import { ACTIVITIES, ACTIVITY_LABELS } from "@/features/english/skills"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { enumParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Practise vocabulary" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Practise vocabulary") }
+}
 
 export default async function PracticePage({ params, searchParams }: PageProps<"/english/vocabulary/sets/[id]/practice">) {
+  const t = await getT()
   await requireRouteAccess(routes.wordSetPractice)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -31,9 +36,9 @@ export default async function PracticePage({ params, searchParams }: PageProps<"
       <Link href={wordSetPath(set.id)} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
         <ArrowLeftIcon className="size-4" aria-hidden /> {set.title}
       </Link>
-      <PageHeader title={ACTIVITY_LABELS[activity].title} description={ACTIVITY_LABELS[activity].description} />
+      <PageHeader title={t(ACTIVITY_LABELS[activity].title)} description={t(ACTIVITY_LABELS[activity].description)} />
       {set.words.length < 4 ? (
-        <p className="text-muted-foreground text-sm">This set needs at least 4 words.</p>
+        <p className="text-muted-foreground text-sm">{t("This set needs at least 4 words.")}</p>
       ) : (
         <div className="max-w-2xl">
           <PracticePlayer setId={set.id} activity={activity} words={toPracticeWords(set.words)} />

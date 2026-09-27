@@ -32,10 +32,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Lesson" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Lesson") }
+}
 
 export default async function LessonPage({ params, searchParams }: PageProps<"/english/lessons/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.lessonDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -52,16 +57,16 @@ export default async function LessonPage({ params, searchParams }: PageProps<"/e
   return (
     <>
       <Link href={`${routes.lessons}?skill=${lesson.skill}`} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> {SKILL_LABELS[lesson.skill]} lessons
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("{value} lessons", { value: SKILL_LABELS[lesson.skill] })}
       </Link>
       <PageHeader
         title={lesson.title}
         description={lesson.summary ?? undefined}
         actions={
           <>
-            <Badge variant="outline">{SKILL_LABELS[lesson.skill]}</Badge>
-            {lesson.cefr_level && <Badge variant="secondary">{CEFR_LABELS[lesson.cefr_level]}</Badge>}
-            {lesson.status !== "published" && <Badge variant="outline">{STATUS_LABELS[lesson.status]}</Badge>}
+            <Badge variant="outline">{t(SKILL_LABELS[lesson.skill])}</Badge>
+            {lesson.cefr_level && <Badge variant="secondary">{t(CEFR_LABELS[lesson.cefr_level])}</Badge>}
+            {lesson.status !== "published" && <Badge variant="outline">{t(STATUS_LABELS[lesson.status])}</Badge>}
           </>
         }
       />
@@ -78,42 +83,44 @@ export default async function LessonPage({ params, searchParams }: PageProps<"/e
   )
 }
 
-function EditorBar({ lesson }: { lesson: Lesson }) {
+async function EditorBar({ lesson }: { lesson: Lesson }) {
+  const t = await getT()
   return (
     <div className="flex flex-wrap gap-2">
       {lesson.status !== "archived" && (
         <Button variant="outline" size="sm" asChild>
           <Link href={lessonEditPath(lesson.id)}>
-            <PencilIcon aria-hidden /> Edit
+            <PencilIcon aria-hidden /> {t("Edit")}
           </Link>
         </Button>
       )}
       {lesson.status === "published" ? (
-        <ConfirmActionButton size="sm" title="Unpublish the lesson?" description="Students no longer see it; their work is kept." confirmLabel="Unpublish" successMessage="Lesson unpublished." action={setLessonStatusAction.bind(null, { lessonId: lesson.id, status: "draft" })}>
-          <EyeOffIcon aria-hidden /> Unpublish
+        <ConfirmActionButton size="sm" title={t("Unpublish the lesson?")} description={t("Students no longer see it; their work is kept.")} confirmLabel={t("Unpublish")} successMessage={t("Lesson unpublished.")} action={setLessonStatusAction.bind(null, { lessonId: lesson.id, status: "draft" })}>
+          <EyeOffIcon aria-hidden /> {t("Unpublish")}
         </ConfirmActionButton>
       ) : (
-        <ConfirmActionButton size="sm" variant="default" title="Publish the lesson?" description="Every student can open it." confirmLabel="Publish" successMessage="Lesson published." action={setLessonStatusAction.bind(null, { lessonId: lesson.id, status: "published" })}>
-          <SendIcon aria-hidden /> Publish
+        <ConfirmActionButton size="sm" variant="default" title={t("Publish the lesson?")} description={t("Every student can open it.")} confirmLabel={t("Publish")} successMessage={t("Lesson published.")} action={setLessonStatusAction.bind(null, { lessonId: lesson.id, status: "published" })}>
+          <SendIcon aria-hidden /> {t("Publish")}
         </ConfirmActionButton>
       )}
       {lesson.status !== "archived" && (
-        <ConfirmActionButton size="sm" title="Archive the lesson?" description="It leaves the library; students' work is kept." confirmLabel="Archive" successMessage="Lesson archived." action={setLessonStatusAction.bind(null, { lessonId: lesson.id, status: "archived" })}>
-          <ArchiveIcon aria-hidden /> Archive
+        <ConfirmActionButton size="sm" title={t("Archive the lesson?")} description={t("It leaves the library; students' work is kept.")} confirmLabel={t("Archive")} successMessage={t("Lesson archived.")} action={setLessonStatusAction.bind(null, { lessonId: lesson.id, status: "archived" })}>
+          <ArchiveIcon aria-hidden /> {t("Archive")}
         </ConfirmActionButton>
       )}
       {lesson.status !== "archived" && (
         <ContentMediaUpload
           target={{ kind: "lesson", lessonId: lesson.id }}
           accept={lesson.skill === "listening" ? ".mp3,.m4a,.wav,.webm" : ".mp3,.m4a,.wav,.webm,.png,.jpg,.jpeg,.webp,.mp4"}
-          label={lesson.media_path ? "Replace media" : lesson.skill === "listening" ? "Upload audio" : "Add media"}
+          label={lesson.media_path ? t("Replace media") : lesson.skill === "listening" ? t("Upload audio") : t("Add media")}
         />
       )}
     </div>
   )
 }
 
-function LessonContent({ lesson }: { lesson: Lesson }) {
+async function LessonContent({ lesson }: { lesson: Lesson }) {
+  const t = await getT()
   const media = lesson.mediaUrl
     ? /\.(mp3|m4a|wav|webm)$/i.test(lesson.media_path ?? "")
       ? <audio controls src={lesson.mediaUrl} className="w-full max-w-lg" />
@@ -124,7 +131,7 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
             <img src={lesson.mediaUrl} alt="" className="max-h-80 rounded-md border" />
           )
     : lesson.skill === "listening"
-      ? <p className="text-muted-foreground text-sm">No audio has been uploaded yet.</p>
+      ? <p className="text-muted-foreground text-sm">{t("No audio has been uploaded yet.")}</p>
       : null
 
   return (
@@ -132,7 +139,7 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {{ grammar: "Explanation", reading: "Read the text", listening: "Listen", speaking: "Your task", writing: "Your task", pronunciation: "Practise", vocabulary: "" }[lesson.skill]}
+            {t({ grammar: "Explanation", reading: "Read the text", listening: "Listen", speaking: "Your task", writing: "Your task", pronunciation: "Practise", vocabulary: "" }[lesson.skill])}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -142,19 +149,19 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
             <>
               {lesson.form && (
                 <section className="grid gap-1">
-                  <h3 className="font-medium">Form</h3>
+                  <h3 className="font-medium">{t("Form")}</h3>
                   <pre className="bg-muted/50 overflow-x-auto rounded-md p-3 font-sans text-sm whitespace-pre-wrap">{lesson.form}</pre>
                 </section>
               )}
               {lesson.usage && (
                 <section className="grid gap-1">
-                  <h3 className="font-medium">Usage</h3>
+                  <h3 className="font-medium">{t("Usage")}</h3>
                   <p className="text-sm whitespace-pre-wrap">{lesson.usage}</p>
                 </section>
               )}
               {lesson.examples.length > 0 && (
                 <section className="grid gap-1">
-                  <h3 className="font-medium">Examples</h3>
+                  <h3 className="font-medium">{t("Examples")}</h3>
                   <ul className="list-disc pl-5 text-sm">
                     {lesson.examples.map((e, i) => (
                       <li key={i}>{e}</li>
@@ -164,15 +171,15 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
               )}
               {lesson.mistakes.length > 0 && (
                 <section className="grid gap-1">
-                  <h3 className="font-medium">Common mistakes</h3>
+                  <h3 className="font-medium">{t("Common mistakes")}</h3>
                   <ul className="grid gap-2 text-sm">
                     {lesson.mistakes.map((m, i) => (
                       <li key={i} className="grid gap-0.5">
                         <span className="inline-flex items-center gap-1 text-[#b02a2a] line-through dark:text-[#ef7b7b]">
-                          <CircleXIcon className="size-3.5 shrink-0" aria-label="Wrong" /> {m.incorrect}
+                          <CircleXIcon className="size-3.5 shrink-0" aria-label={t("Wrong")} /> {m.incorrect}
                         </span>
                         <span className="inline-flex items-center gap-1 text-[#006300] dark:text-[#0ca30c]">
-                          <CircleCheckIcon className="size-3.5 shrink-0" aria-label="Right" /> {m.correct}
+                          <CircleCheckIcon className="size-3.5 shrink-0" aria-label={t("Right")} /> {m.correct}
                         </span>
                         {m.note && <span className="text-muted-foreground">{m.note}</span>}
                       </li>
@@ -184,17 +191,17 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
           )}
           {lesson.skill === "listening" && lesson.secret?.transcript && (
             <details>
-              <summary className="cursor-pointer text-sm font-medium">Transcript</summary>
+              <summary className="cursor-pointer text-sm font-medium">{t("Transcript")}</summary>
               <p className="mt-2 text-sm whitespace-pre-wrap">{lesson.secret.transcript}</p>
             </details>
           )}
           {lesson.rubricItems.length > 0 && (
             <section className="grid gap-1">
-              <h3 className="font-medium">How it is marked</h3>
+              <h3 className="font-medium">{t("How it is marked")}</h3>
               <ul className="grid gap-1 text-sm">
                 {lesson.rubricItems.map((r, i) => (
                   <li key={i}>
-                    <span className="font-medium">{r.criterion}</span> ({r.max_points} pts){r.description && ` – ${r.description}`}
+                    <span className="font-medium">{r.criterion}</span> {t("({max_points} pts)", { max_points: r.max_points })}{r.description && ` – ${r.description}`}
                   </li>
                 ))}
               </ul>
@@ -205,14 +212,14 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
       {lesson.words.length > 0 && (
         <Card className="content-start">
           <CardHeader>
-            <CardTitle>Vocabulary</CardTitle>
+            <CardTitle>{t("Vocabulary")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="grid gap-2 text-sm">
               {lesson.words.map((w) => (
                 <li key={w.id} className="grid">
                   <span>
-                    <span className="font-medium">{w.word}</span> <span className="text-muted-foreground">{w.ipa} · {PART_OF_SPEECH_LABELS[w.part_of_speech]}</span>
+                    <span className="font-medium">{w.word}</span> <span className="text-muted-foreground">{w.ipa} · {t(PART_OF_SPEECH_LABELS[w.part_of_speech])}</span>
                   </span>
                   <span>{w.meaning_vi}</span>
                 </li>
@@ -226,6 +233,7 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
 }
 
 async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Lesson; canEdit: boolean; studentId: string | null; attemptId?: string }) {
+  const t = await getT()
   const db = await createClient()
   if (canEdit) {
     const [keys, attempts, bank] = await Promise.all([
@@ -237,9 +245,9 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Exercises and answer key</CardTitle>
+          <CardTitle>{t("Exercises and answer key")}</CardTitle>
           <CardDescription>
-            {locked ? "Students have done these exercises, so they can no longer change." : "Copied from the question bank; marked automatically."}
+            {locked ? t("Students have done these exercises, so they can no longer change.") : t("Copied from the question bank; marked automatically.")}
           </CardDescription>
           {!locked && lesson.status !== "archived" && (
             <CardAction>
@@ -265,7 +273,7 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
         </CardHeader>
         <CardContent>
           {lesson.questions.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No exercises yet.</p>
+            <p className="text-muted-foreground text-sm">{t("No exercises yet.")}</p>
           ) : (
             <ol className="grid gap-4">
               {lesson.questions.map((q, i) => (
@@ -275,7 +283,7 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
                     <QuestionPreview type={q.question_type} prompt={q.prompt} content={q.content} points={q.points} answerKey={keys.get(q.id)?.answer} explanation={keys.get(q.id)?.explanation} mediaUrl={q.mediaUrl} />
                   </div>
                   {!locked && (
-                    <ConfirmActionButton variant="ghost" size="icon" aria-label="Remove exercise" title="Remove this exercise?" description="The bank question is kept." confirmLabel="Remove" successMessage="Exercise removed." destructive action={removeLessonQuestionAction.bind(null, { lessonQuestionId: q.id })}>
+                    <ConfirmActionButton variant="ghost" size="icon" aria-label={t("Remove exercise")} title={t("Remove this exercise?")} description={t("The bank question is kept.")} confirmLabel={t("Remove")} successMessage={t("Exercise removed.")} destructive action={removeLessonQuestionAction.bind(null, { lessonQuestionId: q.id })}>
                       <Trash2Icon />
                     </ConfirmActionButton>
                   )}
@@ -300,9 +308,9 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
         <Card>
           <CardHeader>
             <CardTitle>
-              Your answers · {review.reduce((s, r) => s + (r.score ?? 0), 0)} / {review.reduce((s, r) => s + r.points, 0)}
+              {t("Your answers ·")} {review.reduce((s, r) => s + (r.score ?? 0), 0)} / {review.reduce((s, r) => s + r.points, 0)}
             </CardTitle>
-            <CardDescription>Compare with the correct answers, then try again whenever you like.</CardDescription>
+            <CardDescription>{t("Compare with the correct answers, then try again whenever you like.")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ol className="grid gap-3 text-sm">
@@ -317,14 +325,14 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
                     {content.source_text && <span className="italic">{content.source_text}</span>}
                     <span className="inline-flex items-center gap-1">
                       {full ? (
-                        <CircleCheckIcon className="size-4 text-[#006300] dark:text-[#0ca30c]" aria-label="Correct" />
+                        <CircleCheckIcon className="size-4 text-[#006300] dark:text-[#0ca30c]" aria-label={t("Correct")} />
                       ) : (
-                        <CircleXIcon className="size-4 text-[#b02a2a] dark:text-[#ef7b7b]" aria-label="Not correct" />
+                        <CircleXIcon className="size-4 text-[#b02a2a] dark:text-[#ef7b7b]" aria-label={t("Not correct")} />
                       )}
-                      Your answer: {describeResponse(r.question_type, content, asResponse(r.response)) ?? <em>no answer</em>}
+                      {t("Your answer:")} {describeResponse(r.question_type, content, asResponse(r.response)) ?? <em>{t("no answer")}</em>}
                     </span>
-                    {!full && <span>Correct answer: {describeKey(r.question_type, content, asKey(r.correct_answer)) ?? "—"}</span>}
-                    {r.unlisted && <span className="text-muted-foreground">Your answer is not in the answer list; ask your teacher if you think it is right.</span>}
+                    {!full && <span>{t("Correct answer: {value}", { value: describeKey(r.question_type, content, asKey(r.correct_answer)) ?? "—" })}</span>}
+                    {r.unlisted && <span className="text-muted-foreground">{t("Your answer is not in the answer list; ask your teacher if you think it is right.")}</span>}
                     {r.explanation && <span className="text-muted-foreground">{r.explanation}</span>}
                   </li>
                 )
@@ -335,7 +343,7 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
       )}
       {lesson.status === "published" && (
         <section className="grid gap-2">
-          <h2 className="font-semibold">{review ? "Try again" : "Exercises"}</h2>
+          <h2 className="font-semibold">{review ? t("Try again") : t("Exercises")}</h2>
           <LessonExercises
             key={attemptId ?? "new"}
             lessonId={lesson.id}
@@ -345,7 +353,7 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
       )}
       {attempts.length > 0 && (
         <p className="text-muted-foreground text-sm">
-          Your attempts:{" "}
+          {t("Your attempts:")}
           {attempts.map((a, i) => (
             <span key={a.id}>
               {i > 0 && " · "}
@@ -361,13 +369,14 @@ async function Exercises({ lesson, canEdit, studentId, attemptId }: { lesson: Le
 }
 
 async function WorkSection({ lesson, studentId }: { lesson: Lesson; studentId: string | null }) {
+  const t = await getT()
   if (!studentId) return null
   const submissions = await listSubmissions(await createClient(), { lessonId: lesson.id, studentId })
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Hand in your work</CardTitle>
-        <CardDescription>{lesson.response_mode && RESPONSE_MODE_LABELS[lesson.response_mode]}. Your teacher will give you feedback.</CardDescription>
+        <CardTitle>{t("Hand in your work")}</CardTitle>
+        <CardDescription>{lesson.response_mode && RESPONSE_MODE_LABELS[lesson.response_mode]}{t(". Your teacher will give you feedback.")}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         {lesson.status === "published" && lesson.response_mode && (
@@ -375,15 +384,15 @@ async function WorkSection({ lesson, studentId }: { lesson: Lesson; studentId: s
         )}
         {submissions.length > 0 && (
           <div className="grid gap-1 text-sm">
-            <span className="font-medium">Your submissions</span>
+            <span className="font-medium">{t("Your submissions")}</span>
             <ul className="grid gap-1">
               {submissions.map((s) => (
                 <li key={s.id}>
                   <Link href={lessonSubmissionPath(s.id)} className="hover:underline">
-                    Attempt {s.attempt} · {formatDateTime(s.submitted_at)}
+                    {t("Attempt {attempt} · {dateTime}", { attempt: s.attempt, dateTime: formatDateTime(s.submitted_at) })}
                   </Link>{" "}
                   <span className="text-muted-foreground">
-                    {s.status === "reviewed" ? `feedback · ${Number(s.score)}/${Number(s.max_score)}` : "waiting for feedback"}
+                    {s.status === "reviewed" ? t("feedback · {number}/{number2}", { number: Number(s.score), number2: Number(s.max_score) }) : t("waiting for feedback")}
                   </span>
                 </li>
               ))}
@@ -392,7 +401,7 @@ async function WorkSection({ lesson, studentId }: { lesson: Lesson; studentId: s
         )}
         {lesson.secret?.model_answer && (
           <details>
-            <summary className="cursor-pointer text-sm font-medium">Model answer</summary>
+            <summary className="cursor-pointer text-sm font-medium">{t("Model answer")}</summary>
             <p className="mt-2 text-sm whitespace-pre-wrap">{lesson.secret.model_answer}</p>
           </details>
         )}
@@ -403,13 +412,14 @@ async function WorkSection({ lesson, studentId }: { lesson: Lesson; studentId: s
 
 /** For teachers, admins and parents: who did the lesson and how it went (RLS-scoped). */
 async function Results({ lesson }: { lesson: Lesson }) {
+  const t = await getT()
   const db = await createClient()
   const [attempts, submissions] = await Promise.all([listLessonAttempts(db, lesson.id), listSubmissions(db, { lessonId: lesson.id })])
   if (attempts.length === 0 && submissions.length === 0) return null
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Students&apos; work</CardTitle>
+        <CardTitle>{t("Students' work")}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-2 text-sm">
         {attempts.map((a) => (
@@ -422,9 +432,9 @@ async function Results({ lesson }: { lesson: Lesson }) {
           <p key={s.id}>
             <span className="font-medium">{s.student?.full_name}</span> ·{" "}
             <Link href={lessonSubmissionPath(s.id)} className="hover:underline">
-              attempt {s.attempt}
+              {t("attempt {attempt}", { attempt: s.attempt })}
             </Link>{" "}
-            · {s.status === "reviewed" ? `${Number(s.score)}/${Number(s.max_score)}` : "waiting for feedback"}
+            · {s.status === "reviewed" ? `${Number(s.score)}/${Number(s.max_score)}` : t("waiting for feedback")}
           </p>
         ))}
       </CardContent>

@@ -16,6 +16,7 @@ import { createTestAction, updateTestAction } from "@/features/tests/actions"
 import { REVIEW_POLICIES, REVIEW_POLICY_LABELS } from "@/features/tests/questions"
 import { testSchema, type TestFormInput, type TestFormOutput } from "@/features/tests/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type TestFormProps = {
   testId?: string
@@ -28,6 +29,7 @@ type TestFormProps = {
 }
 
 export function TestForm({ testId, defaultValues, classes, started, classLocked, cancelHref }: TestFormProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
   const form = useForm<TestFormInput, unknown, TestFormOutput>({ resolver: zodResolver(testSchema), defaultValues })
@@ -48,60 +50,60 @@ export function TestForm({ testId, defaultValues, classes, started, classLocked,
         <FormAlert message={formError} />
         <Card>
           <CardHeader>
-            <CardTitle>Test</CardTitle>
-            <CardDescription>{testId ? "Changes apply straight away." : "Saved as a draft; add questions from the bank on its page."}</CardDescription>
+            <CardTitle>{t("Test")}</CardTitle>
+            <CardDescription>{testId ? t("Changes apply straight away.") : t("Saved as a draft; add questions from the bank on its page.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <TextField control={control} name="title" label="Title" className="sm:col-span-2" />
+            <TextField control={control} name="title" label={t("Title")} className="sm:col-span-2" />
             {classLocked ? (
               <div className="grid gap-2">
-                <span className="text-sm font-medium">Class</span>
+                <span className="text-sm font-medium">{t("Class")}</span>
                 <span className="text-sm">{classes.find((c) => c.id === defaultValues.classId)?.name ?? "—"}</span>
               </div>
             ) : (
-              <SelectField control={control} name="classId" label="Class" placeholder="Choose a class" options={classes.map((c) => ({ value: c.id, label: c.name }))} />
+              <SelectField control={control} name="classId" label={t("Class")} placeholder={t("Choose a class")} options={classes.map((c) => ({ value: c.id, label: c.name }))} />
             )}
-            <TextareaField control={control} name="description" label="Description" rows={2} className="sm:col-span-2" />
-            <TextareaField control={control} name="instructions" label="Instructions for students" rows={4} className="sm:col-span-2" />
+            <TextareaField control={control} name="description" label={t("Description")} rows={2} className="sm:col-span-2" />
+            <TextareaField control={control} name="instructions" label={t("Instructions for students")} rows={4} className="sm:col-span-2" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Timing and attempts</CardTitle>
-            <CardDescription>Times are in Vietnam time. Leave empty for no limit.</CardDescription>
+            <CardTitle>{t("Timing and attempts")}</CardTitle>
+            <CardDescription>{t("Times are in Vietnam time. Leave empty for no limit.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <TextField control={control} name="availableFrom" label="Opens" type="datetime-local" />
-            <TextField control={control} name="availableUntil" label="Closes" type="datetime-local" />
-            <TextField control={control} name="timeLimitMinutes" label="Time limit (minutes)" inputMode="numeric" placeholder="None" />
-            <TextField control={control} name="maxAttempts" label="Attempts allowed" inputMode="numeric" />
+            <TextField control={control} name="availableFrom" label={t("Opens")} type="datetime-local" />
+            <TextField control={control} name="availableUntil" label={t("Closes")} type="datetime-local" />
+            <TextField control={control} name="timeLimitMinutes" label={t("Time limit (minutes)")} inputMode="numeric" placeholder={t("None")} />
+            <TextField control={control} name="maxAttempts" label={t("Attempts allowed")} inputMode="numeric" />
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Scoring and security</CardTitle>
+            <CardTitle>{t("Scoring and security")}</CardTitle>
             <CardDescription>
               {started
-                ? "Students have started: the total score and randomisation can no longer change."
-                : "Scores are scaled to the total. Answers and marks per question are shown to students only as the review setting allows."}
+                ? t("Students have started: the total score and randomisation can no longer change.")
+                : t("Scores are scaled to the total. Answers and marks per question are shown to students only as the review setting allows.")}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <TextField control={control} name="totalScore" label="Total score" inputMode="decimal" disabled={started} />
+            <TextField control={control} name="totalScore" label={t("Total score")} inputMode="decimal" disabled={started} />
             <SelectField
               control={control}
               name="reviewPolicy"
-              label="Students see correct answers"
+              label={t("Students see correct answers")}
               options={REVIEW_POLICIES.map((p) => ({ value: p, label: REVIEW_POLICY_LABELS[p] }))}
             />
-            <CheckboxField control={control} name="shuffleQuestions" label="Randomise the order of questions for each attempt" disabled={started} />
-            <CheckboxField control={control} name="shuffleOptions" label="Randomise the order of options and matching answers" disabled={started} />
+            <CheckboxField control={control} name="shuffleQuestions" label={t("Randomise the order of questions for each attempt")} disabled={started} />
+            <CheckboxField control={control} name="shuffleOptions" label={t("Randomise the order of options and matching answers")} disabled={started} />
           </CardContent>
         </Card>
         <div className="flex gap-2">
-          <SubmitButton pending={isPending}>{testId ? "Save changes" : "Save draft"}</SubmitButton>
+          <SubmitButton pending={isPending}>{testId ? t("Save changes") : t("Save draft")}</SubmitButton>
           <Button variant="outline" asChild>
-            <Link href={cancelHref}>Cancel</Link>
+            <Link href={cancelHref}>{t("Cancel")}</Link>
           </Button>
         </div>
       </form>
@@ -120,6 +122,7 @@ function CheckboxField({
   label: string
   disabled?: boolean
 }) {
+  const t = useT()
   return (
     <FormField
       control={control}
@@ -129,7 +132,7 @@ function CheckboxField({
           <FormControl>
             <Checkbox checked={field.value} disabled={disabled} onCheckedChange={(checked) => field.onChange(checked === true)} />
           </FormControl>
-          <FormLabel className="font-normal">{label}</FormLabel>
+          <FormLabel className="font-normal">{t(label)}</FormLabel>
         </FormItem>
       )}
     />

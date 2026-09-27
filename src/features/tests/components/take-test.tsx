@@ -31,6 +31,7 @@ import {
 } from "@/features/tests/questions"
 import { formatDateTime } from "@/lib/format"
 import type { Json } from "@/types/database"
+import { useT } from "@/i18n/client"
 
 export type TakeQuestion = {
   id: string
@@ -54,6 +55,7 @@ type TakeTestProps = {
 type SaveState = "idle" | "saving" | "saved" | "error"
 
 export function TakeTest({ testId, attemptId, attemptNumber, deadline, optionOrders, questions, initialResponses }: TakeTestProps) {
+  const t = useT()
   const [responses, setResponses] = useState<Record<string, Response>>(
     () => Object.fromEntries(Object.entries(initialResponses).map(([id, r]) => [id, (r ?? {}) as Response]))
   )
@@ -112,24 +114,24 @@ export function TakeTest({ testId, attemptId, attemptNumber, deadline, optionOrd
     <div className="grid gap-4">
       <div className="bg-background/95 sticky top-[env(safe-area-inset-top,0px)] z-10 flex flex-wrap items-center justify-between gap-2 border-b py-2 backdrop-blur">
         <span className="text-sm tabular-nums">
-          Attempt {attemptNumber} · {answered} of {questions.length} answered
+          {t("Attempt {attemptNumber} · {answered} of {length} answered", { attemptNumber, answered, length: questions.length })}
         </span>
         {deadline && (
           <span className={`flex items-center gap-1 text-sm font-medium tabular-nums ${timeLeft !== null && timeLeft < 60_000 ? "text-[#b02a2a] dark:text-[#ef7b7b]" : ""}`} aria-live="polite">
             <TimerIcon className="size-4" aria-hidden />
-            {timeLeft !== null && timeLeft > 0 ? formatCountdown(timeLeft) : "Time is up"}
-            <span className="text-muted-foreground font-normal"> · ends {formatDateTime(deadline)}</span>
+            {timeLeft !== null && timeLeft > 0 ? formatCountdown(timeLeft) : t("Time is up")}
+            <span className="text-muted-foreground font-normal"> {t("· ends {dateTime}", { dateTime: formatDateTime(deadline) })}</span>
           </span>
         )}
       </div>
 
-      <nav aria-label="Questions" className="flex flex-wrap gap-1">
+      <nav aria-label={t("Questions")} className="flex flex-wrap gap-1">
         {questions.map((q, i) => (
           <a
             key={q.id}
             href={`#question-${i + 1}`}
             className={`flex size-8 items-center justify-center rounded-md border text-xs tabular-nums ${isAnswered(responses[q.id]) ? "bg-muted font-medium" : ""}`}
-            aria-label={`Question ${i + 1}${isAnswered(responses[q.id]) ? " (answered)" : ""}`}
+            aria-label={t("Question {value}{value2}", { value: i + 1, value2: isAnswered(responses[q.id]) ? " (answered)" : "" })}
           >
             {i + 1}
           </a>
@@ -143,11 +145,11 @@ export function TakeTest({ testId, attemptId, attemptNumber, deadline, optionOrd
               <CardContent className="grid gap-3 px-4">
                 <div className="flex items-start justify-between gap-2">
                   <span id={`label-${q.id}`} className="font-medium">
-                    Question {index + 1}
+                    {t("Question {value}", { value: index + 1 })}
                   </span>
                   <span className="text-muted-foreground flex items-center gap-2 text-xs tabular-nums">
                     <SaveIndicator state={saveState[q.id]} />
-                    {Number(q.points)} pt{Number(q.points) === 1 ? "" : "s"}
+                    {t("{number} pt{value}", { number: Number(q.points), value: Number(q.points) === 1 ? "" : "s" })}
                   </span>
                 </div>
                 <QuestionInput
@@ -169,32 +171,33 @@ export function TakeTest({ testId, attemptId, attemptNumber, deadline, optionOrd
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button disabled={isSubmitting}>
-              {isSubmitting ? <Loader2Icon className="animate-spin" aria-hidden /> : <SendIcon aria-hidden />} Submit test
+              {isSubmitting ? <Loader2Icon className="animate-spin" aria-hidden /> : <SendIcon aria-hidden />} {t("Submit test")}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Hand in your test?</AlertDialogTitle>
+              <AlertDialogTitle>{t("Hand in your test?")}</AlertDialogTitle>
               <AlertDialogDescription>
-                You have answered {answered} of {questions.length} questions. After submitting you cannot change your answers.
+                {t("You have answered {answered} of {length} questions. After submitting you cannot change your answers.", { answered, length: questions.length })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Keep working</AlertDialogCancel>
-              <AlertDialogAction onClick={handIn}>Submit</AlertDialogAction>
+              <AlertDialogCancel>{t("Keep working")}</AlertDialogCancel>
+              <AlertDialogAction onClick={handIn}>{t("Submit")}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <span className="text-muted-foreground text-sm">Answers are saved as you go.</span>
+        <span className="text-muted-foreground text-sm">{t("Answers are saved as you go.")}</span>
       </div>
     </div>
   )
 }
 
 function SaveIndicator({ state }: { state?: SaveState }) {
-  if (state === "saving") return <Loader2Icon className="size-3 animate-spin" aria-label="Saving" />
-  if (state === "saved") return <CheckIcon className="size-3" aria-label="Saved" />
-  if (state === "error") return <TriangleAlertIcon className="size-3 text-[#b02a2a] dark:text-[#ef7b7b]" aria-label="Not saved" />
+  const t = useT()
+  if (state === "saving") return <Loader2Icon className="size-3 animate-spin" aria-label={t("Saving")} />
+  if (state === "saved") return <CheckIcon className="size-3" aria-label={t("Saved")} />
+  if (state === "error") return <TriangleAlertIcon className="size-3 text-[#b02a2a] dark:text-[#ef7b7b]" aria-label={t("Not saved")} />
   return null
 }
 
@@ -215,6 +218,7 @@ export function QuestionInput({
   /** The server's copy (recordings are saved by the upload, not by this form). */
   saved: Response
 }) {
+  const t = useT()
   const content = asContent(question.content)
   const type = question.question_type
   const labelledBy = `label-${question.id}`
@@ -230,7 +234,7 @@ export function QuestionInput({
       <img src={question.mediaUrl} alt="" className="max-h-64 rounded-md border" />
     )
   ) : type === "listening" ? (
-    <p className="text-muted-foreground text-sm">No audio has been attached to this question.</p>
+    <p className="text-muted-foreground text-sm">{t("No audio has been attached to this question.")}</p>
   ) : null
 
   if (type === "multiple_choice" || type === "multiple_response" || (type === "listening" && content.format === "choice")) {
@@ -241,7 +245,7 @@ export function QuestionInput({
         {text}
         {media}
         <div role={multi ? "group" : "radiogroup"} aria-labelledby={labelledBy} className="grid gap-1">
-          {multi && <p className="text-muted-foreground text-xs">Choose all that apply.</p>}
+          {multi && <p className="text-muted-foreground text-xs">{t("Choose all that apply.")}</p>}
           {order.map((i) => (
             <label key={i} className="hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1 text-sm">
               <input
@@ -274,7 +278,7 @@ export function QuestionInput({
             {[true, false].map((value) => (
               <label key={String(value)} className="flex items-center gap-2 text-sm">
                 <input type="radio" name={`q-${question.id}`} className="accent-primary size-4" checked={response.value === value} onChange={() => onChange({ value })} />
-                {value ? "True" : "False"}
+                {value ? t("True") : t("False")}
               </label>
             ))}
           </div>
@@ -296,7 +300,7 @@ export function QuestionInput({
                   value={pairs[i] ?? -1}
                   onChange={(e) => onChange({ pairs: left.map((_, j) => (j === i ? Number(e.target.value) : pairs[j] ?? -1)) })}
                 >
-                  <option value={-1}>Choose…</option>
+                  <option value={-1}>{t("Choose…")}</option>
                   {order.map((r) => (
                     <option key={r} value={r}>
                       {right[r]}
@@ -320,7 +324,7 @@ export function QuestionInput({
               {i < parts.length - 1 && (
                 <Input
                   className="mx-1 inline-block h-8 w-36 align-baseline"
-                  aria-label={`Blank ${i + 1}`}
+                  aria-label={t("Blank {value}", { value: i + 1 })}
                   maxLength={200}
                   value={blanks[i] ?? ""}
                   onChange={(e) => onChange({ blanks: parts.slice(1).map((_, j) => (j === i ? e.target.value : blanks[j] ?? "")) })}
@@ -335,12 +339,12 @@ export function QuestionInput({
       return (
         <>
           {text}
-          {content.max_seconds && <p className="text-muted-foreground text-xs">Up to {content.max_seconds} seconds.</p>}
-          {saved.file ? <p className="text-sm">Uploaded: {saved.file.name}</p> : <p className="text-muted-foreground text-sm">No recording yet.</p>}
+          {content.max_seconds && <p className="text-muted-foreground text-xs">{t("Up to {max_seconds} seconds.", { max_seconds: content.max_seconds })}</p>}
+          {saved.file ? <p className="text-sm">{t("Uploaded: {name}", { name: saved.file.name })}</p> : <p className="text-muted-foreground text-sm">{t("No recording yet.")}</p>}
           <FileUploader
             target={{ kind: "spoken", attemptId, questionId: question.id }}
             remaining={1}
-            label={saved.file ? "Replace recording" : "Upload recording"}
+            label={saved.file ? t("Replace recording") : t("Upload recording")}
             accept=".mp3,.m4a,.wav,.webm"
           />
         </>
@@ -352,9 +356,9 @@ export function QuestionInput({
           {text}
           <Textarea aria-labelledby={labelledBy} rows={8} maxLength={10000} value={response.text ?? ""} onChange={(e) => onChange({ text: e.target.value })} />
           <p className="text-muted-foreground text-xs tabular-nums">
-            {words} words
-            {content.min_words && ` · at least ${content.min_words}`}
-            {content.max_words && ` · at most ${content.max_words}`}
+            {t("{words} words", { words })}
+            {content.min_words && t(" · at least {min_words}", { min_words: content.min_words })}
+            {content.max_words && t(" · at most {max_words}", { max_words: content.max_words })}
           </p>
         </>
       )

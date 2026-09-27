@@ -9,10 +9,15 @@ import { getClass } from "@/features/classes/server/class-service"
 import { listActiveCourseOptions } from "@/features/courses/server/course-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit class" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit class") }
+}
 
 export default async function EditClassPage({ params }: PageProps<"/classes/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.classEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -28,7 +33,7 @@ export default async function EditClassPage({ params }: PageProps<"/classes/[id]
 
   return (
     <>
-      <PageHeader title={`Edit ${klass.name}`} description={klass.code} />
+      <PageHeader title={t("Edit {name}", { name: klass.name })} description={klass.code} />
       <ClassForm
         classId={klass.id}
         courses={courseOptions}

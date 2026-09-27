@@ -9,19 +9,21 @@ import { setLessonMediaAction, setWordMediaAction } from "@/features/english/act
 import { BUCKETS } from "@/lib/storage"
 import { createClient } from "@/lib/supabase/client"
 import { checkFile, fileExtension } from "@/lib/uploads"
+import { useT } from "@/i18n/client"
 
 /**
  * Plays a word: its uploaded recording when there is one, otherwise the
  * browser's own English voice (speechSynthesis).
  */
 export function SpeakButton({ text, audioUrl, label = "Listen", size = "sm" }: { text: string; audioUrl?: string | null; label?: string; size?: "sm" | "icon" }) {
+  const t = useT()
   function play() {
     if (audioUrl) {
       void new Audio(audioUrl).play()
       return
     }
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      toast.error("This browser cannot read words aloud.")
+      toast.error(t("This browser cannot read words aloud."))
       return
     }
     const utterance = new SpeechSynthesisUtterance(text)
@@ -50,6 +52,7 @@ export async function uploadFile(folder: string, file: File) {
 
 /** Records audio in the browser (MediaRecorder). The recording stays local until the caller uploads it. */
 export function AudioRecorder({ onRecorded, maxSeconds = 120 }: { onRecorded: (file: File, url: string) => void; maxSeconds?: number }) {
+  const tr = useT()
   const [recording, setRecording] = useState(false)
   const [seconds, setSeconds] = useState(0)
   const recorder = useRef<MediaRecorder | null>(null)
@@ -59,7 +62,7 @@ export function AudioRecorder({ onRecorded, maxSeconds = 120 }: { onRecorded: (f
 
   async function start() {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      toast.error("This browser cannot record audio. Upload a recording instead.")
+      toast.error(tr("This browser cannot record audio. Upload a recording instead."))
       return
     }
     try {
@@ -85,7 +88,7 @@ export function AudioRecorder({ onRecorded, maxSeconds = 120 }: { onRecorded: (f
         })
       }, 1000)
     } catch {
-      toast.error("Microphone access was refused.")
+      toast.error(tr("Microphone access was refused."))
     }
   }
 
@@ -97,11 +100,11 @@ export function AudioRecorder({ onRecorded, maxSeconds = 120 }: { onRecorded: (f
 
   return recording ? (
     <Button type="button" variant="destructive" size="sm" onClick={stop}>
-      <SquareIcon aria-hidden /> Stop · {seconds}s
+      <SquareIcon aria-hidden /> {tr("Stop · {seconds}s", { seconds })}
     </Button>
   ) : (
     <Button type="button" variant="outline" size="sm" onClick={start}>
-      <MicIcon aria-hidden /> Record
+      <MicIcon aria-hidden /> {tr("Record")}
     </Button>
   )
 }
@@ -110,6 +113,7 @@ type MediaTarget = { kind: "word"; wordId: string; field: "audio" | "image" } | 
 
 /** Uploads word audio / pictures and lesson media (content editors). */
 export function ContentMediaUpload({ target, accept, label }: { target: MediaTarget; accept: string; label: string }) {
+  const t = useT()
   const input = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -121,10 +125,10 @@ export function ContentMediaUpload({ target, accept, label }: { target: MediaTar
           target.kind === "word"
             ? await setWordMediaAction({ wordId: target.wordId, field: target.field, objectPath, fileName: file.name })
             : await setLessonMediaAction({ lessonId: target.lessonId, objectPath, fileName: file.name })
-        if (result.ok) toast.success("Uploaded.")
+        if (result.ok) toast.success(t("Uploaded."))
         else toast.error(result.error.message)
       } catch (error) {
-        toast.error((error as Error).message)
+        toast.error(t((error as Error).message))
       }
     })
   }
@@ -145,7 +149,7 @@ export function ContentMediaUpload({ target, accept, label }: { target: MediaTar
         }}
       />
       <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => input.current?.click()}>
-        {isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : <UploadIcon aria-hidden />} {label}
+        {isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : <UploadIcon aria-hidden />} {t(label)}
       </Button>
     </>
   )

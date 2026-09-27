@@ -14,10 +14,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Messages" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Messages") }
+}
 
 export default async function MessagesPage() {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.messages)
   const db = await createClient()
   const role = can(user.permissions, "messages.write", ["children"]) ? "parent" : can(user.permissions, "messages.write", ["assigned"]) ? "teacher" : null
@@ -27,18 +32,18 @@ export default async function MessagesPage() {
   return (
     <>
       <PageHeader
-        title="Messages"
-        description={role === "parent" ? "Conversations with your children's teachers." : role === "teacher" ? "Conversations with the parents of students you teach." : "Teacher–parent conversations (read-only)."}
+        title={tr("Messages")}
+        description={role === "parent" ? tr("Conversations with your children's teachers.") : role === "teacher" ? tr("Conversations with the parents of students you teach.") : tr("Teacher–parent conversations (read-only).")}
         actions={role && <NewThreadDialog role={role} userId={user.id} targets={targets} />}
       />
       <p className="text-muted-foreground -mt-3 flex items-center gap-1.5 text-xs">
         <ShieldIcon className="size-3.5" aria-hidden />
-        Only the teacher and the parent in a conversation can write. Academy administrators can read conversations to keep children safe. A conversation closes when the teacher no longer teaches the child.
+        {tr("Only the teacher and the parent in a conversation can write. Academy administrators can read conversations to keep children safe. A conversation closes when the teacher no longer teaches the child.")}
       </p>
       {threads.length === 0 ? (
         <Card>
           <CardContent>
-            <EmptyState icon={MessagesSquareIcon} title="No conversations yet" description={role ? "Start one with “New conversation”." : undefined} />
+            <EmptyState icon={MessagesSquareIcon} title={tr("No conversations yet")} description={role ? tr("Start one with “New conversation”.") : undefined} />
           </CardContent>
         </Card>
       ) : (
@@ -50,18 +55,18 @@ export default async function MessagesPage() {
                   <span className={cn("truncate text-sm", t.unread && "font-semibold")}>
                     {t.role === "teacher" ? t.parentName : t.role === "parent" ? t.teacherName : `${t.teacherName} ↔ ${t.parentName}`}
                   </span>
-                  <span className="text-muted-foreground text-xs">About {t.student?.full_name ?? "a student"}</span>
+                  <span className="text-muted-foreground text-xs">{tr("About {value}", { value: t.student?.full_name ?? "a student" })}</span>
                 </span>
                 <span className="flex shrink-0 items-center gap-2">
-                  {t.unread && <Badge>New</Badge>}
-                  <span className="text-muted-foreground text-xs">{t.last_message_at ? formatDateTime(t.last_message_at) : "No messages"}</span>
+                  {t.unread && <Badge>{tr("New")}</Badge>}
+                  <span className="text-muted-foreground text-xs">{t.last_message_at ? formatDateTime(t.last_message_at) : tr("No messages")}</span>
                 </span>
               </Link>
             </li>
           ))}
         </ul>
       )}
-      {observer && !role && <p className="text-muted-foreground text-xs">You are viewing as an administrator and cannot write in these conversations.</p>}
+      {observer && !role && <p className="text-muted-foreground text-xs">{tr("You are viewing as an administrator and cannot write in these conversations.")}</p>}
     </>
   )
 }

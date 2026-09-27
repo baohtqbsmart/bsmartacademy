@@ -6,6 +6,7 @@ import { AbsenceAlertBadge } from "@/features/attendance/components/attendance-b
 import type { AbsenceAlert } from "@/features/attendance/server/attendance-service"
 import { ABSENCE_RULES, ABSENCE_WINDOW_DAYS, describeAlert } from "@/features/attendance/summary"
 import { formatDate } from "@/lib/format"
+import { getT } from "@/i18n/server"
 
 export const ALERT_RULE_TEXT =
   `Watch: ${ABSENCE_RULES.warning.consecutive} absences in a row or ${ABSENCE_RULES.warning.recent} in ${ABSENCE_WINDOW_DAYS} days. ` +
@@ -13,7 +14,7 @@ export const ALERT_RULE_TEXT =
   "Excused absences do not count."
 
 /** Repeated-absence warnings for the students the caller can see. */
-export function AbsenceAlerts({
+export async function AbsenceAlerts({
   alerts,
   title = "Repeated absences",
   showClass = true,
@@ -27,15 +28,16 @@ export function AbsenceAlerts({
   /** Link class names to their register (for those who take attendance). */
   linkClasses?: boolean
 }) {
+  const t = await getT()
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription>{ALERT_RULE_TEXT}</CardDescription>
+        <CardDescription>{t(ALERT_RULE_TEXT)}</CardDescription>
       </CardHeader>
       <CardContent>
         {alerts.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No repeated absences in active classes.</p>
+          <p className="text-muted-foreground text-sm">{t("No repeated absences in active classes.")}</p>
         ) : (
           <ul className="grid gap-3">
             {alerts.map((alert) => (
@@ -64,7 +66,7 @@ export function AbsenceAlerts({
                   </span>
                   <span className="text-muted-foreground">
                     {describeAlert(alert)}
-                    {alert.last_absent_on && ` · last absent ${formatDate(alert.last_absent_on)}`}
+                    {alert.last_absent_on && t(" · last absent {date}", { date: formatDate(alert.last_absent_on) })}
                   </span>
                 </div>
                 <AbsenceAlertBadge level={alert.level} />

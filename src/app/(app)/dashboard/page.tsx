@@ -11,10 +11,15 @@ import { can } from "@/lib/auth/permissions"
 import { roleLabel } from "@/lib/auth/roles"
 import { requireUser } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Dashboard" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Dashboard") }
+}
 
 export default async function DashboardPage() {
+  const t = await getT()
   const user = await requireUser()
   const needsProfile = !user.fullName
   // Students reach their own record from here (they have no student list).
@@ -25,32 +30,32 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={user.fullName ? `Welcome, ${user.fullName}` : "Welcome"}
-        description="Your BSmart Academy workspace."
+        title={user.fullName ? t("Welcome, {fullName}", { fullName: user.fullName }) : t("Welcome")}
+        description={t("Your BSmart Academy workspace.")}
       />
       <Card className="max-w-xl">
         <CardHeader>
-          <CardTitle>Your account</CardTitle>
+          <CardTitle>{t("Your account")}</CardTitle>
           <CardDescription>{user.email}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm">
-            Role <Badge variant="secondary">{roleLabel(user.roleCode)}</Badge>
+            {t("Role")} <Badge variant="secondary">{t(roleLabel(user.roleCode))}</Badge>
           </div>
           <div className="flex flex-wrap gap-2">
             {can(user.permissions, "reports.read", ["all"]) && (
               <Button asChild size="sm">
-                <Link href={routes.adminDashboard}>Admin dashboard</Link>
+                <Link href={routes.adminDashboard}>{t("Admin dashboard")}</Link>
               </Button>
             )}
             {ownStudentId && (
               <Button asChild size="sm">
-                <Link href={studentPath(ownStudentId)}>My student profile</Link>
+                <Link href={studentPath(ownStudentId)}>{t("My student profile")}</Link>
               </Button>
             )}
             <Button asChild variant={needsProfile ? "default" : "outline"} size="sm">
               <Link href={routes.profile}>
-                {needsProfile ? "Complete your profile" : "Edit profile"}
+                {needsProfile ? t("Complete your profile") : t("Edit profile")}
               </Link>
             </Button>
           </div>

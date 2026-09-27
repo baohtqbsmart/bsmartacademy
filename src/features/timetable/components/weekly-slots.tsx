@@ -1,4 +1,5 @@
 import { formatTime, WEEKDAYS } from "@/lib/dates"
+import { getT } from "@/i18n/server"
 
 export type WeeklySlot = {
   id: string
@@ -14,13 +15,14 @@ export function sortSlots<T extends { weekday: number; starts_at: string }>(slot
 }
 
 /** Compact recurring pattern: "Mon 17:30–19:00 · P202". */
-export function WeeklySlots({ slots, empty = "No timetable yet." }: { slots: WeeklySlot[]; empty?: string }) {
-  if (slots.length === 0) return <p className="text-muted-foreground text-sm">{empty}</p>
+export async function WeeklySlots({ slots, empty = "No timetable yet." }: { slots: WeeklySlot[]; empty?: string }) {
+  const t = await getT()
+  if (slots.length === 0) return <p className="text-muted-foreground text-sm">{t(empty)}</p>
   return (
     <ul className="grid gap-1.5 text-sm">
       {sortSlots(slots).map((slot) => (
         <li key={slot.id} className="flex flex-wrap items-baseline gap-x-2">
-          <span className="w-10 font-medium">{WEEKDAYS[slot.weekday - 1].short}</span>
+          <span className="w-10 font-medium">{t(WEEKDAYS[slot.weekday - 1].short)}</span>
           <span className="tabular-nums">
             {formatTime(slot.starts_at)}–{formatTime(slot.ends_at)}
           </span>

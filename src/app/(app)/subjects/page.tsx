@@ -14,10 +14,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { normalizeSearch } from "@/lib/search"
 import { enumParam, firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Subjects & levels" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Subjects & levels") }
+}
 
 export default async function SubjectsPage({ searchParams }: PageProps<"/subjects">) {
+  const t = await getT()
   await requireRouteAccess(routes.subjects)
   const params = await searchParams
   const q = firstParam(params, "q")
@@ -30,20 +35,20 @@ export default async function SubjectsPage({ searchParams }: PageProps<"/subject
   return (
     <>
       <PageHeader
-        title="Subjects & levels"
-        description="The catalogue that courses are built from."
+        title={t("Subjects & levels")}
+        description={t("The catalogue that courses are built from.")}
         actions={<SubjectDialog />}
       />
       <ListFilters
         basePath={routes.subjects}
         values={{ q, show }}
-        searchPlaceholder="Search subjects"
+        searchPlaceholder={t("Search subjects")}
         filters={[{ param: "show", allLabel: "Live subjects", options: [{ value: "archived", label: "Archived" }] }]}
       />
       <SimpleTable
         rows={subjects}
         rowKey={(s) => s.id}
-        empty={<EmptyState icon={LibraryIcon} title={q || show ? "No subjects match" : "No subjects yet"} />}
+        empty={<EmptyState icon={LibraryIcon} title={q || show ? t("No subjects match") : t("No subjects yet")} />}
         columns={[
           { header: "Code", cell: (s) => <span className="font-mono text-xs">{s.code}</span> },
           {

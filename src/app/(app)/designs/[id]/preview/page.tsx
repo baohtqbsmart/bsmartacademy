@@ -13,10 +13,15 @@ import { getDesign } from "@/features/designer/server/design-service"
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Present design" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Present design") }
+}
 
 export default async function DesignPreviewPage({ params }: PageProps<"/designs/[id]/preview">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.designPreview)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -26,16 +31,16 @@ export default async function DesignPreviewPage({ params }: PageProps<"/designs/
   return (
     <>
       <Link href={routes.designs} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Lesson designer
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Lesson designer")}
       </Link>
       <PageHeader
         title={design.title}
-        description={`${KIND_LABELS[design.kind]} · ${design.content.pages.length} page${design.content.pages.length === 1 ? "" : "s"} · arrow keys to move, Reveal shows hidden answers`}
+        description={t("{value} · {length} page{value2} · arrow keys to move, Reveal shows hidden answers", { value: KIND_LABELS[design.kind], length: design.content.pages.length, value2: design.content.pages.length === 1 ? "" : "s" })}
         actions={
           can(user.permissions, "designs.write") ? (
             <Button variant="outline" asChild>
               <Link href={designPath(design.id)}>
-                <PencilIcon aria-hidden /> Edit
+                <PencilIcon aria-hidden /> {t("Edit")}
               </Link>
             </Button>
           ) : undefined

@@ -20,12 +20,14 @@ import { Input } from "@/components/ui/input"
 import { updateProfileAction } from "@/features/profile/actions"
 import { profileSchema } from "@/features/profile/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type ProfileFormProps = {
   defaultValues: z.input<typeof profileSchema>
 }
 
 export function ProfileForm({ defaultValues }: ProfileFormProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -40,7 +42,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
       const result = await updateProfileAction(values)
       if (result.ok) {
         form.reset(values)
-        toast.success("Profile updated.")
+        toast.success(t("Profile updated."))
       } else {
         setFormError(applyActionError(form, result.error))
       }
@@ -56,7 +58,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full name</FormLabel>
+              <FormLabel>{t("Full name")}</FormLabel>
               <FormControl>
                 <Input autoComplete="name" {...field} />
               </FormControl>
@@ -69,7 +71,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone</FormLabel>
+              <FormLabel>{t("Phone")}</FormLabel>
               <FormControl>
                 <Input type="tel" autoComplete="tel" {...field} />
               </FormControl>
@@ -79,7 +81,7 @@ export function ProfileForm({ defaultValues }: ProfileFormProps) {
         />
         <div>
           <SubmitButton pending={isPending} disabled={!form.formState.isDirty}>
-            Save changes
+            {t("Save changes")}
           </SubmitButton>
         </div>
       </form>

@@ -17,10 +17,15 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { enumParam, firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Lesson designer" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Lesson designer") }
+}
 
 export default async function DesignsPage({ searchParams }: PageProps<"/designs">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.designs)
   const params = await searchParams
   const kind = enumParam(params, "kind", DESIGN_KINDS)
@@ -31,13 +36,13 @@ export default async function DesignsPage({ searchParams }: PageProps<"/designs"
   return (
     <>
       <PageHeader
-        title="Lesson designer"
-        description="Slides, worksheets, flashcards, vocabulary cards, grammar activities, quizzes and exit tickets."
+        title={t("Lesson designer")}
+        description={t("Slides, worksheets, flashcards, vocabulary cards, grammar activities, quizzes and exit tickets.")}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={routes.designNew}>
-                <PlusIcon aria-hidden /> New design
+                <PlusIcon aria-hidden /> {t("New design")}
               </Link>
             </Button>
           )
@@ -46,7 +51,7 @@ export default async function DesignsPage({ searchParams }: PageProps<"/designs"
       <ListFilters
         basePath={routes.designs}
         values={{ kind, q }}
-        searchPlaceholder="Search titles"
+        searchPlaceholder={t("Search titles")}
         filters={[{ param: "kind", allLabel: "All types", options: DESIGN_KINDS.map((k) => ({ value: k, label: KIND_LABELS[k] })) }]}
       />
       {designs.length === 0 ? (
@@ -54,13 +59,13 @@ export default async function DesignsPage({ searchParams }: PageProps<"/designs"
           <CardContent>
             <EmptyState
               icon={PaletteIcon}
-              title={kind || q ? "No designs match" : "No designs yet"}
-              description={kind || q ? undefined : "Create one from a template or start blank."}
+              title={kind || q ? t("No designs match") : t("No designs yet")}
+              description={kind || q ? undefined : t("Create one from a template or start blank.")}
               action={
                 canWrite && !kind && !q ? (
                   <Button asChild>
                     <Link href={routes.designNew}>
-                      <PlusIcon aria-hidden /> New design
+                      <PlusIcon aria-hidden /> {t("New design")}
                     </Link>
                   </Button>
                 ) : undefined
@@ -73,7 +78,7 @@ export default async function DesignsPage({ searchParams }: PageProps<"/designs"
           {designs.map((d) => (
             <li key={d.id}>
               <Card className="h-full gap-0 overflow-hidden py-0">
-                <Link href={designPath(d.id)} className="bg-muted flex aspect-video items-center justify-center overflow-hidden border-b" aria-label={`Open ${d.title}`}>
+                <Link href={designPath(d.id)} className="bg-muted flex aspect-video items-center justify-center overflow-hidden border-b" aria-label={t("Open {title}", { title: d.title })}>
                   {d.firstPage ? (
                     <div className="shadow-sm">
                       <PageThumbnail page={d.firstPage} pageSize={d.pageSize} assets={assets} width={d.pageSize === "a4_portrait" ? 100 : 216} />
@@ -85,20 +90,20 @@ export default async function DesignsPage({ searchParams }: PageProps<"/designs"
                     {d.title}
                   </Link>
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant="secondary">{KIND_LABELS[d.kind]}</Badge>
+                    <Badge variant="secondary">{t(KIND_LABELS[d.kind])}</Badge>
                     {d.share_token && (
                       <Badge variant="outline">
-                        <Link2Icon aria-hidden /> Shared
+                        <Link2Icon aria-hidden /> {t("Shared")}
                       </Badge>
                     )}
                   </div>
                   <p className="text-muted-foreground text-xs">
-                    {d.owner_id !== user.id && `${d.owner_name} · `}Edited {formatDateTime(d.updated_at)}
+                    {d.owner_id !== user.id && `${d.owner_name} · `}{t("Edited {dateTime}", { dateTime: formatDateTime(d.updated_at) })}
                   </p>
                   <div>
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={designPreviewPath(d.id)}>
-                        <PlayIcon aria-hidden /> Present
+                        <PlayIcon aria-hidden /> {t("Present")}
                       </Link>
                     </Button>
                   </div>

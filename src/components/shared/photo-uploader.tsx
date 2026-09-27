@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import type { ActionResult } from "@/lib/action-result"
 import { IMAGE_RULES, type Bucket } from "@/lib/storage"
 import { createClient } from "@/lib/supabase/client"
+import { useT } from "@/i18n/client"
 
 type PhotoUploaderProps = {
   bucket: Bucket
@@ -25,16 +26,17 @@ type PhotoUploaderProps = {
  * who may write where), then lets a Server Action record the object path.
  */
 export function PhotoUploader({ bucket, objectPath, name, photoUrl, onUploaded, className }: PhotoUploaderProps) {
+  const t = useT()
   const inputRef = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleFile(file: File) {
     if (!(IMAGE_RULES.mimeTypes as readonly string[]).includes(file.type)) {
-      toast.error("Please choose a PNG, JPEG or WebP image.")
+      toast.error(t("Please choose a PNG, JPEG or WebP image."))
       return
     }
     if (file.size > IMAGE_RULES.maxBytes) {
-      toast.error("Images must be 2 MB or smaller.")
+      toast.error(t("Images must be 2 MB or smaller."))
       return
     }
 
@@ -43,11 +45,11 @@ export function PhotoUploader({ bucket, objectPath, name, photoUrl, onUploaded, 
         .storage.from(bucket)
         .upload(objectPath, file, { upsert: true, contentType: file.type })
       if (error) {
-        toast.error("Upload failed. Please try again.")
+        toast.error(t("Upload failed. Please try again."))
         return
       }
       const result = await onUploaded()
-      if (result.ok) toast.success("Photo updated.")
+      if (result.ok) toast.success(t("Photo updated."))
       else toast.error(result.error.message)
     })
   }
@@ -70,7 +72,7 @@ export function PhotoUploader({ bucket, objectPath, name, photoUrl, onUploaded, 
       />
       <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => inputRef.current?.click()}>
         {isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : <UploadIcon aria-hidden />}
-        Change photo
+        {t("Change photo")}
       </Button>
     </div>
   )

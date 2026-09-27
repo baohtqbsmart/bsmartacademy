@@ -9,12 +9,17 @@ import { getCourse } from "@/features/courses/server/course-service"
 import { listSubjectOptions } from "@/features/subjects/server/subject-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit course" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit course") }
+}
 
 const text = (value: number | null) => (value === null ? "" : String(value))
 
 export default async function EditCoursePage({ params }: PageProps<"/courses/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.courseEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -24,7 +29,7 @@ export default async function EditCoursePage({ params }: PageProps<"/courses/[id
 
   return (
     <>
-      <PageHeader title={`Edit ${course.name}`} description={course.code} />
+      <PageHeader title={t("Edit {name}", { name: course.name })} description={course.code} />
       <CourseForm
         courseId={course.id}
         subjects={subjects}

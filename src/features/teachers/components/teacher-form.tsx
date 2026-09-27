@@ -20,6 +20,7 @@ import {
   type TeacherFormOutput,
 } from "@/features/teachers/schemas"
 import { applyActionError } from "@/lib/action-result"
+import { useT } from "@/i18n/client"
 
 type TeacherFormProps = {
   teacherId?: string
@@ -28,6 +29,7 @@ type TeacherFormProps = {
 }
 
 export function TeacherForm({ teacherId, defaultValues, cancelHref }: TeacherFormProps) {
+  const t = useT()
   const [isPending, startTransition] = useTransition()
   const [formError, setFormError] = useState<string | null>(null)
   const form = useForm<TeacherFormInput, unknown, TeacherFormOutput>({
@@ -51,27 +53,27 @@ export function TeacherForm({ teacherId, defaultValues, cancelHref }: TeacherFor
         <FormAlert message={formError} />
         <Card>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <TextField control={control} name="teacherCode" label="Teacher code" placeholder="GV005" />
-            <TextField control={control} name="fullName" label="Full name" />
-            <TextField control={control} name="email" label="Email" type="email" />
-            <TextField control={control} name="phone" label="Phone" type="tel" />
-            <TextField control={control} name="hiredOn" label="Start date" type="date" />
+            <TextField control={control} name="teacherCode" label={t("Teacher code")} placeholder={t("GV005")} />
+            <TextField control={control} name="fullName" label={t("Full name")} />
+            <TextField control={control} name="email" label={t("Email")} type="email" />
+            <TextField control={control} name="phone" label={t("Phone")} type="tel" />
+            <TextField control={control} name="hiredOn" label={t("Start date")} type="date" />
             <SelectField
               control={control}
               name="status"
-              label="Status"
+              label={t("Status")}
               options={TEACHER_STATUSES.map((s) => ({ value: s, label: STAFF_STATUS[s].label }))}
             />
-            <TextareaField control={control} name="notes" label="Internal notes (staff only)" className="sm:col-span-2" />
+            <TextareaField control={control} name="notes" label={t("Internal notes (staff only)")} className="sm:col-span-2" />
           </CardContent>
         </Card>
         <p className="text-muted-foreground text-sm">
-          Subjects and qualifications are managed on the teacher&apos;s profile.
+          {t("Subjects and qualifications are managed on the teacher's profile.")}
         </p>
         <div className="flex gap-2">
-          <SubmitButton pending={isPending}>{teacherId ? "Save changes" : "Add teacher"}</SubmitButton>
+          <SubmitButton pending={isPending}>{teacherId ? t("Save changes") : t("Add teacher")}</SubmitButton>
           <Button variant="outline" asChild>
-            <Link href={cancelHref}>Cancel</Link>
+            <Link href={cancelHref}>{t("Cancel")}</Link>
           </Button>
         </div>
       </form>

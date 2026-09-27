@@ -26,10 +26,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDate } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Students" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Students") }
+}
 
 export default async function StudentsPage({ searchParams }: PageProps<"/students">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.students)
   const query = parseStudentListQuery(await searchParams)
   const canWrite = can(user.permissions, "students.write")
@@ -55,28 +60,28 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
   const empty = filtered ? (
     <EmptyState
       icon={SearchXIcon}
-      title="No students match your search"
-      description="Try a different name or remove some filters."
+      title={t("No students match your search")}
+      description={t("Try a different name or remove some filters.")}
       action={
         <Button variant="outline" size="sm" asChild>
-          <Link href={routes.students}>Clear filters</Link>
+          <Link href={routes.students}>{t("Clear filters")}</Link>
         </Button>
       }
     />
   ) : (
     <EmptyState
       icon={UsersIcon}
-      title="No students yet"
+      title={t("No students yet")}
       description={
         canWrite
-          ? "Add the first student to start building the directory."
-          : "Students will appear here once they are enrolled in a class you can see."
+          ? t("Add the first student to start building the directory.")
+          : t("Students will appear here once they are enrolled in a class you can see.")
       }
       action={
         canWrite && (
           <Button size="sm" asChild>
             <Link href={routes.studentNew}>
-              <PlusIcon aria-hidden /> Add student
+              <PlusIcon aria-hidden /> {t("Add student")}
             </Link>
           </Button>
         )
@@ -87,13 +92,13 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
   return (
     <>
       <PageHeader
-        title="Students"
+        title={t("Students")}
         description={description}
         actions={
           canWrite && (
             <Button asChild>
               <Link href={routes.studentNew}>
-                <PlusIcon aria-hidden /> Add student
+                <PlusIcon aria-hidden /> {t("Add student")}
               </Link>
             </Button>
           )
@@ -122,17 +127,17 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
         columns={[
           {
             key: "code",
-            header: <SortableHeader label="Student ID" sort="code" query={query} />,
+            header: <SortableHeader label={t("Student ID")} sort="code" query={query} />,
             cell: (s) => <span className="font-mono text-xs">{s.student_code}</span>,
           },
           {
             key: "name",
-            header: <SortableHeader label="Name" sort="name" query={query} />,
+            header: <SortableHeader label={t("Name")} sort="name" query={query} />,
             cell: (s) => (
               <Link href={studentPath(s.id)} className="flex items-center gap-2 font-medium hover:underline">
                 <UserAvatar name={s.full_name} avatarUrl={null} className="size-7 text-xs" />
                 <span>{s.full_name}</span>
-                {s.deleted_at && <Badge variant="outline">Archived</Badge>}
+                {s.deleted_at && <Badge variant="outline">{t("Archived")}</Badge>}
               </Link>
             ),
           },
@@ -144,13 +149,13 @@ export default async function StudentsPage({ searchParams }: PageProps<"/student
           { header: "Parent", cell: (s) => s.primary_parent_name ?? "—" },
           {
             key: "joined",
-            header: <SortableHeader label="Enrollment date" sort="joined" query={query} />,
+            header: <SortableHeader label={t("Enrollment date")} sort="joined" query={query} />,
             cell: (s) => formatDate(s.joined_on),
           },
           {
             header: "Status",
             cell: (s) => (
-              <Badge variant={STUDENT_STATUS[s.status].variant}>{STUDENT_STATUS[s.status].label}</Badge>
+              <Badge variant={STUDENT_STATUS[s.status].variant}>{t(STUDENT_STATUS[s.status].label)}</Badge>
             ),
           },
         ]}

@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import type { AlertLevel, AttendanceStatus } from "@/features/attendance/summary"
 import { cn } from "@/lib/utils"
+import { Trans } from "@/i18n/client"
 
 // Status palette (good / warning / critical), always with an icon and a
 // label, never colour alone.
@@ -41,12 +42,17 @@ export function AttendanceStatusBadge({
     <span className="inline-flex items-center gap-1">
       <Badge variant="outline" className={cn("gap-1", config.className)}>
         <Icon className="size-3" aria-hidden />
-        {config.label}
-        {status === "late" && minutesLate ? ` · ${minutesLate} min` : null}
+        <Trans>{config.label}</Trans>
+        {status === "late" && minutesLate ? (
+          <>
+            {" · "}
+            <Trans values={{ minutes: minutesLate }}>{"{minutes} min"}</Trans>
+          </>
+        ) : null}
       </Badge>
       {online && (
         <Badge variant="outline" className="text-muted-foreground gap-1">
-          <MonitorIcon className="size-3" aria-hidden /> Online
+          <MonitorIcon className="size-3" aria-hidden /> <Trans>{"Online"}</Trans>
         </Badge>
       )}
     </span>
@@ -64,7 +70,7 @@ export function AbsenceAlertBadge({ level, title }: { level: AlertLevel; title?:
   return (
     <Badge variant="outline" className={cn("gap-1", config.className)} title={title}>
       <Icon className="size-3" aria-hidden />
-      {config.label}
+      <Trans>{config.label}</Trans>
     </Badge>
   )
 }

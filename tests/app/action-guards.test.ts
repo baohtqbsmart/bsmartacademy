@@ -7,9 +7,9 @@ import { describe, expect, it } from "vitest"
  * Server Actions are public HTTP endpoints: anyone can call them with any
  * input. Every exported action must identify the caller before doing work
  * (requirePermission / requireUser); the database then checks the rows.
- * Only the sign-in family is public by design.
+ * Only the sign-in family and the interface-language switch are public by design.
  */
-const PUBLIC_ACTIONS = new Set(["signInAction", "signOutAction", "requestPasswordResetAction"])
+const PUBLIC_ACTIONS = new Set(["signInAction", "signOutAction", "requestPasswordResetAction", "setLocaleAction"])
 
 const srcDir = path.resolve(import.meta.dirname, "../../src")
 

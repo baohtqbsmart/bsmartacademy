@@ -23,10 +23,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDate, formatDateRange } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Teacher" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Teacher") }
+}
 
 export default async function TeacherPage({ params }: PageProps<"/teachers/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.teacherDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -49,42 +54,42 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
   return (
     <>
       <Link href={routes.teachers} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Teachers
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Teachers")}
       </Link>
       <PageHeader
         title={teacher.full_name}
         description={teacher.teacher_code}
         actions={
           <>
-            <Badge variant={STAFF_STATUS[teacher.status].variant}>{STAFF_STATUS[teacher.status].label}</Badge>
-            {teacher.deleted_at && <Badge variant="destructive">Archived</Badge>}
+            <Badge variant={STAFF_STATUS[teacher.status].variant}>{t(STAFF_STATUS[teacher.status].label)}</Badge>
+            {teacher.deleted_at && <Badge variant="destructive">{t("Archived")}</Badge>}
             {canWrite && (
               <>
                 <Button variant="outline" size="sm" asChild>
                   <Link href={teacherEditPath(teacher.id)}>
-                    <PencilIcon aria-hidden /> Edit
+                    <PencilIcon aria-hidden /> {t("Edit")}
                   </Link>
                 </Button>
                 {teacher.deleted_at ? (
                   <ConfirmActionButton
-                    title="Restore teacher?"
-                    description="The teacher can be assigned to classes again."
-                    confirmLabel="Restore"
-                    successMessage="Teacher restored."
+                    title={t("Restore teacher?")}
+                    description={t("The teacher can be assigned to classes again.")}
+                    confirmLabel={t("Restore")}
+                    successMessage={t("Teacher restored.")}
                     action={restoreTeacherAction.bind(null, { teacherId: teacher.id })}
                   >
-                    <ArchiveRestoreIcon aria-hidden /> Restore
+                    <ArchiveRestoreIcon aria-hidden /> {t("Restore")}
                   </ConfirmActionButton>
                 ) : (
                   <ConfirmActionButton
-                    title="Archive teacher?"
-                    description="Only possible once they no longer teach planned or running classes."
-                    confirmLabel="Archive"
-                    successMessage="Teacher archived."
+                    title={t("Archive teacher?")}
+                    description={t("Only possible once they no longer teach planned or running classes.")}
+                    confirmLabel={t("Archive")}
+                    successMessage={t("Teacher archived.")}
                     destructive
                     action={archiveTeacherAction.bind(null, { teacherId: teacher.id })}
                   >
-                    <ArchiveIcon aria-hidden /> Archive
+                    <ArchiveIcon aria-hidden /> {t("Archive")}
                   </ConfirmActionButton>
                 )}
               </>
@@ -96,15 +101,15 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
       <div className="grid gap-6 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Details</CardTitle>
+            <CardTitle>{t("Details")}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 text-sm">
-            <Detail label="Email">{teacher.email}</Detail>
-            <Detail label="Phone">{teacher.phone}</Detail>
-            <Detail label="Start date">{teacher.hired_on && formatDate(teacher.hired_on)}</Detail>
+            <Detail label={t("Email")}>{teacher.email}</Detail>
+            <Detail label={t("Phone")}>{teacher.phone}</Detail>
+            <Detail label={t("Start date")}>{teacher.hired_on && formatDate(teacher.hired_on)}</Detail>
             {/* teacher_notes() returns notes only to teacher editors. */}
             {teacher.notes !== null && (
-              <Detail label="Internal notes">
+              <Detail label={t("Internal notes")}>
                 <span className="whitespace-pre-line">{teacher.notes}</span>
               </Detail>
             )}
@@ -113,7 +118,7 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
 
         <Card>
           <CardHeader>
-            <CardTitle>Subjects</CardTitle>
+            <CardTitle>{t("Subjects")}</CardTitle>
             {canWrite && (
               <CardAction>
                 <TeacherSubjectsDialog
@@ -126,7 +131,7 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
           </CardHeader>
           <CardContent>
             {teacher.teacher_subjects.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No subjects recorded.</p>
+              <p className="text-muted-foreground text-sm">{t("No subjects recorded.")}</p>
             ) : (
               <div className="flex flex-wrap gap-1">
                 {teacher.teacher_subjects.map((ts) =>
@@ -143,7 +148,7 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
 
         <Card>
           <CardHeader>
-            <CardTitle>Teaching schedule</CardTitle>
+            <CardTitle>{t("Teaching schedule")}</CardTitle>
           </CardHeader>
           <CardContent>
             <WeeklySlots
@@ -155,7 +160,7 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
                 room: e.delivery_mode === "online" ? "Online" : e.room,
                 label: e.class_name,
               }))}
-              empty="No scheduled classes."
+              empty={t("No scheduled classes.")}
             />
           </CardContent>
         </Card>
@@ -163,13 +168,13 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
 
       <section className="grid gap-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Qualifications</h2>
+          <h2 className="font-semibold">{t("Qualifications")}</h2>
           {canWrite && <AddQualificationDialog teacherId={teacher.id} />}
         </div>
         <SimpleTable
           rows={quals}
           rowKey={(q) => q.id}
-          empty={<EmptyState icon={AwardIcon} title="No qualifications recorded" />}
+          empty={<EmptyState icon={AwardIcon} title={t("No qualifications recorded")} />}
           columns={[
             { header: "Qualification", cell: (q) => <span className="font-medium">{q.title}</span> },
             { header: "Institution", cell: (q) => q.institution ?? "—" },
@@ -184,11 +189,11 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
                       <ConfirmActionButton
                         variant="ghost"
                         size="icon"
-                        aria-label={`Remove ${q.title}`}
-                        title="Remove qualification?"
+                        aria-label={t("Remove {title}", { title: q.title })}
+                        title={t("Remove qualification?")}
                         description={q.title}
-                        confirmLabel="Remove"
-                        successMessage="Qualification removed."
+                        confirmLabel={t("Remove")}
+                        successMessage={t("Qualification removed.")}
                         destructive
                         action={removeQualificationAction.bind(null, { qualificationId: q.id })}
                       >
@@ -203,11 +208,11 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
       </section>
 
       <section className="grid gap-2">
-        <h2 className="font-semibold">Classes</h2>
+        <h2 className="font-semibold">{t("Classes")}</h2>
         <SimpleTable
           rows={classes}
           rowKey={(m) => m.class!.id}
-          empty="No classes you can see."
+          empty={t("No classes you can see.")}
           columns={[
             {
               header: "Class",
@@ -222,7 +227,7 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
             { header: "Dates", cell: (m) => formatDateRange(m.class!.start_date, m.class!.end_date) },
             {
               header: "Status",
-              cell: (m) => <Badge variant={CLASS_STATUS[m.class!.status].variant}>{CLASS_STATUS[m.class!.status].label}</Badge>,
+              cell: (m) => <Badge variant={CLASS_STATUS[m.class!.status].variant}>{t(CLASS_STATUS[m.class!.status].label)}</Badge>,
             },
           ]}
         />
@@ -231,10 +236,11 @@ export default async function TeacherPage({ params }: PageProps<"/teachers/[id]"
   )
 }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+async function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  const t = await getT()
   return (
     <div className="grid gap-0.5">
-      <span className="text-muted-foreground text-xs">{label}</span>
+      <span className="text-muted-foreground text-xs">{t(label)}</span>
       <span>{children || "—"}</span>
     </div>
   )

@@ -18,10 +18,15 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "AI draft" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("AI draft") }
+}
 
 export default async function AiDraftPage({ params }: PageProps<"/ai/[id]">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.aiDraft)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -36,11 +41,11 @@ export default async function AiDraftPage({ params }: PageProps<"/ai/[id]">) {
   return (
     <>
       <Link href={routes.ai} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm print:hidden">
-        <ArrowLeftIcon className="size-4" aria-hidden /> AI assistant
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("AI assistant")}
       </Link>
       <PageHeader
         title={draft.title}
-        description={`${TASK_LABELS[draft.task]} · ${input.topic} · ${CEFR_NAMES[input.cefr]} · age ${input.studentAge} · ${SKILL_NAMES[input.skill]} · ${input.durationMinutes} min`}
+        description={t("{value} · {topic} · {value2} · age {studentAge} · {value3} · {durationMinutes} min", { value: TASK_LABELS[draft.task], topic: input.topic, value2: CEFR_NAMES[input.cefr], studentAge: input.studentAge, value3: SKILL_NAMES[input.skill], durationMinutes: input.durationMinutes })}
         actions={
           <div className="print:hidden">
             <PrintButton />
@@ -49,22 +54,22 @@ export default async function AiDraftPage({ params }: PageProps<"/ai/[id]">) {
       />
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Badge variant="outline" className="gap-1">
-          <BotIcon aria-hidden /> AI-generated draft
+          <BotIcon aria-hidden /> {t("AI-generated draft")}
         </Badge>
-        {draft.status === "draft" && <Badge variant="outline">Needs your review</Badge>}
-        {draft.status === "approved" && <Badge>Approved by {draft.approved_by_name || "the teacher"} · {draft.approved_at && formatDateTime(draft.approved_at)}</Badge>}
-        {draft.status === "discarded" && <Badge variant="secondary">Discarded</Badge>}
+        {draft.status === "draft" && <Badge variant="outline">{t("Needs your review")}</Badge>}
+        {draft.status === "approved" && <Badge>{t("Approved by {value} ·", { value: draft.approved_by_name || "the teacher" })} {draft.approved_at && formatDateTime(draft.approved_at)}</Badge>}
+        {draft.status === "discarded" && <Badge variant="secondary">{t("Discarded")}</Badge>}
         <span className="text-muted-foreground text-xs">
-          Written by {draft.model} on {formatDateTime(draft.created_at)}. Check facts, answer keys and suitability for your students before use.
+          {t("Written by {model} on {dateTime}. Check facts, answer keys and suitability for your students before use.", { model: draft.model, dateTime: formatDateTime(draft.created_at) })}
         </span>
       </div>
-      <p className="text-muted-foreground text-xs">Objective: {input.objective}</p>
+      <p className="text-muted-foreground text-xs">{t("Objective: {objective}", { objective: input.objective })}</p>
 
       {draft.status === "approved" && own && (
         <Card className="print:hidden">
           <CardHeader>
-            <CardTitle>Save to the platform</CardTitle>
-            <CardDescription>Nothing is published: a design is private to you, and an assignment is created as a draft.</CardDescription>
+            <CardTitle>{t("Save to the platform")}</CardTitle>
+            <CardDescription>{t("Nothing is published: a design is private to you, and an assignment is created as a draft.")}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
             <SaveToPlatform draftId={draft.id} classes={classes} canDesign={can(user.permissions, "designs.write")} canAssign={can(user.permissions, "assignments.write")} />
@@ -72,9 +77,9 @@ export default async function AiDraftPage({ params }: PageProps<"/ai/[id]">) {
               <ul className="text-sm">
                 {draft.savedTo.map((s) => (
                   <li key={s.id}>
-                    Saved as{" "}
+                    {t("Saved as")}
                     <Link className="underline" href={s.type === "design" ? designPath(s.id) : assignmentPath(s.id)}>
-                      {s.type === "design" ? "a lesson design" : "a draft assignment"}
+                      {s.type === "design" ? t("a lesson design") : t("a draft assignment")}
                     </Link>
                   </li>
                 ))}
@@ -85,7 +90,7 @@ export default async function AiDraftPage({ params }: PageProps<"/ai/[id]">) {
       )}
 
       {!draft.plan ? (
-        <p className="text-destructive text-sm">This draft&apos;s content could not be read.</p>
+        <p className="text-destructive text-sm">{t("This draft's content could not be read.")}</p>
       ) : draft.status === "draft" && own ? (
         <PlanEditor draftId={draft.id} initial={draft.plan} warnings={planProblems(draft.task, draft.plan, input.durationMinutes)} />
       ) : (

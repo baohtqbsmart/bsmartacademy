@@ -11,6 +11,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { formatVnd, formatVndCompact } from "@/lib/money"
+import { useT } from "@/i18n/client"
 
 // Series colours are validated palette slots 1 and 2 (see globals.css), which
 // step for dark mode. One unit (đồng) => one y-axis.
@@ -48,12 +49,13 @@ const methodConfig = {
 
 /** One series (collected), one colour; the method names label the bars. */
 export function MethodChart({ data }: { data: { label: string; amount: number }[] }) {
+  const t = useT()
   return (
     <ChartContainer config={methodConfig} className="aspect-auto h-44 w-full">
       <BarChart data={data} layout="vertical" accessibilityLayer margin={{ left: 8, right: 16 }}>
         <CartesianGrid horizontal={false} />
         <XAxis type="number" tickLine={false} axisLine={false} tickFormatter={(value: number) => formatVndCompact(value)} />
-        <YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={96} />
+        <YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={96} tickFormatter={(v: string) => t(v)} />
         <ChartTooltip
           cursor={{ fillOpacity: 0.4 }}
           content={<ChartTooltipContent hideIndicator formatter={(value) => formatVnd(Number(value))} />}
@@ -65,10 +67,11 @@ export function MethodChart({ data }: { data: { label: string; amount: number }[
 }
 
 function TooltipRow({ name, value }: { name: string; value: number }) {
+  const t = useT()
   const label = monthlyConfig[name as keyof typeof monthlyConfig]?.label ?? name
   return (
     <div className="flex w-full items-center justify-between gap-4">
-      <span className="text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground">{t(label)}</span>
       <span className="font-medium tabular-nums">{formatVnd(value)}</span>
     </div>
   )

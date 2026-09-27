@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
 type TabNavProps = {
   tabs: { value: string; label: string; href: string }[]
@@ -9,9 +10,10 @@ type TabNavProps = {
 }
 
 /** URL-driven tabs: each tab is a link, so only the active tab's data is loaded. */
-export function TabNav({ tabs, active, label }: TabNavProps) {
+export async function TabNav({ tabs, active, label }: TabNavProps) {
+  const t = await getT()
   return (
-    <nav aria-label={label} className="overflow-x-auto border-b">
+    <nav aria-label={t(label)} className="overflow-x-auto border-b">
       <ul className="flex min-w-max gap-1">
         {tabs.map((tab) => {
           const isActive = tab.value === active
@@ -28,7 +30,7 @@ export function TabNav({ tabs, active, label }: TabNavProps) {
                     : "text-muted-foreground hover:text-foreground border-transparent"
                 )}
               >
-                {tab.label}
+                {t(tab.label)}
               </Link>
             </li>
           )

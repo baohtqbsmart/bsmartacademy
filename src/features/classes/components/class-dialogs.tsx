@@ -11,6 +11,7 @@ import { CLASS_MEMBER_ROLE_LABELS } from "@/config/labels"
 import { assignTeacherAction, saveSlotAction } from "@/features/classes/actions"
 import { WEEKDAYS } from "@/lib/dates"
 import type { Enums } from "@/types/database"
+import { useT } from "@/i18n/client"
 
 type Role = Enums<"class_member_role">
 
@@ -23,6 +24,7 @@ export function AssignTeacherDialog({
   teachers: Option[]
   hasLead: boolean
 }) {
+  const t = useT()
   const initialRole: Role = hasLead ? "assistant_teacher" : "lead_teacher"
   const [teacherId, setTeacherId] = useState("")
   const [role, setRole] = useState<Role>(initialRole)
@@ -31,29 +33,29 @@ export function AssignTeacherDialog({
     <ActionDialog
       trigger={
         <Button variant="outline" size="sm">
-          <UserPlusIcon aria-hidden /> Assign teacher
+          <UserPlusIcon aria-hidden /> {t("Assign teacher")}
         </Button>
       }
-      title="Assign a teacher"
-      description="Making someone lead turns the current lead into an assistant. Timetable clashes are rejected."
-      submitLabel="Assign"
-      successMessage="Teacher assigned."
+      title={t("Assign a teacher")}
+      description={t("Making someone lead turns the current lead into an assistant. Timetable clashes are rejected.")}
+      submitLabel={t("Assign")}
+      successMessage={t("Teacher assigned.")}
       onOpen={() => {
         setTeacherId("")
         setRole(initialRole)
       }}
       onSubmit={() => assignTeacherAction({ classId, teacherId, role })}
     >
-      <Field id="assign-teacher" label="Teacher">
-        <OptionSelect id="assign-teacher" value={teacherId} onChange={setTeacherId} options={teachers} placeholder="Choose a teacher" />
+      <Field id="assign-teacher" label={t("Teacher")}>
+        <OptionSelect id="assign-teacher" value={teacherId} onChange={setTeacherId} options={teachers} placeholder={t("Choose a teacher")} />
       </Field>
-      <Field id="assign-role" label="Role">
+      <Field id="assign-role" label={t("Role")}>
         <OptionSelect
           id="assign-role"
           value={role}
           onChange={(value) => setRole(value as Role)}
           options={(Object.keys(CLASS_MEMBER_ROLE_LABELS) as Role[]).map((r) => ({ id: r, label: CLASS_MEMBER_ROLE_LABELS[r] }))}
-          placeholder="Role"
+          placeholder={t("Role")}
         />
       </Field>
     </ActionDialog>
@@ -62,18 +64,19 @@ export function AssignTeacherDialog({
 
 /** Role change for an assigned teacher (reuses the assignment RPC). */
 export function ChangeRoleButton({ classId, teacherId, role }: { classId: string; teacherId: string; role: Role }) {
+  const t = useT()
   const next: Role = role === "lead_teacher" ? "assistant_teacher" : "lead_teacher"
   return (
     <ActionDialog
       trigger={
         <Button variant="ghost" size="sm">
-          Make {CLASS_MEMBER_ROLE_LABELS[next].toLowerCase()}
+          {t("Make {value}", { value: CLASS_MEMBER_ROLE_LABELS[next].toLowerCase() })}
         </Button>
       }
-      title={`Make ${CLASS_MEMBER_ROLE_LABELS[next].toLowerCase()}?`}
-      description={next === "lead_teacher" ? "The current lead becomes an assistant." : "The class will have no lead until one is assigned."}
-      submitLabel="Confirm"
-      successMessage="Role updated."
+      title={t("Make {value}?", { value: CLASS_MEMBER_ROLE_LABELS[next].toLowerCase() })}
+      description={next === "lead_teacher" ? t("The current lead becomes an assistant.") : t("The class will have no lead until one is assigned.")}
+      submitLabel={t("Confirm")}
+      successMessage={t("Role updated.")}
       onSubmit={() => assignTeacherAction({ classId, teacherId, role: next })}
     >
       {null}
@@ -84,6 +87,7 @@ export function ChangeRoleButton({ classId, teacherId, role }: { classId: string
 type SlotValues = { slotId?: string; weekday: string; startsAt: string; endsAt: string; room: string }
 
 export function SlotDialog({ classId, initial }: { classId: string; initial?: SlotValues }) {
+  const t = useT()
   const empty: SlotValues = { weekday: "", startsAt: "", endsAt: "", room: "" }
   const [values, setValues] = useState<SlotValues>(initial ?? empty)
   const set = (key: keyof SlotValues) => (value: string) => setValues((current) => ({ ...current, [key]: value }))
@@ -92,40 +96,40 @@ export function SlotDialog({ classId, initial }: { classId: string; initial?: Sl
     <ActionDialog
       trigger={
         initial ? (
-          <Button variant="ghost" size="icon" aria-label="Edit time slot">
+          <Button variant="ghost" size="icon" aria-label={t("Edit time slot")}>
             <PencilIcon />
           </Button>
         ) : (
           <Button variant="outline" size="sm">
-            <PlusIcon aria-hidden /> Add time slot
+            <PlusIcon aria-hidden /> {t("Add time slot")}
           </Button>
         )
       }
-      title={initial ? "Edit time slot" : "Add a weekly time slot"}
-      description="Rooms and teachers cannot be double-booked; clashes are rejected with the conflicting class."
-      submitLabel="Save"
-      successMessage="Timetable updated."
+      title={initial ? t("Edit time slot") : t("Add a weekly time slot")}
+      description={t("Rooms and teachers cannot be double-booked; clashes are rejected with the conflicting class.")}
+      submitLabel={t("Save")}
+      successMessage={t("Timetable updated.")}
       onOpen={() => setValues(initial ?? empty)}
       onSubmit={() => saveSlotAction({ ...values, classId })}
     >
-      <Field id="slot-day" label="Day">
+      <Field id="slot-day" label={t("Day")}>
         <OptionSelect
           id="slot-day"
           value={values.weekday}
           onChange={set("weekday")}
           options={WEEKDAYS.map((d) => ({ id: String(d.value), label: d.label }))}
-          placeholder="Choose a day"
+          placeholder={t("Choose a day")}
         />
       </Field>
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field id="slot-start" label="Starts">
+        <Field id="slot-start" label={t("Starts")}>
           <Input id="slot-start" type="time" value={values.startsAt} onChange={(e) => set("startsAt")(e.target.value)} />
         </Field>
-        <Field id="slot-end" label="Ends">
+        <Field id="slot-end" label={t("Ends")}>
           <Input id="slot-end" type="time" value={values.endsAt} onChange={(e) => set("endsAt")(e.target.value)} />
         </Field>
-        <Field id="slot-room" label="Room (optional)">
-          <Input id="slot-room" value={values.room} onChange={(e) => set("room")(e.target.value)} placeholder="Class room" />
+        <Field id="slot-room" label={t("Room (optional)")}>
+          <Input id="slot-room" value={values.room} onChange={(e) => set("room")(e.target.value)} placeholder={t("Class room")} />
         </Field>
       </div>
     </ActionDialog>

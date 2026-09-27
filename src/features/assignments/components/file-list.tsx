@@ -1,7 +1,10 @@
+"use client"
+
 import { DownloadIcon, FileIcon, XIcon } from "lucide-react"
 
 import { ConfirmActionButton } from "@/components/shared/confirm-action-button"
 import { removeAttachmentAction, removeSubmissionFileAction } from "@/features/assignments/actions"
+import { useT } from "@/i18n/client"
 import { formatFileSize } from "@/lib/uploads"
 
 type FileRow = { id: string; file_name: string; size_bytes: number; url: string | null }
@@ -17,7 +20,8 @@ export function FileList({
   removable?: "attachment" | "submission"
   empty?: string
 }) {
-  if (files.length === 0) return <p className="text-muted-foreground text-sm">{empty}</p>
+  const t = useT()
+  if (files.length === 0) return <p className="text-muted-foreground text-sm">{t(empty)}</p>
   return (
     <ul className="grid gap-1">
       {files.map((file) => (
@@ -38,11 +42,11 @@ export function FileList({
             <ConfirmActionButton
               variant="ghost"
               size="icon"
-              aria-label={`Remove ${file.file_name}`}
-              title="Remove this file?"
-              description={`"${file.file_name}" will be deleted.`}
-              confirmLabel="Remove"
-              successMessage="File removed."
+              aria-label={t("Remove {name}", { name: file.file_name })}
+              title={t("Remove this file?")}
+              description={t("\"{name}\" will be deleted.", { name: file.file_name })}
+              confirmLabel={t("Remove")}
+              successMessage={t("File removed.")}
               destructive
               action={
                 removable === "attachment"

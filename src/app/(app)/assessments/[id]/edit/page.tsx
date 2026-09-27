@@ -9,10 +9,15 @@ import { getTask, listAssessmentClasses, listRubrics, listTaskSubmissions } from
 import { requireRouteAccess } from "@/lib/auth/session"
 import { isoToAcademyInput } from "@/lib/dates"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Edit task" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Edit task") }
+}
 
 export default async function EditTaskPage({ params }: PageProps<"/assessments/[id]/edit">) {
+  const t = await getT()
   await requireRouteAccess(routes.assessmentEdit)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -24,7 +29,7 @@ export default async function EditTaskPage({ params }: PageProps<"/assessments/[
 
   return (
     <>
-      <PageHeader title="Edit task" description={task.title} />
+      <PageHeader title={t("Edit task")} description={task.title} />
       <TaskForm
         classes={options}
         rubrics={rubrics}

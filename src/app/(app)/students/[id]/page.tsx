@@ -45,10 +45,15 @@ import { addDays, todayInAcademy } from "@/lib/dates"
 import { formatVnd } from "@/lib/money"
 import { BUCKETS, createSignedUrl } from "@/lib/storage"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Student profile" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Student profile") }
+}
 
 export default async function StudentProfilePage({ params, searchParams }: PageProps<"/students/[id]">) {
+  const tr = await getT()
   const user = await requireRouteAccess(routes.studentDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -98,7 +103,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
     <>
       {canListStudents && (
         <Link href={routes.students} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-          <ArrowLeftIcon className="size-4" aria-hidden /> Students
+          <ArrowLeftIcon className="size-4" aria-hidden /> {tr("Students")}
         </Link>
       )}
 
@@ -113,8 +118,8 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
             <h1 className="text-2xl font-semibold tracking-tight">{student.full_name}</h1>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="text-muted-foreground font-mono">{student.student_code}</span>
-              <Badge variant={STUDENT_STATUS[student.status].variant}>{STUDENT_STATUS[student.status].label}</Badge>
-              {student.deleted_at && <Badge variant="destructive">Archived</Badge>}
+              <Badge variant={STUDENT_STATUS[student.status].variant}>{tr(STUDENT_STATUS[student.status].label)}</Badge>
+              {student.deleted_at && <Badge variant="destructive">{tr("Archived")}</Badge>}
             </div>
           </div>
         </div>
@@ -122,29 +127,29 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
           <div className="flex gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link href={studentEditPath(student.id)}>
-                <PencilIcon aria-hidden /> Edit
+                <PencilIcon aria-hidden /> {tr("Edit")}
               </Link>
             </Button>
             {student.deleted_at ? (
               <ConfirmActionButton
-                title="Restore student?"
-                description="The student will reappear in lists and regain access for their teachers and parents."
-                confirmLabel="Restore"
-                successMessage="Student restored."
+                title={tr("Restore student?")}
+                description={tr("The student will reappear in lists and regain access for their teachers and parents.")}
+                confirmLabel={tr("Restore")}
+                successMessage={tr("Student restored.")}
                 action={restoreStudentAction.bind(null, { studentId: student.id })}
               >
-                <ArchiveRestoreIcon aria-hidden /> Restore
+                <ArchiveRestoreIcon aria-hidden /> {tr("Restore")}
               </ConfirmActionButton>
             ) : (
               <ConfirmActionButton
-                title="Archive student?"
-                description="Archived students are hidden from lists, teachers and parents. Their history is kept and they can be restored."
-                confirmLabel="Archive"
-                successMessage="Student archived."
+                title={tr("Archive student?")}
+                description={tr("Archived students are hidden from lists, teachers and parents. Their history is kept and they can be restored.")}
+                confirmLabel={tr("Archive")}
+                successMessage={tr("Student archived.")}
                 destructive
                 action={archiveStudentAction.bind(null, { studentId: student.id })}
               >
-                <ArchiveIcon aria-hidden /> Archive
+                <ArchiveIcon aria-hidden /> {tr("Archive")}
               </ConfirmActionButton>
             )}
           </div>
@@ -152,7 +157,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
       </div>
 
       <TabNav
-        label="Student profile sections"
+        label={tr("Student profile sections")}
         active={tab}
         tabs={STUDENT_TABS.map((t) => ({ value: t.value, label: t.label, href: studentPath(student.id, t.value) }))}
       />
@@ -203,8 +208,8 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
         ) : (
           <EmptyState
             icon={LockIcon}
-            title="Financial information is restricted"
-            description="Tuition is visible to finance staff, the student and their parents. Ask an administrator if you need access."
+            title={tr("Financial information is restricted")}
+            description={tr("Tuition is visible to finance staff, the student and their parents. Ask an administrator if you need access.")}
           />
         ))}
       {tab === "attendance" && (
@@ -220,19 +225,19 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
         (canSeeGrades ? (
           <div className="grid gap-3">
             <p className="text-muted-foreground text-sm">
-              Published results of the last 12 months: returned grades, graded tests, reviewed work and practice.{" "}
+              {tr("Published results of the last 12 months: returned grades, graded tests, reviewed work and practice.")}
               <Link href={analyticsStudentPath(student.id)} className="underline">
-                Progress over time
+                {tr("Progress over time")}
               </Link>
             </p>
             <ResultsTable results={grades} />
           </div>
         ) : (
-          <EmptyState icon={LockIcon} title="Grades are not available to your role" />
+          <EmptyState icon={LockIcon} title={tr("Grades are not available to your role")} />
         ))}
       {tab === "materials" &&
         (materials.length === 0 ? (
-          <EmptyState icon={FolderOpenIcon} title="No materials" description="Nothing from the material library is assigned to this student's classes or shared with them." />
+          <EmptyState icon={FolderOpenIcon} title={tr("No materials")} description={tr("Nothing from the material library is assigned to this student's classes or shared with them.")} />
         ) : (
           <ul className="grid gap-2">
             {materials.map((m) => (
@@ -240,7 +245,7 @@ export default async function StudentProfilePage({ params, searchParams }: PageP
                 <Link href={libraryMaterialPath(m.id)} className="hover:bg-muted/50 flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
                   <span className="font-medium">{m.title}</span>
                   <span className="text-muted-foreground text-xs">
-                    {FILE_KIND_LABELS[m.file_kind as FileKind] ?? m.file_kind} · {m.scope === "academy" ? "Academy library" : m.owner_name}
+                    {FILE_KIND_LABELS[m.file_kind as FileKind] ?? m.file_kind} · {m.scope === "academy" ? tr("Academy library") : m.owner_name}
                   </span>
                 </Link>
               </li>

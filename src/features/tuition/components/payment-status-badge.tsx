@@ -2,6 +2,7 @@ import { BanIcon, CircleAlertIcon, CircleCheckIcon, CircleDashedIcon, CircleDotI
 
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
 type Status = "paid" | "partially_paid" | "unpaid" | "overdue" | "void" | "cancelled" | "voided" | "completed"
 
@@ -17,13 +18,14 @@ const STATUS: Record<Status, { label: string; icon: LucideIcon; className: strin
 }
 
 /** Status is always icon + label, never colour alone (status palette: good/warning/critical). */
-export function PaymentStatusBadge({ status }: { status: string }) {
+export async function PaymentStatusBadge({ status }: { status: string }) {
+  const t = await getT()
   const config = STATUS[status as Status] ?? STATUS.unpaid
   const Icon = config.icon
   return (
     <Badge variant="outline" className={cn("gap-1", config.className)}>
       <Icon className="size-3" aria-hidden />
-      {config.label}
+      {t(config.label)}
     </Badge>
   )
 }

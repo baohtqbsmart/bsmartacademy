@@ -28,66 +28,68 @@ import {
   type QuestionType,
   type TestStatus,
 } from "@/features/tests/questions"
+import { useT } from "@/i18n/client"
 
 export function TestLifecycle({ testId, status, hasQuestions, canDelete }: { testId: string; status: TestStatus; hasQuestions: boolean; canDelete: boolean }) {
+  const t = useT()
   const run = (action: string) => changeTestStatusAction.bind(null, { testId, action })
   return (
     <div className="flex flex-wrap gap-2">
       {status === "draft" && (
         <ConfirmActionButton
           variant="default"
-          title="Publish the test?"
-          description="Students in the class can take it (from its opening time). Its questions can no longer change."
-          confirmLabel="Publish"
-          successMessage="Test published."
+          title={t("Publish the test?")}
+          description={t("Students in the class can take it (from its opening time). Its questions can no longer change.")}
+          confirmLabel={t("Publish")}
+          successMessage={t("Test published.")}
           action={run("publish")}
         >
-          <SendIcon aria-hidden /> Publish{!hasQuestions && " (add questions first)"}
+          <SendIcon aria-hidden /> {t("Publish")}{!hasQuestions && t(" (add questions first)")}
         </ConfirmActionButton>
       )}
       {status === "published" && (
         <ConfirmActionButton
-          title="Close the test?"
-          description="Attempts still open are handed in with what was saved. You can reopen it later."
-          confirmLabel="Close"
-          successMessage="Test closed."
+          title={t("Close the test?")}
+          description={t("Attempts still open are handed in with what was saved. You can reopen it later.")}
+          confirmLabel={t("Close")}
+          successMessage={t("Test closed.")}
           action={run("close")}
         >
-          <LockIcon aria-hidden /> Close
+          <LockIcon aria-hidden /> {t("Close")}
         </ConfirmActionButton>
       )}
       {status === "closed" && (
-        <ConfirmActionButton title="Reopen the test?" description="Students can start attempts again." confirmLabel="Reopen" successMessage="Test reopened." action={run("reopen")}>
-          <LockOpenIcon aria-hidden /> Reopen
+        <ConfirmActionButton title={t("Reopen the test?")} description={t("Students can start attempts again.")} confirmLabel={t("Reopen")} successMessage={t("Test reopened.")} action={run("reopen")}>
+          <LockOpenIcon aria-hidden /> {t("Reopen")}
         </ConfirmActionButton>
       )}
       {status !== "archived" && (
         <ConfirmActionButton
-          title="Archive the test?"
-          description="It disappears from students' and parents' lists; attempts and results are kept."
-          confirmLabel="Archive"
-          successMessage="Test archived."
+          title={t("Archive the test?")}
+          description={t("It disappears from students' and parents' lists; attempts and results are kept.")}
+          confirmLabel={t("Archive")}
+          successMessage={t("Test archived.")}
           action={run("archive")}
         >
-          <ArchiveIcon aria-hidden /> Archive
+          <ArchiveIcon aria-hidden /> {t("Archive")}
         </ConfirmActionButton>
       )}
       {status === "archived" && (
-        <ConfirmActionButton title="Restore the test?" description="It returns as closed (or as a draft if never published)." confirmLabel="Restore" successMessage="Test restored." action={run("restore")}>
-          <ArchiveRestoreIcon aria-hidden /> Restore
+        <ConfirmActionButton title={t("Restore the test?")} description={t("It returns as closed (or as a draft if never published).")} confirmLabel={t("Restore")} successMessage={t("Test restored.")} action={run("restore")}>
+          <ArchiveRestoreIcon aria-hidden /> {t("Restore")}
         </ConfirmActionButton>
       )}
       {canDelete && (
         <ConfirmActionButton
           variant="ghost"
-          title="Delete this draft?"
-          description="The draft and its question copies are deleted. Bank questions are not affected."
-          confirmLabel="Delete"
-          successMessage="Draft deleted."
+          title={t("Delete this draft?")}
+          description={t("The draft and its question copies are deleted. Bank questions are not affected.")}
+          confirmLabel={t("Delete")}
+          successMessage={t("Draft deleted.")}
           destructive
           action={deleteDraftTestAction.bind(null, { testId })}
         >
-          <Trash2Icon aria-hidden /> Delete draft
+          <Trash2Icon aria-hidden /> {t("Delete draft")}
         </ConfirmActionButton>
       )}
     </div>
@@ -117,6 +119,7 @@ export function QuestionPicker({
   questions: PickerQuestion[]
   alreadyAdded: string[]
 }) {
+  const tr = useT()
   const [selected, setSelected] = useState<string[]>([])
   const [search, setSearch] = useState("")
   const [type, setType] = useState<"" | QuestionType>("")
@@ -134,13 +137,13 @@ export function QuestionPicker({
     <ActionDialog
       trigger={
         <Button size="sm">
-          <PlusIcon aria-hidden /> Add from the bank
+          <PlusIcon aria-hidden /> {tr("Add from the bank")}
         </Button>
       }
-      title="Add questions from the bank"
-      description={`Questions are copied into the ${target.kind} with their answer keys; later bank edits do not change it.`}
+      title={tr("Add questions from the bank")}
+      description={tr("Questions are copied into the {kind} with their answer keys; later bank edits do not change it.", { kind: target.kind })}
       submitLabel={`Add ${selected.length || ""} question${selected.length === 1 ? "" : "s"}`.replace("  ", " ")}
-      successMessage="Questions added."
+      successMessage={tr("Questions added.")}
       onOpen={() => setSelected([])}
       onSubmit={() =>
         target.kind === "test"
@@ -149,23 +152,23 @@ export function QuestionPicker({
       }
     >
       <div className="flex flex-wrap gap-2">
-        <Input className="min-w-40 flex-1" placeholder="Search prompt, topic, tag" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search questions" />
+        <Input className="min-w-40 flex-1" placeholder={tr("Search prompt, topic, tag")} value={search} onChange={(e) => setSearch(e.target.value)} aria-label={tr("Search questions")} />
         <select
           className="border-input bg-background h-9 rounded-md border px-2 text-sm"
           value={type}
           onChange={(e) => setType(e.target.value as "" | QuestionType)}
-          aria-label="Question type"
+          aria-label={tr("Question type")}
         >
-          <option value="">All types</option>
+          <option value="">{tr("All types")}</option>
           {QUESTION_TYPES.map((t) => (
             <option key={t} value={t}>
-              {QUESTION_TYPE_LABELS[t]}
+              {tr(QUESTION_TYPE_LABELS[t])}
             </option>
           ))}
         </select>
       </div>
       <ul className="grid max-h-96 gap-1 overflow-y-auto">
-        {shown.length === 0 && <li className="text-muted-foreground py-4 text-center text-sm">No matching questions.</li>}
+        {shown.length === 0 && <li className="text-muted-foreground py-4 text-center text-sm">{tr("No matching questions.")}</li>}
         {shown.map((q) => (
           <li key={q.id}>
             <label className="hover:bg-muted flex items-start gap-2 rounded-md p-2 text-sm">
@@ -178,11 +181,11 @@ export function QuestionPicker({
               <span className="grid gap-1">
                 <span className="line-clamp-2">{q.prompt}</span>
                 <span className="flex flex-wrap gap-1">
-                  <Badge variant="outline">{QUESTION_TYPE_LABELS[q.question_type]}</Badge>
-                  <Badge variant="secondary">{DIFFICULTY_LABELS[q.difficulty]}</Badge>
-                  {q.cefr_level && <Badge variant="secondary">{CEFR_LABELS[q.cefr_level]}</Badge>}
+                  <Badge variant="outline">{tr(QUESTION_TYPE_LABELS[q.question_type])}</Badge>
+                  <Badge variant="secondary">{tr(DIFFICULTY_LABELS[q.difficulty])}</Badge>
+                  {q.cefr_level && <Badge variant="secondary">{tr(CEFR_LABELS[q.cefr_level])}</Badge>}
                   {q.subject && <span className="text-muted-foreground text-xs">{q.subject}</span>}
-                  <span className="text-muted-foreground text-xs tabular-nums">{Number(q.points)} pt</span>
+                  <span className="text-muted-foreground text-xs tabular-nums">{tr("{number} pt", { number: Number(q.points) })}</span>
                 </span>
               </span>
             </label>
@@ -195,6 +198,7 @@ export function QuestionPicker({
 
 /** Reorder / remove / re-weight a draft test's questions. */
 export function TestQuestionControls({ testQuestionId, points, first, last }: { testQuestionId: string; points: number; first: boolean; last: boolean }) {
+  const t = useT()
   const [value, setValue] = useState(String(points))
   const [isPending, startTransition] = useTransition()
   const move = (direction: "up" | "down") =>
@@ -207,21 +211,21 @@ export function TestQuestionControls({ testQuestionId, points, first, last }: { 
       <ActionDialog
         trigger={
           <Button variant="ghost" size="sm" className="tabular-nums">
-            {points} pt
+            {t("{points} pt", { points })}
           </Button>
         }
-        title="Points for this question"
-        submitLabel="Save"
-        successMessage="Points saved."
+        title={t("Points for this question")}
+        submitLabel={t("Save")}
+        successMessage={t("Points saved.")}
         onOpen={() => setValue(String(points))}
         onSubmit={() => setTestQuestionPointsAction({ testQuestionId, points: value })}
       >
-        <Input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} aria-label="Points" />
+        <Input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} aria-label={t("Points")} />
       </ActionDialog>
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Move up"
+        aria-label={t("Move up")}
         disabled={first || isPending}
         onClick={() => move("up")}
       >
@@ -230,7 +234,7 @@ export function TestQuestionControls({ testQuestionId, points, first, last }: { 
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Move down"
+        aria-label={t("Move down")}
         disabled={last || isPending}
         onClick={() => move("down")}
       >
@@ -239,11 +243,11 @@ export function TestQuestionControls({ testQuestionId, points, first, last }: { 
       <ConfirmActionButton
         variant="ghost"
         size="icon"
-        aria-label="Remove question"
-        title="Remove this question from the test?"
-        description="The bank question itself is kept."
-        confirmLabel="Remove"
-        successMessage="Question removed."
+        aria-label={t("Remove question")}
+        title={t("Remove this question from the test?")}
+        description={t("The bank question itself is kept.")}
+        confirmLabel={t("Remove")}
+        successMessage={t("Question removed.")}
         destructive
         action={removeTestQuestionAction.bind(null, { testQuestionId })}
       >

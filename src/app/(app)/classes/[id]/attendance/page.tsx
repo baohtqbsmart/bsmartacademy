@@ -26,12 +26,17 @@ import { isIsoDate, isoWeekday, todayInAcademy, WEEKDAYS } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 import { firstParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Take attendance" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Take attendance") }
+}
 
 const TAKEABLE = new Set(["active", "completed"])
 
 export default async function ClassAttendancePage({ params, searchParams }: PageProps<"/classes/[id]/attendance">) {
+  const t = await getT()
   const user = await requireRouteAccess(routes.classAttendance)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -73,11 +78,11 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
         <ArrowLeftIcon className="size-4" aria-hidden /> {klass.name}
       </Link>
       <PageHeader
-        title="Attendance"
-        description={`${klass.name} · ${DELIVERY_MODE_LABELS[klass.delivery_mode]}`}
+        title={t("Attendance")}
+        description={t("{name} · {value}", { name: klass.name, value: DELIVERY_MODE_LABELS[klass.delivery_mode] })}
         actions={
           <Button variant="outline" asChild>
-            <Link href={`${routes.attendance}?class=${klass.id}`}>Class report</Link>
+            <Link href={`${routes.attendance}?class=${klass.id}`}>{t("Class report")}</Link>
           </Button>
         }
       />
@@ -87,7 +92,7 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
           {/* A plain GET form: works before JavaScript loads. */}
           <form className="flex flex-wrap items-end gap-2" action={classAttendancePath(klass.id)}>
             <div className="grid gap-1">
-              <Label htmlFor="register-date">Date</Label>
+              <Label htmlFor="register-date">{t("Date")}</Label>
               <Input
                 id="register-date"
                 name="date"
@@ -100,7 +105,7 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
               />
             </div>
             <Button type="submit" variant="outline">
-              Open register
+              {t("Open register")}
             </Button>
           </form>
 
@@ -108,14 +113,14 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
             <span className="font-medium">{formatDate(date)}</span>
             {register.session ? (
               <Badge variant="secondary">
-                Taken by {register.session.recorded_by_name || "staff"}
+                {t("Taken by {value}", { value: register.session.recorded_by_name || "staff" })}
               </Badge>
             ) : (
-              <Badge variant="outline">Not taken yet</Badge>
+              <Badge variant="outline">{t("Not taken yet")}</Badge>
             )}
             {!scheduled && scheduleDays.length > 0 && (
               <span className="text-muted-foreground">
-                Not a scheduled day (classes on {scheduleDays.map((d) => WEEKDAYS[d - 1].short).join(", ")}) — fine for make-up sessions.
+                {t("Not a scheduled day (classes on")} {scheduleDays.map((d) => WEEKDAYS[d - 1].short).join(", ")}{t(") — fine for make-up sessions.")}
               </span>
             )}
           </div>
@@ -123,22 +128,22 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
           {online && (
             <p className="flex flex-wrap items-center gap-1 text-sm">
               <MonitorIcon className="size-4" aria-hidden />
-              Online lesson this day:
+              {t("Online lesson this day:")}
               <Link href={onlineSessionPath(online.id)} className="underline">
                 {online.title}
               </Link>
-              <span className="text-muted-foreground">— students are marked as attending online unless you untick it.</span>
+              <span className="text-muted-foreground">{t("— students are marked as attending online unless you untick it.")}</span>
             </p>
           )}
           {!online && klass.delivery_mode !== "in_person" && (
             <p className="text-muted-foreground flex flex-wrap items-center gap-1 text-sm">
               <MonitorIcon className="size-4" aria-hidden />
               {klass.delivery_mode === "online"
-                ? "Online class: attendance is recorded as online."
-                : "Hybrid class: tick “Online” for students who joined remotely."}
+                ? t("Online class: attendance is recorded as online.")
+                : t("Hybrid class: tick “Online” for students who joined remotely.")}
               {klass.meeting_url && (
                 <a href={klass.meeting_url} target="_blank" rel="noreferrer" className="break-all underline">
-                  Meeting link
+                  {t("Meeting link")}
                 </a>
               )}
             </p>
@@ -147,13 +152,13 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
           {unavailable ? (
             <Card>
               <CardContent>
-                <EmptyState icon={CalendarXIcon} title="No register for this date" description={unavailable} />
+                <EmptyState icon={CalendarXIcon} title={t("No register for this date")} description={unavailable} />
               </CardContent>
             </Card>
           ) : register.rows.length === 0 ? (
             <Card>
               <CardContent>
-                <EmptyState icon={UsersIcon} title="No students were enrolled on this date" />
+                <EmptyState icon={UsersIcon} title={t("No students were enrolled on this date")} />
               </CardContent>
             </Card>
           ) : (
@@ -172,14 +177,14 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
             <div>
               <ConfirmActionButton
                 variant="ghost"
-                title="Delete this register?"
-                description={`All attendance recorded for ${formatDate(date)} in this class will be deleted. Use this only for a register taken on the wrong date.`}
-                confirmLabel="Delete register"
-                successMessage="Register deleted."
+                title={t("Delete this register?")}
+                description={t("All attendance recorded for {date} in this class will be deleted. Use this only for a register taken on the wrong date.", { date: formatDate(date) })}
+                confirmLabel={t("Delete register")}
+                successMessage={t("Register deleted.")}
                 destructive
                 action={deleteRegisterAction.bind(null, { sessionId: register.session.id })}
               >
-                <Trash2Icon aria-hidden /> Delete register
+                <Trash2Icon aria-hidden /> {t("Delete register")}
               </ConfirmActionButton>
             </div>
           )}
@@ -187,11 +192,11 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
 
         <Card className="content-start">
           <CardHeader>
-            <CardTitle>Registers taken</CardTitle>
+            <CardTitle>{t("Registers taken")}</CardTitle>
           </CardHeader>
           <CardContent>
             {registers.length === 0 ? (
-              <p className="text-muted-foreground text-sm">None yet.</p>
+              <p className="text-muted-foreground text-sm">{t("None yet.")}</p>
             ) : (
               <ul className="grid gap-1 text-sm">
                 {registers.map((r) => (
@@ -203,7 +208,7 @@ export default async function ClassAttendancePage({ params, searchParams }: Page
                     >
                       <span className="tabular-nums">{formatDate(r.session_date)}</span>
                       <span className="text-muted-foreground tabular-nums">
-                        {r.counts.absent > 0 && `${r.counts.absent} absent · `}
+                        {r.counts.absent > 0 && t("{absent} absent · ", { absent: r.counts.absent })}
                         {formatRate(r.rate)}
                       </span>
                     </Link>

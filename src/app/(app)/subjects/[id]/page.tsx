@@ -20,10 +20,15 @@ import { LevelDialog, SubjectDialog } from "@/features/subjects/components/subje
 import { getSubject } from "@/features/subjects/server/subject-service"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { createClient } from "@/lib/supabase/server"
+import { getT } from "@/i18n/server"
 
-export const metadata: Metadata = { title: "Subject" }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT()
+  return { title: t("Subject") }
+}
 
 export default async function SubjectPage({ params }: PageProps<"/subjects/[id]">) {
+  const t = await getT()
   await requireRouteAccess(routes.subjectDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
@@ -38,37 +43,37 @@ export default async function SubjectPage({ params }: PageProps<"/subjects/[id]"
   return (
     <>
       <Link href={routes.subjects} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-        <ArrowLeftIcon className="size-4" aria-hidden /> Subjects
+        <ArrowLeftIcon className="size-4" aria-hidden /> {t("Subjects")}
       </Link>
       <PageHeader
         title={subject.name}
-        description={subject.description || `Subject code ${subject.code}`}
+        description={subject.description || t("Subject code {code}", { code: subject.code })}
         actions={
           <>
-            {subject.deleted_at && <Badge variant="destructive">Archived</Badge>}
+            {subject.deleted_at && <Badge variant="destructive">{t("Archived")}</Badge>}
             <SubjectDialog
               initial={{ subjectId: subject.id, code: subject.code, name: subject.name, description: subject.description }}
             />
             {subject.deleted_at ? (
               <ConfirmActionButton
-                title="Restore subject?"
-                description="It will be available for new courses again."
-                confirmLabel="Restore"
-                successMessage="Subject restored."
+                title={t("Restore subject?")}
+                description={t("It will be available for new courses again.")}
+                confirmLabel={t("Restore")}
+                successMessage={t("Subject restored.")}
                 action={restoreSubjectAction.bind(null, { subjectId: subject.id })}
               >
-                <ArchiveRestoreIcon aria-hidden /> Restore
+                <ArchiveRestoreIcon aria-hidden /> {t("Restore")}
               </ConfirmActionButton>
             ) : (
               <ConfirmActionButton
-                title="Archive subject?"
-                description="Only possible when no live course uses it. Archived subjects cannot be used for new courses."
-                confirmLabel="Archive"
-                successMessage="Subject archived."
+                title={t("Archive subject?")}
+                description={t("Only possible when no live course uses it. Archived subjects cannot be used for new courses.")}
+                confirmLabel={t("Archive")}
+                successMessage={t("Subject archived.")}
                 destructive
                 action={archiveSubjectAction.bind(null, { subjectId: subject.id })}
               >
-                <ArchiveIcon aria-hidden /> Archive
+                <ArchiveIcon aria-hidden /> {t("Archive")}
               </ConfirmActionButton>
             )}
           </>
@@ -77,13 +82,13 @@ export default async function SubjectPage({ params }: PageProps<"/subjects/[id]"
 
       <section className="grid gap-2">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold">Levels</h2>
+          <h2 className="font-semibold">{t("Levels")}</h2>
           <LevelDialog subjectId={subject.id} nextOrder={nextOrder} />
         </div>
         <SimpleTable
           rows={levels}
           rowKey={(l) => l.id}
-          empty="No levels yet. Levels let courses be grouped from beginner to advanced."
+          empty={t("No levels yet. Levels let courses be grouped from beginner to advanced.")}
           columns={[
             { header: "Order", cell: (l) => l.sort_order, className: "w-16" },
             { header: "Code", cell: (l) => <span className="font-mono text-xs">{l.code}</span> },
@@ -92,7 +97,7 @@ export default async function SubjectPage({ params }: PageProps<"/subjects/[id]"
               cell: (l) => (
                 <span className="flex items-center gap-2">
                   {l.name}
-                  {l.deleted_at && <Badge variant="outline">Archived</Badge>}
+                  {l.deleted_at && <Badge variant="outline">{t("Archived")}</Badge>}
                 </span>
               ),
             },
@@ -109,18 +114,18 @@ export default async function SubjectPage({ params }: PageProps<"/subjects/[id]"
                   />
                   <ConfirmActionButton
                     variant="ghost"
-                    title={l.deleted_at ? "Restore level?" : "Archive level?"}
+                    title={l.deleted_at ? t("Restore level?") : t("Archive level?")}
                     description={
                       l.deleted_at
-                        ? "It will be available for courses again."
-                        : "Only possible when no live course uses this level."
+                        ? t("It will be available for courses again.")
+                        : t("Only possible when no live course uses this level.")
                     }
-                    confirmLabel={l.deleted_at ? "Restore" : "Archive"}
-                    successMessage={l.deleted_at ? "Level restored." : "Level archived."}
+                    confirmLabel={l.deleted_at ? t("Restore") : t("Archive")}
+                    successMessage={l.deleted_at ? t("Level restored.") : t("Level archived.")}
                     destructive={!l.deleted_at}
                     action={(l.deleted_at ? restoreLevelAction : archiveLevelAction).bind(null, { levelId: l.id })}
                   >
-                    {l.deleted_at ? "Restore" : "Archive"}
+                    {l.deleted_at ? t("Restore") : t("Archive")}
                   </ConfirmActionButton>
                 </div>
               ),
@@ -130,11 +135,11 @@ export default async function SubjectPage({ params }: PageProps<"/subjects/[id]"
       </section>
 
       <section className="grid gap-2">
-        <h2 className="font-semibold">Courses</h2>
+        <h2 className="font-semibold">{t("Courses")}</h2>
         <SimpleTable
           rows={courses}
           rowKey={(c) => c.id}
-          empty="No courses use this subject yet."
+          empty={t("No courses use this subject yet.")}
           columns={[
             { header: "Code", cell: (c) => <span className="font-mono text-xs">{c.code}</span> },
             {
@@ -148,7 +153,7 @@ export default async function SubjectPage({ params }: PageProps<"/subjects/[id]"
             { header: "Level", cell: (c) => (c.level_id ? levelName.get(c.level_id) ?? "—" : "—") },
             {
               header: "Status",
-              cell: (c) => <Badge variant={COURSE_STATUS[c.status].variant}>{COURSE_STATUS[c.status].label}</Badge>,
+              cell: (c) => <Badge variant={COURSE_STATUS[c.status].variant}>{t(COURSE_STATUS[c.status].label)}</Badge>,
             },
           ]}
         />

@@ -15,6 +15,7 @@ import { saveSessionAction } from "@/features/online/actions"
 import type { SessionFormInput } from "@/features/online/schemas"
 import type { FieldErrors } from "@/lib/action-result"
 import { detectProvider, MEETING_PROVIDERS, PROVIDERS, type MeetingProviderId } from "@/lib/meetings"
+import { useT } from "@/i18n/client"
 
 type ClassOption = { id: string; name: string; meetingUrl: string | null; teachers: { id: string; full_name: string; lead: boolean }[] }
 
@@ -29,12 +30,13 @@ export function SessionForm({
   editing: boolean
   cancelHref: string
 }) {
+  const tr = useT()
   const [v, setV] = useState(initial)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [isPending, startTransition] = useTransition()
   const set = <K extends keyof SessionFormInput>(key: K, value: SessionFormInput[K]) => setV((c) => ({ ...c, [key]: value }))
-  const fieldError = (name: string) => fieldErrors[name]?.[0] && <p className="text-destructive text-sm">{fieldErrors[name]![0]}</p>
+  const fieldError = (name: string) => fieldErrors[name]?.[0] && <p className="text-destructive text-sm">{tr(fieldErrors[name]![0])}</p>
 
   const klass = classes.find((c) => c.id === v.classId)
   const provider = PROVIDERS[v.provider as MeetingProviderId]
@@ -69,53 +71,53 @@ export function SessionForm({
       <FormAlert message={error} />
       <Card>
         <CardHeader>
-          <CardTitle>Class and time</CardTitle>
-          <CardDescription>Times are Vietnam time. A teacher cannot have two sessions at once.</CardDescription>
+          <CardTitle>{tr("Class and time")}</CardTitle>
+          <CardDescription>{tr("Times are Vietnam time. A teacher cannot have two sessions at once.")}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="os-class" label="Class">
+            <Field id="os-class" label={tr("Class")}>
               <OptionSelect
                 id="os-class"
                 value={v.classId}
                 onChange={chooseClass}
                 options={classes.map((c) => ({ id: c.id, label: c.name }))}
-                placeholder="Choose a class"
+                placeholder={tr("Choose a class")}
                 disabled={editing}
               />
               {fieldError("classId")}
             </Field>
-            <Field id="os-teacher" label="Teacher">
+            <Field id="os-teacher" label={tr("Teacher")}>
               <OptionSelect
                 id="os-teacher"
                 value={v.teacherId}
                 onChange={(value) => set("teacherId", value)}
                 options={(klass?.teachers ?? []).map((t) => ({ id: t.id, label: t.lead ? `${t.full_name} (lead)` : t.full_name }))}
-                placeholder={klass ? "Choose the teacher" : "Choose a class first"}
+                placeholder={klass ? tr("Choose the teacher") : tr("Choose a class first")}
                 disabled={!klass}
               />
               {fieldError("teacherId")}
             </Field>
           </div>
-          <Field id="os-title" label="Title">
-            <Input id="os-title" maxLength={200} value={v.title} onChange={(e) => set("title", e.target.value)} placeholder="Unit 5 – Animals: speaking practice" />
+          <Field id="os-title" label={tr("Title")}>
+            <Input id="os-title" maxLength={200} value={v.title} onChange={(e) => set("title", e.target.value)} placeholder={tr("Unit 5 – Animals: speaking practice")} />
             {fieldError("title")}
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field id="os-date" label="Date">
+            <Field id="os-date" label={tr("Date")}>
               <Input id="os-date" type="date" value={v.date} onChange={(e) => set("date", e.target.value)} />
               {fieldError("date")}
             </Field>
-            <Field id="os-start" label="Start time">
+            <Field id="os-start" label={tr("Start time")}>
               <Input id="os-start" type="time" value={v.startTime} onChange={(e) => set("startTime", e.target.value)} />
               {fieldError("startTime")}
             </Field>
-            <Field id="os-end" label="End time">
+            <Field id="os-end" label={tr("End time")}>
               <Input id="os-end" type="time" value={v.endTime} onChange={(e) => set("endTime", e.target.value)} />
               {fieldError("endTime")}
             </Field>
           </div>
-          <Field id="os-agenda" label="Agenda (students see it)">
+          <Field id="os-agenda" label={tr("Agenda (students see it)")}>
             <Textarea id="os-agenda" rows={3} maxLength={5000} value={v.agenda ?? ""} onChange={(e) => set("agenda", e.target.value)} />
           </Field>
         </CardContent>
@@ -123,24 +125,23 @@ export function SessionForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Meeting</CardTitle>
+          <CardTitle>{tr("Meeting")}</CardTitle>
           <CardDescription>
-            Lessons run in Google Meet, Zoom or Microsoft Teams. Create the meeting there and paste its link; students get it from
-            the Join button, 15 minutes before the start.
+            {tr("Lessons run in Google Meet, Zoom or Microsoft Teams. Create the meeting there and paste its link; students get it from the Join button, 15 minutes before the start.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-4 sm:grid-cols-[14rem_1fr]">
-            <Field id="os-provider" label="Platform">
+            <Field id="os-provider" label={tr("Platform")}>
               <OptionSelect
                 id="os-provider"
                 value={v.provider}
                 onChange={(value) => set("provider", value as MeetingProviderId)}
                 options={MEETING_PROVIDERS.map((p) => ({ id: p, label: PROVIDERS[p].label }))}
-                placeholder="Platform"
+                placeholder={tr("Platform")}
               />
             </Field>
-            <Field id="os-url" label="Meeting link">
+            <Field id="os-url" label={tr("Meeting link")}>
               <Input id="os-url" type="url" inputMode="url" maxLength={500} value={v.meetingUrl ?? ""} onChange={(e) => pasteLink(e.target.value.trim())} placeholder={provider.example} />
               {fieldError("meetingUrl")}
             </Field>
@@ -149,27 +150,27 @@ export function SessionForm({
             {provider.help}
             {provider.createUrl && (
               <a href={provider.createUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline">
-                Open {provider.label} <ExternalLinkIcon className="size-3.5" aria-hidden />
+                {tr("Open {label}", { label: provider.label })} <ExternalLinkIcon className="size-3.5" aria-hidden />
               </a>
             )}
             {klass?.meetingUrl && !v.meetingUrl && (
               <Button type="button" variant="link" className="h-auto p-0" onClick={() => pasteLink(klass.meetingUrl!)}>
-                Use the class&apos;s usual link
+                {tr("Use the class's usual link")}
               </Button>
             )}
           </p>
-          <p className="text-muted-foreground text-sm">You can save now and add the link later; students cannot join until it is there.</p>
+          <p className="text-muted-foreground text-sm">{tr("You can save now and add the link later; students cannot join until it is there.")}</p>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="os-code" label="Meeting ID (optional)">
+            <Field id="os-code" label={tr("Meeting ID (optional)")}>
               <Input id="os-code" maxLength={100} value={v.meetingCode ?? ""} onChange={(e) => set("meetingCode", e.target.value)} />
             </Field>
-            <Field id="os-pass" label="Passcode (optional)">
+            <Field id="os-pass" label={tr("Passcode (optional)")}>
               <Input id="os-pass" maxLength={100} value={v.passcode ?? ""} onChange={(e) => set("passcode", e.target.value)} />
             </Field>
           </div>
           {editing && (
-            <Field id="os-rec" label="Recording link (optional)">
-              <Input id="os-rec" type="url" maxLength={1000} value={v.recordingUrl ?? ""} onChange={(e) => set("recordingUrl", e.target.value)} placeholder="https://…" />
+            <Field id="os-rec" label={tr("Recording link (optional)")}>
+              <Input id="os-rec" type="url" maxLength={1000} value={v.recordingUrl ?? ""} onChange={(e) => set("recordingUrl", e.target.value)} placeholder={tr("https://…")} />
               {fieldError("recordingUrl")}
             </Field>
           )}
@@ -177,9 +178,9 @@ export function SessionForm({
       </Card>
 
       <div className="flex gap-2">
-        <SubmitButton pending={isPending}>{editing ? "Save changes" : "Create session"}</SubmitButton>
+        <SubmitButton pending={isPending}>{editing ? tr("Save changes") : tr("Create session")}</SubmitButton>
         <Button variant="ghost" asChild>
-          <Link href={cancelHref}>Cancel</Link>
+          <Link href={cancelHref}>{tr("Cancel")}</Link>
         </Button>
       </div>
     </form>

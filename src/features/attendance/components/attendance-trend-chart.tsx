@@ -3,6 +3,7 @@
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { useT } from "@/i18n/client"
 
 // One series (attendance rate), one colour: validated palette slot 1. The
 // card title names it, so there is no legend.
@@ -42,14 +43,15 @@ export function AttendanceTrendChart({ data }: { data: Week[] }) {
 }
 
 function WeekTooltip({ week }: { week: Week }) {
+  const t = useT()
   return (
     <div className="grid min-w-36 gap-1">
       <div className="flex justify-between gap-4">
-        <span className="text-muted-foreground">Attendance rate</span>
+        <span className="text-muted-foreground">{t("Attendance rate")}</span>
         <span className="font-medium tabular-nums">{week.rate === null ? "—" : `${week.rate}%`}</span>
       </div>
       <div className="text-muted-foreground tabular-nums">
-        {week.present} present · {week.late} late · {week.absent} absent · {week.excused} excused
+        {t("{present} present · {late} late · {absent} absent · {excused} excused", { present: week.present, late: week.late, absent: week.absent, excused: week.excused })}
       </div>
     </div>
   )

@@ -12,6 +12,7 @@ import { WEEKDAYS } from "@/lib/dates"
 import { formatDate } from "@/lib/format"
 import { PROVIDERS } from "@/lib/meetings"
 import { cn } from "@/lib/utils"
+import { getT } from "@/i18n/server"
 
 const STATUS_STYLE: Record<SessionStatus, { icon: typeof VideoIcon; className: string }> = {
   scheduled: { icon: CalendarClockIcon, className: "" },
@@ -20,11 +21,12 @@ const STATUS_STYLE: Record<SessionStatus, { icon: typeof VideoIcon; className: s
   cancelled: { icon: BanIcon, className: "border-destructive/40 text-destructive" },
 }
 
-export function SessionStatusBadge({ status }: { status: SessionStatus }) {
+export async function SessionStatusBadge({ status }: { status: SessionStatus }) {
+  const t = await getT()
   const { icon: Icon, className } = STATUS_STYLE[status]
   return (
     <Badge variant="outline" className={className}>
-      <Icon aria-hidden /> {STATUS_LABELS[status]}
+      <Icon aria-hidden /> {t(STATUS_LABELS[status])}
     </Badge>
   )
 }
@@ -33,7 +35,8 @@ export function sessionWhen(s: { starts_at: string; ends_at: string }) {
   return `${formatDate(academyDate(s.starts_at))} · ${academyTime(s.starts_at)}–${academyTime(s.ends_at)}`
 }
 
-export function SessionList({ sessions, student, empty }: { sessions: SessionListItem[]; student: boolean; empty: React.ReactNode }) {
+export async function SessionList({ sessions, student, empty }: { sessions: SessionListItem[]; student: boolean; empty: React.ReactNode }) {
+  const t = await getT()
   if (sessions.length === 0) return empty
   return (
     <ul className="grid gap-2">
@@ -51,17 +54,17 @@ export function SessionList({ sessions, student, empty }: { sessions: SessionLis
                 <span className="flex flex-wrap items-center gap-2 text-xs">
                   <SessionStatusBadge status={s.status} />
                   <span className="text-muted-foreground inline-flex items-center gap-1">
-                    <VideoIcon className="size-3.5" aria-hidden /> {PROVIDERS[s.provider].label}
-                    {!s.meeting_url && " · no link yet"}
+                    <VideoIcon className="size-3.5" aria-hidden /> {t(PROVIDERS[s.provider].label)}
+                    {!s.meeting_url && t(" · no link yet")}
                   </span>
                   {s.materialCount > 0 && (
                     <span className="text-muted-foreground inline-flex items-center gap-1">
-                      <FileTextIcon className="size-3.5" aria-hidden /> {s.materialCount} material{s.materialCount === 1 ? "" : "s"}
+                      <FileTextIcon className="size-3.5" aria-hidden /> {t("{materialCount} material{value}", { materialCount: s.materialCount, value: s.materialCount === 1 ? "" : "s" })}
                     </span>
                   )}
                   {s.homeworkCount > 0 && (
                     <span className="text-muted-foreground inline-flex items-center gap-1">
-                      <NotebookPenIcon className="size-3.5" aria-hidden /> homework
+                      <NotebookPenIcon className="size-3.5" aria-hidden /> {t("homework")}
                     </span>
                   )}
                 </span>
@@ -77,24 +80,25 @@ export function SessionList({ sessions, student, empty }: { sessions: SessionLis
 }
 
 /** Month grid; each day lists its sessions as links. */
-export function SessionCalendar({ month, today, sessions, hrefFor }: { month: string; today: string; sessions: SessionListItem[]; hrefFor: (month: string) => string }) {
+export async function SessionCalendar({ month, today, sessions, hrefFor }: { month: string; today: string; sessions: SessionListItem[]; hrefFor: (month: string) => string }) {
+  const t = await getT()
   const byDay = Map.groupBy(sessions, (s) => s.session_date)
   const weeks = monthGrid(month)
   return (
-    <section aria-label={`Online sessions, ${monthLabel(month)}`} className="grid gap-3">
+    <section aria-label={t("Online sessions, {monthLabel}", { monthLabel: monthLabel(month) })} className="grid gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold">{monthLabel(month)}</h2>
+        <h2 className="text-lg font-semibold">{t(monthLabel(month))}</h2>
         <div className="flex gap-1">
           <Button variant="outline" size="icon" asChild>
-            <Link href={hrefFor(shiftMonth(month, -1))} aria-label="Previous month">
+            <Link href={hrefFor(shiftMonth(month, -1))} aria-label={t("Previous month")}>
               <ChevronLeftIcon />
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href={hrefFor(today.slice(0, 7))}>This month</Link>
+            <Link href={hrefFor(today.slice(0, 7))}>{t("This month")}</Link>
           </Button>
           <Button variant="outline" size="icon" asChild>
-            <Link href={hrefFor(shiftMonth(month, 1))} aria-label="Next month">
+            <Link href={hrefFor(shiftMonth(month, 1))} aria-label={t("Next month")}>
               <ChevronRightIcon />
             </Link>
           </Button>
@@ -106,7 +110,7 @@ export function SessionCalendar({ month, today, sessions, hrefFor }: { month: st
         <div className="bg-muted text-muted-foreground grid grid-cols-7 text-xs font-medium">
           {WEEKDAYS.map((d) => (
             <div key={d.short} className="px-2 py-1.5">
-              {d.short}
+              {t(d.short)}
             </div>
           ))}
         </div>
@@ -143,25 +147,26 @@ export function SessionCalendar({ month, today, sessions, hrefFor }: { month: st
               ))}
             </li>
           ))}
-        {!weeks.flat().some((d) => d.inMonth && byDay.has(d.date)) && <li className="text-muted-foreground text-sm">No online sessions this month.</li>}
+        {!weeks.flat().some((d) => d.inMonth && byDay.has(d.date)) && <li className="text-muted-foreground text-sm">{t("No online sessions this month.")}</li>}
       </ul>
     </section>
   )
 }
 
-function CalendarEntry({ session: s }: { session: SessionListItem }) {
+async function CalendarEntry({ session: s }: { session: SessionListItem }) {
+  const t = await getT()
   const { icon: Icon } = STATUS_STYLE[s.status]
   return (
     <Link
       href={onlineSessionPath(s.id)}
-      title={`${s.title} · ${STATUS_LABELS[s.status]}`}
+      title={t("{title} · {value}", { title: s.title, value: STATUS_LABELS[s.status] })}
       className={cn(
         "hover:bg-muted flex items-start gap-1 rounded border px-1.5 py-1 text-xs",
         s.status === "cancelled" && "text-muted-foreground line-through",
         s.status === "live" && "border-emerald-600/50"
       )}
     >
-      <Icon className="mt-0.5 size-3 shrink-0" aria-label={STATUS_LABELS[s.status]} />
+      <Icon className="mt-0.5 size-3 shrink-0" aria-label={t(STATUS_LABELS[s.status])} />
       <span className="min-w-0">
         <span className="tabular-nums">{academyTime(s.starts_at)}</span> <span className="font-medium">{s.class?.name}</span>
         <span className="text-muted-foreground block truncate">{s.title}</span>

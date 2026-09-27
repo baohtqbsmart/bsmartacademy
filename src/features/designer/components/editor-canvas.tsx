@@ -5,6 +5,7 @@ import { useRef, useState } from "react"
 import { PageView, type AssetUrls } from "@/features/designer/components/page-view"
 import { HANDLES, resizeBox, snapBox, type Box, type Guide, type Handle } from "@/features/designer/editor-state"
 import { FONTS, PAGE_SIZES, type DesignElement, type DesignPage, type ElementOf, type PageSizeId } from "@/features/designer/model"
+import { useT } from "@/i18n/client"
 
 type Drag =
   | { kind: "move"; id: string; px: number; py: number; box: Box; moved: boolean }
@@ -44,6 +45,7 @@ export function EditorCanvas({
   onGestureEnd: () => void
   onTextCommit: (id: string, text: string) => void
 }) {
+  const t = useT()
   const size = PAGE_SIZES[pageSize]
   const drag = useRef<Drag | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
@@ -96,7 +98,7 @@ export function EditorCanvas({
       <div
         role="button"
         tabIndex={-1}
-        aria-label={`${el.type} element`}
+        aria-label={t("{type} element", { type: el.type })}
         aria-pressed={el.id === selectedId}
         style={{ width: "100%", height: "100%", cursor: editing ? "text" : "move", touchAction: "none", userSelect: "none" }}
         onPointerDown={(e) => {
@@ -167,6 +169,7 @@ export function EditorCanvas({
 }
 
 function InlineText({ el, onDone }: { el: ElementOf<"text">; onDone: (text: string | null) => void }) {
+  const t = useT()
   const [value, setValue] = useState(el.text)
   // Escape unmounts the textarea, which also fires blur: finish only once.
   const finished = useRef(false)
@@ -185,7 +188,7 @@ function InlineText({ el, onDone }: { el: ElementOf<"text">; onDone: (text: stri
           node.select()
         }
       }}
-      aria-label="Edit text"
+      aria-label={t("Edit text")}
       value={value}
       maxLength={5000}
       onChange={(e) => setValue(e.target.value)}

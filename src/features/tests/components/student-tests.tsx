@@ -6,9 +6,11 @@ import { SimpleTable } from "@/components/shared/simple-table"
 import { testPath } from "@/config/routes"
 import { AttemptStatusText } from "@/features/tests/components/test-status-badge"
 import type { TestListItem } from "@/features/tests/server/test-service"
+import { getT } from "@/i18n/server"
 
 /** Student profile tab: every test the student has attempted, with each attempt. */
-export function StudentTests({ tests, studentId }: { tests: TestListItem[]; studentId: string }) {
+export async function StudentTests({ tests, studentId }: { tests: TestListItem[]; studentId: string }) {
+  const t = await getT()
   const rows = tests
     .map((test) => ({ test, attempts: test.test_attempts.filter((a) => a.student_id === studentId).sort((a, b) => b.attempt_number - a.attempt_number) }))
     .filter((r) => r.attempts.length > 0)
@@ -16,7 +18,7 @@ export function StudentTests({ tests, studentId }: { tests: TestListItem[]; stud
     <SimpleTable
       rows={rows}
       rowKey={(r) => r.test.id}
-      empty={<EmptyState icon={FileCheckIcon} title="No test attempts yet" />}
+      empty={<EmptyState icon={FileCheckIcon} title={t("No test attempts yet")} />}
       columns={[
         {
           header: "Test",
