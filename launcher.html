@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BSmart Academy – Launcher</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --card: #ffffff; --text: #1c1c1c; --muted: #6b6b6b; --border: #e3e3e0;
+    --accent: #2a78d6; --good: #006300; --good-bg: #0ca30c1f; --bad: #b02a2a; --bad-bg: #d03b3b1f;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141414; --card: #1d1d1d; --text: #ececec; --muted: #a3a3a3; --border: #333;
+      --accent: #3987e5; --good: #0ca30c; --bad: #ef7b7b; color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 16px 48px; display: grid; gap: 20px; }
+  h1 { margin: 0; font-size: 1.6rem; }
+  h2 { margin: 0 0 8px; font-size: 1.05rem; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .status { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+  .status.up { color: var(--good); background: var(--good-bg); }
+  .status.down { color: var(--bad); background: var(--bad-bg); }
+  .status.checking { color: var(--muted); border: 1px solid var(--border); }
+  input { font: inherit; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); width: 16rem; max-width: 100%; }
+  button, a.btn { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; text-decoration: none; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  .grid a { display: block; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; }
+  .grid a:hover { border-color: var(--accent); }
+  .grid small { display: block; color: var(--muted); }
+  code, pre { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+  pre { margin: 8px 0 0; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; overflow-x: auto; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; border-top: 0; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>BSmart Academy</h1>
+    <p class="muted">Launcher for local development. This page is static (fine for Live Server); the app itself runs on the Next.js dev server.</p>
+  </header>
+
+  <section class="card">
+    <h2>App server</h2>
+    <div class="row">
+      <input id="base" aria-label="App address" value="http://localhost:3000">
+      <button class="primary" id="check">Check</button>
+      <span id="status" class="status checking">Checking…</span>
+      <a class="btn" id="open" href="http://localhost:3000/login" target="_blank" rel="noreferrer">Open app</a>
+    </div>
+    <p class="muted" id="hint" style="margin-top:8px"></p>
+  </section>
+
+  <section class="card">
+    <h2>How to start it</h2>
+    <p>In a terminal, from the <code>bsmart-academy</code> folder:</p>
+    <pre>npm install          # first time only
+copy .env.example .env.local   # then fill in your Supabase URL and publishable key
+npm run dev          # serves http://localhost:3000</pre>
+    <p class="muted" style="margin-top:8px">Signing in needs a Supabase project: a hosted one (values in <code>.env.local</code>) or the local stack (<code>npm run db:start</code>, requires Docker). Without it, pages load but sign-in fails.</p>
+  </section>
+
+  <section class="card">
+    <h2>Pages</h2>
+    <p class="muted" style="margin-bottom:8px">Each opens in a new tab. You are asked to sign in first; pages your role cannot open show “not found”.</p>
+    <div class="grid" id="pages"></div>
+  </section>
+
+  <section class="card">
+    <h2>Seed accounts (local only, fictional)</h2>
+    <p class="muted">Loaded by <code>supabase/seed.sql</code> on <code>npm run db:reset</code>. Password for all: <code>BSmart@2026</code></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Email</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>superadmin@bsmart.test</td><td>Super admin</td></tr>
+          <tr><td>admin@bsmart.test</td><td>Admin</td></tr>
+          <tr><td>gv.hung@bsmart.test</td><td>Teacher (Toán 6)</td></tr>
+          <tr><td>gv.ha@bsmart.test</td><td>Teacher (Flyers)</td></tr>
+          <tr><td>ph.lan@bsmart.test</td><td>Parent</td></tr>
+          <tr><td>hs.huy@bsmart.test</td><td>Student</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  const PAGES = [
+    ["Login", "/login", "Sign in"],
+    ["Dashboard", "/dashboard", "Start page"],
+    ["Timetable", "/timetable", "Weekly schedule"],
+    ["Attendance", "/attendance", "Registers and reports"],
+    ["Assignments", "/assignments", "Homework, quizzes, grading"],
+    ["Tests", "/tests", "Test builder, results, analytics"],
+    ["Question bank", "/question-bank", "Reusable questions"],
+    ["English", "/english", "Learner dashboard"],
+    ["Vocabulary", "/english/vocabulary", "Words, sets, practice"],
+    ["English lessons", "/english/lessons", "Grammar, reading, listening, speaking, writing, pronunciation"],
+    ["Writing & speaking", "/assessments", "Tasks, grading, feedback, history"],
+    ["Online classes", "/online", "Meet / Zoom / Teams sessions, calendar, materials"],
+    ["Lesson designer", "/designs", "Slides, worksheets, flashcards; PDF/PNG export, share links"],
+    ["Material library", "/library", "Upload, preview, share and reuse teaching files"],
+    ["Progress", "/analytics", "Student, class and academy analytics"],
+    ["Admin dashboard", "/admin", "Academy summary cards and charts (admins)"],
+    ["Reports", "/reports", "Eight reports with filters, print and CSV"],
+    ["AI assistant", "/ai", "AI drafts for teachers to review and approve"],
+    ["My family", "/family", "Parent portal (parents only)"],
+    ["Announcements", "/announcements", "Academy and class announcements"],
+    ["Messages", "/messages", "Teacher–parent conversations"],
+    ["Notifications", "/notifications", "In-app notifications and settings"],
+    ["Classes", "/classes", "Classes and rosters"],
+    ["Courses", "/courses", "Course catalogue"],
+    ["Subjects & levels", "/subjects", "Catalogue admin"],
+    ["Students", "/students", "Student management"],
+    ["Parents", "/parents", "Parent contacts"],
+    ["Teachers", "/teachers", "Teacher profiles"],
+    ["Tuition", "/tuition", "Finance dashboard"],
+    ["Invoices", "/tuition/invoices", "Invoices and outstanding fees"],
+    ["Payments", "/tuition/payments", "Payment history"],
+    ["Tuition reports", "/tuition/reports", "Revenue reports"],
+    ["Users & roles", "/admin/users", "Accounts and access"],
+    ["My profile", "/settings/profile", "Your account"],
+  ];
+
+  const baseInput = document.getElementById("base");
+  const statusEl = document.getElementById("status");
+  const hintEl = document.getElementById("hint");
+  const openEl = document.getElementById("open");
+  const pagesEl = document.getElementById("pages");
+
+  function base() {
+    return baseInput.value.trim().replace(/\/+$/, "") || "http://localhost:3000";
+  }
+
+  function renderPages() {
+    pagesEl.innerHTML = "";
+    for (const [title, path, note] of PAGES) {
+      const a = document.createElement("a");
+      a.href = base() + path;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      a.innerHTML = "<strong></strong><small></small>";
+      a.querySelector("strong").textContent = title;
+      a.querySelector("small").textContent = note + " · " + path;
+      pagesEl.appendChild(a);
+    }
+    openEl.href = base() + "/login";
+  }
+
+  function setStatus(kind, text, hint) {
+    statusEl.className = "status " + kind;
+    statusEl.textContent = text;
+    hintEl.textContent = hint || "";
+  }
+
+  async function check() {
+    renderPages();
+    setStatus("checking", "Checking…");
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    try {
+      // A cross-origin "no-cors" request only tells us whether something answered.
+      await fetch(base() + "/login", { mode: "no-cors", cache: "no-store", signal: controller.signal });
+      setStatus("up", "Running", "The app answered. Use the links below.");
+    } catch {
+      setStatus("down", "Not running", "Nothing answered at " + base() + ". Start it with “npm run dev” (see below), then press Check.");
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  try { const saved = localStorage.getItem("bsmart-launcher-base"); if (saved) baseInput.value = saved; } catch {}
+  baseInput.addEventListener("change", () => { try { localStorage.setItem("bsmart-launcher-base", base()); } catch {} check(); });
+  document.getElementById("check").addEventListener("click", check);
+  check();
+  setInterval(() => { if (!statusEl.classList.contains("up")) check(); }, 10000);
+</script>
+</body>
+</html>

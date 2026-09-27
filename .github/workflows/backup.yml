@@ -1,0 +1,47 @@
+# Weekly off-site logical backup, in addition to Supabase's own daily
+# backups / point-in-time recovery. The dump is encrypted with an age public
+# key BEFORE it leaves the runner and uploaded to a private S3-compatible
+# bucket that only the backup key can write to.
+#
+# Secrets (GitHub environment "production"):
+#   SUPABASE_DB_URL        session-pooler connection string (read-only role recommended)
+#   BACKUP_AGE_RECIPIENT   age public key (the private key is kept offline)
+#   BACKUP_S3_URI          e.g. s3://bsmart-backups/db
+#   AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_DEFAULT_REGION (/ AWS_ENDPOINT_URL for R2 etc.)
+name: Backup database
+
+on:
+  schedule:
+    - cron: "0 19 * * 0" # Sunday 02:00 Vietnam time
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client age
+      - name: Dump, encrypt, upload
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+          TARGET: ${{ secrets.BACKUP_S3_URI }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_ENDPOINT_URL: ${{ secrets.AWS_ENDPOINT_URL }}
+        run: |
+          set -euo pipefail
+          name="bsmart-$(date -u +%Y%m%d-%H%M).dump.age"
+          pg_dump "$DB_URL" --format=custom --no-owner --no-privileges \
+            --schema=public --schema=private --schema=auth --schema=storage \
+            | age -r "$RECIPIENT" > "$name"
+          aws s3 cp "$name" "$TARGET/$name" --only-show-errors
+          echo "Uploaded $name ($(stat -c %s "$name") bytes)"

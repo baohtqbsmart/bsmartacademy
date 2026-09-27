@@ -1,0 +1,7 @@
+# Keep LF in the repository and working tree on every OS (CI runs on Linux,
+# SQL migrations and shell steps must not pick up CRLF).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

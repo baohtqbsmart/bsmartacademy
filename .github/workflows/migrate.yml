@@ -1,0 +1,41 @@
+# Applies new database migrations to a Supabase project. Run it by hand
+# (Actions -> Migrate database -> Run workflow), staging first, then
+# production, BEFORE promoting the app build that needs them.
+#
+# Secrets (per GitHub environment "staging" / "production"):
+#   SUPABASE_ACCESS_TOKEN  personal access token of a project admin
+#   SUPABASE_PROJECT_REF   the project's reference id
+#   SUPABASE_DB_PASSWORD   the database password
+# These never go to Vercel or the app.
+name: Migrate database
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target
+        type: choice
+        options: [staging, production]
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+      - name: Pending migrations
+        run: supabase migration list
+      - name: Apply (never runs seed.sql)
+        run: supabase db push

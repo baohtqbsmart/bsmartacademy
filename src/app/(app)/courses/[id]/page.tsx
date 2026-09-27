@@ -1,0 +1,175 @@
+import { ArchiveIcon, ArchiveRestoreIcon, ArrowLeftIcon, ListTreeIcon, PencilIcon } from "lucide-react"
+import type { Metadata } from "next"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { z } from "zod"
+
+import { PageHeader } from "@/components/layout/page-header"
+import { ConfirmActionButton } from "@/components/shared/confirm-action-button"
+import { EmptyState } from "@/components/shared/empty-state"
+import { SimpleTable } from "@/components/shared/simple-table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { CLASS_STATUS, COURSE_STATUS } from "@/config/labels"
+import { classPath, courseEditPath, routes } from "@/config/routes"
+import { archiveCourseAction, restoreCourseAction } from "@/features/courses/actions"
+import { UnitControls, UnitDialog } from "@/features/courses/components/course-units"
+import { getCourse } from "@/features/courses/server/course-service"
+import { can } from "@/lib/auth/permissions"
+import { requireRouteAccess } from "@/lib/auth/session"
+import { formatDateRange } from "@/lib/format"
+import { createClient } from "@/lib/supabase/server"
+
+export const metadata: Metadata = { title: "Course" }
+
+export default async function CoursePage({ params }: PageProps<"/courses/[id]">) {
+  const user = await requireRouteAccess(routes.courseDetail)
+  const { id } = await params
+  if (!z.uuid().safeParse(id).success) notFound()
+  const course = await getCourse(await createClient(), id)
+  if (!course) notFound()
+
+  const canWrite = can(user.permissions, "courses.write")
+  const units = course.course_units
+  const plannedSessions = units.reduce((sum, u) => sum + (u.session_count ?? 0), 0)
+  // RLS limits the class list to classes the viewer may see.
+  const classes = course.classes.filter((c) => !c.deleted_at)
+
+  return (
+    <>
+      <Link href={routes.courses} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
+        <ArrowLeftIcon className="size-4" aria-hidden /> Courses
+      </Link>
+      <PageHeader
+        title={course.name}
+        description={[course.code, course.subject?.name, course.level?.name].filter(Boolean).join(" · ")}
+        actions={
+          <>
+            <Badge variant={COURSE_STATUS[course.status].variant}>{COURSE_STATUS[course.status].label}</Badge>
+            {course.deleted_at && <Badge variant="destructive">Archived</Badge>}
+            {canWrite && (
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={courseEditPath(course.id)}>
+                    <PencilIcon aria-hidden /> Edit
+                  </Link>
+                </Button>
+                {course.deleted_at ? (
+                  <ConfirmActionButton
+                    title="Restore course?"
+                    description="The course returns to the catalogue."
+                    confirmLabel="Restore"
+                    successMessage="Course restored."
+                    action={restoreCourseAction.bind(null, { courseId: course.id })}
+                  >
+                    <ArchiveRestoreIcon aria-hidden /> Restore
+                  </ConfirmActionButton>
+                ) : (
+                  <ConfirmActionButton
+                    title="Archive course?"
+                    description="Only possible when no planned or running class uses it."
+                    confirmLabel="Archive"
+                    successMessage="Course archived."
+                    destructive
+                    action={archiveCourseAction.bind(null, { courseId: course.id })}
+                  >
+                    <ArchiveIcon aria-hidden /> Archive
+                  </ConfirmActionButton>
+                )}
+              </>
+            )}
+          </>
+        }
+      />
+
+      <Card>
+        <CardContent className="grid gap-4 sm:grid-cols-4">
+          <Stat label="Duration" value={course.duration_weeks ? `${course.duration_weeks} weeks` : "—"} />
+          <Stat label="Sessions" value={course.session_count ? String(course.session_count) : "—"} />
+          <Stat label="Session length" value={course.session_minutes ? `${course.session_minutes} min` : "—"} />
+          <Stat label="Units" value={`${units.length} (${plannedSessions} sessions planned)`} />
+          {course.description && <p className="text-sm whitespace-pre-line sm:col-span-4">{course.description}</p>}
+        </CardContent>
+      </Card>
+
+      <section className="grid gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold">Course structure</h2>
+            <p className="text-muted-foreground text-sm">Shared by every class of this course.</p>
+          </div>
+          {canWrite && <UnitDialog courseId={course.id} />}
+        </div>
+        <SimpleTable
+          rows={units}
+          rowKey={(u) => u.id}
+          empty={<EmptyState icon={ListTreeIcon} title="No units yet" description="Add units to outline the syllabus." />}
+          columns={[
+            { header: "#", cell: (u) => units.indexOf(u) + 1, className: "w-10" },
+            {
+              header: "Unit",
+              cell: (u) => (
+                <div className="grid">
+                  <span className="font-medium">{u.title}</span>
+                  {u.description && <span className="text-muted-foreground text-xs whitespace-normal">{u.description}</span>}
+                </div>
+              ),
+            },
+            { header: "Sessions", cell: (u) => u.session_count ?? "—" },
+            ...(canWrite
+              ? [
+                  {
+                    header: "",
+                    key: "actions",
+                    className: "text-right",
+                    cell: (u: (typeof units)[number]) => (
+                      <UnitControls
+                        courseId={course.id}
+                        unit={u}
+                        isFirst={units.indexOf(u) === 0}
+                        isLast={units.indexOf(u) === units.length - 1}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </section>
+
+      <section className="grid gap-2">
+        <h2 className="font-semibold">Classes</h2>
+        <SimpleTable
+          rows={classes}
+          rowKey={(c) => c.id}
+          empty="No classes you can see run this course."
+          columns={[
+            {
+              header: "Class",
+              cell: (c) => (
+                <Link href={classPath(c.id)} className="font-medium hover:underline">
+                  {c.name}
+                </Link>
+              ),
+            },
+            { header: "Dates", cell: (c) => formatDateRange(c.start_date, c.end_date) },
+            {
+              header: "Status",
+              cell: (c) => <Badge variant={CLASS_STATUS[c.status].variant}>{CLASS_STATUS[c.status].label}</Badge>,
+            },
+          ]}
+        />
+      </section>
+    </>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-0.5">
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <span className="text-sm font-medium">{value}</span>
+    </div>
+  )
+}

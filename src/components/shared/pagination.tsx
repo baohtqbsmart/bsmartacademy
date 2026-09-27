@@ -1,0 +1,54 @@
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
+
+type PaginationProps = {
+  page: number
+  pageSize: number
+  total: number
+  hrefForPage: (page: number) => string
+}
+
+/** "Showing 21–40 of 57" with previous/next links (server-rendered). */
+export function Pagination({ page, pageSize, total, hrefForPage }: PaginationProps) {
+  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const first = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const last = Math.min(page * pageSize, total)
+
+  return (
+    <nav className="flex flex-wrap items-center justify-between gap-2 text-sm" aria-label="Pagination">
+      <p className="text-muted-foreground">
+        {total === 0 ? "No results" : `Showing ${first}–${last} of ${total}`}
+      </p>
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground">
+          Page {Math.min(page, pageCount)} of {pageCount}
+        </span>
+        <PageLink href={page > 1 ? hrefForPage(page - 1) : null} label="Previous page">
+          <ChevronLeftIcon />
+        </PageLink>
+        <PageLink href={page < pageCount ? hrefForPage(page + 1) : null} label="Next page">
+          <ChevronRightIcon />
+        </PageLink>
+      </div>
+    </nav>
+  )
+}
+
+function PageLink({ href, label, children }: { href: string | null; label: string; children: React.ReactNode }) {
+  if (!href) {
+    return (
+      <Button variant="outline" size="icon" disabled aria-label={label}>
+        {children}
+      </Button>
+    )
+  }
+  return (
+    <Button variant="outline" size="icon" asChild>
+      <Link href={href} aria-label={label} scroll={false}>
+        {children}
+      </Link>
+    </Button>
+  )
+}

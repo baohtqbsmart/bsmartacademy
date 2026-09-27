@@ -1,0 +1,37 @@
+# Every push and pull request: types, lint, all tests (including the database
+# suites, which run the real migrations in an in-process Postgres) and a
+# production build. Vercel deploys only what passes (require this check).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Public placeholders so the build can run; no real secrets in CI.
+      NEXT_PUBLIC_SITE_URL: https://academy.example.test
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      # Key prefixes are matched with a following token because supabase-js
+      # itself contains the bare string "sb_secret_" (a prefix check).
+      - name: No secrets in browser bundles
+        run: |
+          if grep -rlE "AI_API_KEY|service_role|SUPABASE_SECRET|sb_secret_[A-Za-z0-9_-]{16,}|sk-ant-[A-Za-z0-9_-]{16,}|x-api-key" .next/static; then
+            echo "Secret-looking strings found in client bundles" && exit 1
+          fi
