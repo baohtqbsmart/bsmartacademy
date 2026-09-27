@@ -48,12 +48,13 @@ redeploy. CI fails the build if a secret-looking string appears in `.next/static
 3. **Storage:** nothing to create by hand — the migrations create the private buckets
    (`avatars`, `student-photos`, `assignment-files`) with size and type limits, and all storage
    policies. Check in Storage that all three buckets show as *private*.
-4. **Auth → Sign In / Providers:** disable "Allow new users to sign up"; disable anonymous
+4. **Auth → Sign In / Providers:** enable "Allow new users to sign up" and "Confirm email"
+   (self sign-ups become *member* accounts; staff promote them in Users & roles); disable anonymous
    sign-ins; e-mail provider on; *Secure password change* on; minimum password length 8 with
    "letters and digits".
 5. **Auth → URL Configuration:** Site URL = `NEXT_PUBLIC_SITE_URL`; Redirect URLs =
    `https://<your-domain>/auth/confirm` (and the staging domain for the staging project).
-6. **Auth → Emails → Templates:** paste `supabase/templates/invite.html`, `recovery.html` and
+6. **Auth → Emails → Templates:** paste `supabase/templates/confirmation.html` (Confirm signup), `invite.html`, `recovery.html` and
    `email_change.html` (subjects are in `supabase/config.toml`). They link to `/auth/confirm`
    with a token hash; the default templates would not sign invited users in.
 7. **Auth → Emails → SMTP:** configure a real SMTP sender (the built-in one is rate-limited and

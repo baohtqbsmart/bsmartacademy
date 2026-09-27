@@ -130,11 +130,12 @@ between Hà and Lan about Ngọc Anh; the seeded events above also produce reali
 The local stack reads `supabase/config.toml`; a hosted project must be configured to match in
 the dashboard:
 
-1. **Sign In / Providers:** disable "Allow new users to sign up" and anonymous sign-ins;
-   enable *Secure password change*; minimum password length 8, "letters and digits".
+1. **Sign In / Providers:** enable "Allow new users to sign up" (website sign-up creates
+   *member* accounts only) and "Confirm email"; disable anonymous sign-ins; enable *Secure
+   password change*; minimum password length 8, "letters and digits".
 2. **URL Configuration:** Site URL = `NEXT_PUBLIC_SITE_URL`; add `<site-url>/auth/confirm`
    to Redirect URLs.
-3. **Emails → Templates:** use `supabase/templates/invite.html`, `recovery.html` and
+3. **Emails → Templates:** use `supabase/templates/confirmation.html`, `invite.html`, `recovery.html` and
    `email_change.html` (Vietnamese/English). They send users to `/auth/confirm` with a token
    hash — the default templates would not work with this app.
 4. **Emails → SMTP:** set up a real SMTP sender for production.

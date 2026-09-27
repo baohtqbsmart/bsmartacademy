@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest"
  * (requirePermission / requireUser); the database then checks the rows.
  * Only the sign-in family and the interface-language switch are public by design.
  */
-const PUBLIC_ACTIONS = new Set(["signInAction", "signOutAction", "requestPasswordResetAction", "setLocaleAction"])
+const PUBLIC_ACTIONS = new Set(["signInAction", "signOutAction", "requestPasswordResetAction", "setLocaleAction", "signUpAction"])
 
 const srcDir = path.resolve(import.meta.dirname, "../../src")
 

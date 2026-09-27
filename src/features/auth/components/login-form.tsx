@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { routes } from "@/config/routes"
 import { signInAction } from "@/features/auth/actions"
@@ -35,7 +36,7 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
 
   const form = useForm<z.input<typeof signInSchema>, unknown, z.output<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "", password: "", remember: true },
   })
 
   function onSubmit(values: z.output<typeof signInSchema>) {
@@ -84,9 +85,27 @@ export function LoginForm({ next, initialError }: LoginFormProps) {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="remember"
+          render={({ field }) => (
+            <FormItem className="flex items-center gap-2">
+              <FormControl>
+                <Checkbox checked={field.value} onCheckedChange={(v) => field.onChange(v === true)} />
+              </FormControl>
+              <FormLabel className="font-normal">{t("Keep me signed in")}</FormLabel>
+            </FormItem>
+          )}
+        />
         <SubmitButton pending={isPending} className="w-full">
           {t("Sign in")}
         </SubmitButton>
+        <p className="text-muted-foreground text-center text-sm">
+          {t("New to BSmart Academy?")}{" "}
+          <Link href={routes.register} className="text-primary font-medium underline-offset-4 hover:underline">
+            {t("Create an account")}
+          </Link>
+        </p>
       </form>
     </Form>
   )

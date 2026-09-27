@@ -6,6 +6,7 @@ import { cache } from "react"
 import { z } from "zod"
 
 import { Reveal } from "@/components/motion/reveal"
+import { NoCopy } from "@/components/shared/no-copy"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { canAccessRoute } from "@/config/access"
@@ -39,6 +40,9 @@ export default async function PublicMaterialPage({ params }: PageProps<"/resourc
   if (!material) notFound()
   const url = new URL(resourcePath(material.id), getPublicEnv().NEXT_PUBLIC_SITE_URL).toString()
   const fullHref = user && canAccessRoute(user.permissions, routes.libraryMaterial) ? libraryMaterialPath(material.id) : null
+  // Visitors and website members may read a free material here but not keep it.
+  const readOnly = !fullHref
+  const Wrapper = readOnly ? NoCopy : "div"
 
   return (
     <article className="mx-auto grid max-w-4xl gap-8 px-4 pt-6 pb-20 sm:px-6">
@@ -61,25 +65,35 @@ export default async function PublicMaterialPage({ params }: PageProps<"/resourc
 
       {material.fileUrl ? (
         <div className="grid gap-3">
-          <div className="overflow-hidden rounded-2xl border">
-            {material.file_kind === "pdf" && <iframe src={material.fileUrl} title={material.title} className="h-[75vh] w-full" />}
+          <Wrapper className="overflow-hidden rounded-2xl border">
+            {material.file_kind === "pdf" && (
+              <iframe src={readOnly ? `${material.fileUrl}#toolbar=0&navpanes=0` : material.fileUrl} title={material.title} className="h-[75vh] w-full" />
+            )}
             {material.file_kind === "image" && (
               // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
-              <img src={material.fileUrl} alt={material.title} className="w-full" />
+              <img src={material.fileUrl} alt={material.title} className="w-full" draggable={!readOnly} />
             )}
-            {material.file_kind === "video" && <video src={material.fileUrl} controls preload="metadata" className="aspect-video w-full bg-black" />}
-            {material.file_kind === "audio" && <audio src={material.fileUrl} controls preload="metadata" className="w-full p-4" />}
+            {material.file_kind === "video" && (
+              <video src={material.fileUrl} controls preload="metadata" controlsList={readOnly ? "nodownload" : undefined} className="aspect-video w-full bg-black" />
+            )}
+            {material.file_kind === "audio" && (
+              <audio src={material.fileUrl} controls preload="metadata" controlsList={readOnly ? "nodownload" : undefined} className="w-full p-4" />
+            )}
             {!["pdf", "image", "video", "audio"].includes(material.file_kind) && (
-              <p className="text-muted-foreground p-8 text-center text-sm">{t("No preview for Word or PowerPoint files — download it to open.")}</p>
+              <p className="text-muted-foreground p-8 text-center text-sm">
+                {readOnly ? t("This file can be opened by BSmart Academy learners.") : t("No preview for Word or PowerPoint files — download it to open.")}
+              </p>
             )}
-          </div>
-          <div>
-            <Button asChild variant="outline">
-              <a href={material.fileUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLinkIcon aria-hidden /> {t("Open in a new tab")}
-              </a>
-            </Button>
-          </div>
+          </Wrapper>
+          {!readOnly && (
+            <div>
+              <Button asChild variant="outline">
+                <a href={material.fileUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLinkIcon aria-hidden /> {t("Open in a new tab")}
+                </a>
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <UnlockCta

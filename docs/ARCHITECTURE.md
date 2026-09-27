@@ -968,3 +968,30 @@ read no table except `site_settings`), `src/config/routes.test.ts` (public route
   (then the full version inside the platform) or enrol to unlock.
 
 **Tests:** `tests/db/public-content.test.ts`.
+
+## 34. Website members, comments, dictionary and the audit log
+
+- **Sign-up** (`/register`, public `signUpAction`): Supabase Auth with e-mail confirmation
+  (`supabase/templates/confirmation.html` → `/auth/confirm`). The person's own data can only set
+  `user_metadata` (the name); the role comes from `raw_app_meta_data`, which only staff and SQL
+  write, so **new accounts are `member`** (`handle_new_user`). Staff-created students, parents
+  and teachers keep the role they are given; a member is promoted in Users & roles. Whether an
+  e-mail already exists is never revealed.
+- **Member** (rank 5): `dictionary.read` and `comments.write` only. Members read preview lessons
+  in full (`public_lesson` returns the full text to any signed-in caller), comment, use the
+  dictionary, and see free materials read-only (`NoCopy`, PDF toolbar hidden, no download
+  links — a deterrent, not DRM). They get their own menu, home and phone tabs.
+- **Remember me:** unchecked → `bsmart_session_only` cookie; the server client and the proxy
+  then write auth cookies without Max-Age/Expires (`applySessionPolicy`), so they end with the
+  browser session.
+- **Dictionary** (`/dictionary`): `dictionary_search()` over published words of the word bank.
+- **Comments** (`content_comments`) under public lessons and articles: only on pages that are
+  public right now (`private.is_public_target`), author and name set by the database, 10 per
+  hour per person, moderators (`site.write`) hide/show, authors delete their own, nobody edits
+  someone else's text.
+- **Audit log** (`audit_log`, Administration → Audit log, `audit.read`): append-only, written by
+  triggers — role and activation changes, permission grants, payments and voids, invoice voids,
+  archiving/restoring students, teachers and classes, website visibility, articles, website
+  settings. Nobody (administrators included) can insert, edit or delete entries directly.
+
+**Tests:** `tests/db/members.test.ts`, `src/lib/supabase/session-cookies.test.ts`.

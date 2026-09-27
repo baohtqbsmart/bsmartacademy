@@ -72,9 +72,14 @@ export function PublicHeader({ signedIn }: { signedIn: boolean }) {
               <Link href={routes.dashboard}>{t("Go to my learning")}</Link>
             </Button>
           ) : (
-            <Button asChild>
-              <Link href={routes.login}>{t("Sign in")}</Link>
-            </Button>
+            <>
+              <Button asChild variant="ghost" className="text-primary">
+                <Link href={routes.login}>{t("Sign in")}</Link>
+              </Button>
+              <Button asChild>
+                <Link href={routes.register}>{t("Sign up")}</Link>
+              </Button>
+            </>
           )}
         </div>
 
@@ -107,11 +112,26 @@ export function PublicHeader({ signedIn }: { signedIn: boolean }) {
             </nav>
             <div className="mt-auto grid gap-3 p-4">
               <LanguageSwitcher className="w-full" />
-              <Button asChild>
-                <Link href={signedIn ? routes.dashboard : routes.login} onClick={() => setOpen(false)}>
-                  {signedIn ? t("Go to my learning") : t("Sign in")}
-                </Link>
-              </Button>
+              {signedIn ? (
+                <Button asChild>
+                  <Link href={routes.dashboard} onClick={() => setOpen(false)}>
+                    {t("Go to my learning")}
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild>
+                    <Link href={routes.register} onClick={() => setOpen(false)}>
+                      {t("Sign up")}
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href={routes.login} onClick={() => setOpen(false)}>
+                      {t("Sign in")}
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </SheetContent>
         </Sheet>

@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { navigationFor } from "@/config/navigation"
 import { routes } from "@/config/routes"
+import { MemberHome } from "@/features/dashboard/components/member-home"
 import { QuickActions, StudentHome } from "@/features/dashboard/components/student-home"
+import { listPublicLessons, listPublishedArticles } from "@/features/site/server/content-service"
 import { loadStudentDashboard } from "@/features/dashboard/server/student-dashboard"
 import { getOwnStudentId } from "@/features/students/server/student-service"
 import { intlLocale } from "@/i18n/config"
@@ -67,7 +69,9 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      {studentData ? (
+      {user.roleCode === "member" ? (
+        <MemberHome lessons={await listPublicLessons(db)} articles={await listPublishedArticles(db, 3)} />
+      ) : studentData ? (
         <StudentHome data={studentData} />
       ) : user.roleCode === "student" ? (
         <Card>

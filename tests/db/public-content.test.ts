@@ -191,7 +191,7 @@ describe("articles", () => {
 })
 
 describe("private helpers", () => {
-  it("visitors can call no private function except the storage check", async () => {
+  it("visitors can call no private function except the two public-content checks", async () => {
     const callable = await as(db, null, (tx) =>
       column(
         tx,
@@ -199,6 +199,6 @@ describe("private helpers", () => {
          where n.nspname = 'private' and has_function_privilege('anon', p.oid, 'execute')`
       )
     )
-    expect(callable).toEqual(["is_public_object"])
+    expect(callable).toEqual(["is_public_object", "is_public_target"])
   })
 })

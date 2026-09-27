@@ -20,9 +20,32 @@ const loginName = z
 export const signInSchema = z.object({
   email: loginName,
   password: z.string().min(1, "Enter your password."),
+  /** Keep the session after the browser closes. */
+  remember: z.boolean().default(true),
 })
 
 export const forgotPasswordSchema = z.object({ email })
+
+const newPassword = z
+  .string()
+  .min(8, "Use at least 8 characters.")
+  .max(72, "Use at most 72 characters.")
+  .regex(/\p{L}/u, "Include at least one letter.")
+  .regex(/\d/, "Include at least one number.")
+
+/** Website sign-up: creates a member account (see the members migration). */
+export const signUpSchema = z
+  .object({
+    fullName: z.string().trim().min(1, "Enter your full name.").max(120, "Use at most 120 characters."),
+    email,
+    password: newPassword,
+    confirmPassword: z.string(),
+    acceptTerms: z.literal(true, { error: "Please accept the terms to continue." }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  })
 
 export const setPasswordSchema = z
   .object({

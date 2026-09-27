@@ -7,6 +7,7 @@ import { cache } from "react"
 import { Reveal } from "@/components/motion/reveal"
 import { Prose } from "@/components/shared/prose"
 import { articlePath, routes } from "@/config/routes"
+import { CommentsSection } from "@/features/comments/components/comments-section"
 import { ArticleCards } from "@/features/site/components/resource-cards"
 import { ShareButtons } from "@/features/site/components/share-buttons"
 import { getPublishedArticle, listPublishedArticles } from "@/features/site/server/content-service"
@@ -65,6 +66,7 @@ export default async function ArticlePage({ params }: PageProps<"/articles/[slug
           <img src={cover} alt="" className="aspect-[16/9] w-full rounded-2xl object-cover" />
         )}
         <Prose text={article.body} className="text-lg" />
+        <CommentsSection target={{ articleId: article.id }} returnTo={articlePath(article.slug)} />
       </article>
       {more.length > 0 && (
         <section className="grid gap-6">

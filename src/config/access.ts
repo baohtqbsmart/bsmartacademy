@@ -14,6 +14,8 @@ export type AccessRule = {
  */
 export const routeAccess = {
   [routes.website]: { permission: "site.write" },
+  [routes.audit]: { permission: "audit.read" },
+  [routes.dictionary]: { permission: "dictionary.read" },
   [routes.adminArticles]: { permission: "site.write" },
   [routes.adminArticleNew]: { permission: "site.write" },
   [routes.adminArticleEdit]: { permission: "site.write" },

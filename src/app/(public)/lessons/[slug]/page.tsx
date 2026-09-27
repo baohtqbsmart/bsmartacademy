@@ -13,6 +13,7 @@ import { SKILL_NAMES } from "@/features/analytics/metrics"
 import { AccessBadge } from "@/features/site/components/resource-cards"
 import { ShareButtons } from "@/features/site/components/share-buttons"
 import { UnlockCta } from "@/features/site/components/unlock-cta"
+import { CommentsSection } from "@/features/comments/components/comments-section"
 import { getPublicLesson } from "@/features/site/server/content-service"
 import { getT } from "@/i18n/server"
 import { getCurrentUser } from "@/lib/auth/session"
@@ -141,6 +142,8 @@ export default async function PublicLessonPage({ params }: PageProps<"/lessons/[
         title={lesson.body_truncated ? undefined : t("Practise this lesson")}
         text={lesson.body_truncated ? undefined : t("Sign in to do the exercises, get feedback and keep your progress.")}
       />
+
+      <CommentsSection target={{ lessonId: lesson.id }} returnTo={publicLessonPath(lesson.slug)} />
     </article>
   )
 }

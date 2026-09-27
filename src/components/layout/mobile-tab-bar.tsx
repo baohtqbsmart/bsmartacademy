@@ -1,6 +1,6 @@
 "use client"
 
-import { BellIcon, BookOpenIcon, ClipboardListIcon, HeartHandshakeIcon, HouseIcon, UserRoundIcon, type LucideIcon } from "lucide-react"
+import { BellIcon, BookMarkedIcon, BookOpenIcon, ClipboardListIcon, HeartHandshakeIcon, HouseIcon, NotebookTextIcon, UserRoundIcon, type LucideIcon } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -17,7 +17,13 @@ type Tab = { title: string; href: string; icon: LucideIcon }
 export function MobileTabBar({ permissions, roleCode }: { permissions: PermissionGrants; roleCode: string }) {
   const t = useT()
   const pathname = usePathname()
-  const tabs: Tab[] = [
+  const tabs: Tab[] = (roleCode === "member" ? [
+    { title: "Home", href: routes.dashboard, icon: HouseIcon },
+    { title: "Free lessons", href: routes.resources, icon: NotebookTextIcon },
+    { title: "Dictionary", href: routes.dictionary, icon: BookMarkedIcon },
+    { title: "Notifications", href: routes.notifications, icon: BellIcon },
+    { title: "Me", href: routes.profile, icon: UserRoundIcon },
+  ] : [
     { title: "Home", href: routes.dashboard, icon: HouseIcon },
     roleCode === "parent"
       ? { title: "My family", href: routes.family, icon: HeartHandshakeIcon }
@@ -25,7 +31,7 @@ export function MobileTabBar({ permissions, roleCode }: { permissions: Permissio
     { title: "Assignments", href: routes.assignments, icon: ClipboardListIcon },
     { title: "Notifications", href: routes.notifications, icon: BellIcon },
     { title: "Me", href: routes.profile, icon: UserRoundIcon },
-  ].filter((tab) => canAccessRoute(permissions, tab.href))
+  ]).filter((tab) => canAccessRoute(permissions, tab.href))
 
   return (
     <nav

@@ -34,6 +34,8 @@ import {
   UsersIcon,
   UsersRoundIcon,
   BellIcon,
+  BookMarkedIcon,
+  ScrollTextIcon,
   GlobeIcon,
   NewspaperIcon,
   SettingsIcon,
@@ -101,6 +103,7 @@ export const navigation: NavSection[] = [
       { title: "Vocabulary", href: routes.vocabulary, icon: BookAIcon },
       { title: "Lessons", href: routes.lessons, icon: NotebookTextIcon },
       { title: "Writing & speaking", href: routes.assessments, icon: PenLineIcon },
+      { title: "Dictionary", href: routes.dictionary, icon: BookMarkedIcon },
     ],
   },
   {
@@ -129,6 +132,7 @@ export const navigation: NavSection[] = [
       { title: "Users & roles", href: routes.users, icon: ShieldCheckIcon },
       { title: "Website", href: routes.website, icon: GlobeIcon },
       { title: "Articles", href: routes.adminArticles, icon: NewspaperIcon },
+      { title: "Audit log", href: routes.audit, icon: ScrollTextIcon },
     ],
   },
   {
@@ -164,6 +168,7 @@ export const learnerNavigation: NavSection[] = [
       { title: "Vocabulary", href: routes.vocabulary, icon: BookAIcon },
       { title: "Lessons", href: routes.lessons, icon: NotebookTextIcon },
       { title: "Writing & speaking", href: routes.assessments, icon: PenLineIcon },
+      { title: "Dictionary", href: routes.dictionary, icon: BookMarkedIcon },
     ],
   },
   {
@@ -184,8 +189,28 @@ export const learnerNavigation: NavSection[] = [
   },
 ]
 
+/** Website members: what they signed up for, and how to enrol. */
+export const memberNavigation: NavSection[] = [
+  {
+    label: "Learning",
+    items: [
+      { title: "Dashboard", href: routes.dashboard, icon: LayoutDashboardIcon },
+      { title: "Free lessons", href: routes.resources, icon: NotebookTextIcon },
+      { title: "Dictionary", href: routes.dictionary, icon: BookMarkedIcon },
+      { title: "Courses", href: routes.programs, icon: BookOpenIcon },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { title: "Notifications", href: routes.notifications, icon: BellIcon },
+      { title: "Settings", href: routes.profile, icon: SettingsIcon },
+    ],
+  },
+]
+
 export function navigationFor(grants: PermissionGrants, roleCode?: string): NavSection[] {
-  return (roleCode === "student" ? learnerNavigation : navigation)
+  return (roleCode === "student" ? learnerNavigation : roleCode === "member" ? memberNavigation : navigation)
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => canAccessRoute(grants, item.href)),

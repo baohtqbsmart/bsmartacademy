@@ -68,12 +68,15 @@ describe("permission matrix", () => {
           "assignments.write": "all",
           "attendance.read": "all",
           "attendance.write": "all",
+          "audit.read": "all",
           "classes.read": "all",
           "classes.write": "all",
+          "comments.write": "all",
           "courses.read": "all",
           "courses.write": "all",
           "designs.read": "all",
           "designs.write": "all",
+          "dictionary.read": "all",
           "english.read": "all",
           "english.results": "all",
           "english.review": "all",
@@ -105,6 +108,10 @@ describe("permission matrix", () => {
           "users.manage": "all",
           "users.read": "all",
         },
+        "member": {
+          "comments.write": "all",
+          "dictionary.read": "all",
+        },
         "parent": {
           "analytics.read": "children",
           "announcements.read": "children",
@@ -112,7 +119,9 @@ describe("permission matrix", () => {
           "assignments.read": "children",
           "attendance.read": "children",
           "classes.read": "children",
+          "comments.write": "all",
           "courses.read": "all",
+          "dictionary.read": "all",
           "english.read": "all",
           "english.results": "children",
           "enrollments.read": "children",
@@ -135,7 +144,9 @@ describe("permission matrix", () => {
           "assignments.read": "own",
           "attendance.read": "own",
           "classes.read": "own",
+          "comments.write": "all",
           "courses.read": "all",
+          "dictionary.read": "all",
           "english.practice": "own",
           "english.read": "all",
           "english.results": "own",
@@ -161,14 +172,17 @@ describe("permission matrix", () => {
           "assignments.write": "all",
           "attendance.read": "all",
           "attendance.write": "all",
+          "audit.read": "all",
           "classes.delete": "all",
           "classes.read": "all",
           "classes.write": "all",
+          "comments.write": "all",
           "courses.delete": "all",
           "courses.read": "all",
           "courses.write": "all",
           "designs.read": "all",
           "designs.write": "all",
+          "dictionary.read": "all",
           "english.read": "all",
           "english.results": "all",
           "english.review": "all",
@@ -217,9 +231,11 @@ describe("permission matrix", () => {
           "attendance.read": "assigned",
           "attendance.write": "assigned",
           "classes.read": "assigned",
+          "comments.write": "all",
           "courses.read": "all",
           "designs.read": "own",
           "designs.write": "own",
+          "dictionary.read": "all",
           "english.read": "all",
           "english.results": "assigned",
           "english.review": "assigned",
@@ -250,6 +266,8 @@ describe("permission matrix", () => {
 describe("direct URL access per role", () => {
   // Read pages every signed-in role can open (RLS decides which rows they see).
   const readForAll = [
+    // Every signed-in role, website members included, has the dictionary.
+    routes.dictionary,
     routes.studentDetail,
     routes.teachers,
     routes.teacherDetail,
@@ -342,6 +360,7 @@ describe("direct URL access per role", () => {
     routes.adminArticles,
     routes.adminArticleNew,
     routes.adminArticleEdit,
+    routes.audit,
     // Finance
     routes.tuition,
     routes.receipt,
@@ -363,6 +382,8 @@ describe("direct URL access per role", () => {
     parent: [...readForAll, routes.students, ...familyFinance, routes.family, routes.messages, routes.messageThread],
     // Students open only their own profile (RLS 404s any other id).
     student: [...readForAll, ...familyFinance, routes.assignmentWork, routes.testTake, routes.wordSetPractice],
+    // Website members: public lessons (outside the platform) and the dictionary only.
+    member: [routes.dictionary],
   }
   // Pages reachable by URL but not listed in the sidebar.
   const notInSidebar = new Set<string>([

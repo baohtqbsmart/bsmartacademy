@@ -61,7 +61,7 @@ const ALL_ENROLLMENTS = [
 ]
 
 describe("schema", () => {
-  it("defines exactly the five roles, ranked", async () => {
+  it("defines exactly the six roles, ranked", async () => {
     const { rows } = await db.query("select code from public.roles order by rank desc")
     expect(rows.map((r) => (r as { code: string }).code)).toEqual([
       "super_admin",
@@ -69,6 +69,7 @@ describe("schema", () => {
       "teacher",
       "parent",
       "student",
+      "member",
     ])
   })
 

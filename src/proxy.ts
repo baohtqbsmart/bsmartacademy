@@ -21,7 +21,7 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(url, response)
   }
 
-  if (userId && pathname === routes.login) {
+  if (userId && (pathname === routes.login || pathname === routes.register)) {
     const url = request.nextUrl.clone()
     url.pathname = routes.dashboard
     url.search = ""

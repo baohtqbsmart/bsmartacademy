@@ -1,5 +1,5 @@
 /** Mirrors public.roles (tests/db/matrix.test.ts keeps them in sync). */
-export const ROLE_CODES = ["super_admin", "admin", "teacher", "parent", "student"] as const
+export const ROLE_CODES = ["super_admin", "admin", "teacher", "parent", "student", "member"] as const
 
 export type RoleCode = (typeof ROLE_CODES)[number]
 
@@ -9,6 +9,7 @@ export const ROLE_LABELS: Record<RoleCode, string> = {
   teacher: "Teacher",
   parent: "Parent",
   student: "Student",
+  member: "Member",
 }
 
 export function isRoleCode(value: string): value is RoleCode {

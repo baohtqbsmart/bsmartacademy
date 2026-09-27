@@ -11,6 +11,7 @@ import part10 from "./vi/10"
 import part11 from "./vi/11"
 import part12 from "./vi/12"
 import part13 from "./vi/13"
+import part14 from "./vi/14"
 import extra from "./vi/extra"
 
 /**
@@ -32,5 +33,6 @@ export const vi: Readonly<Record<string, string>> = {
   ...part11,
   ...part12,
   ...part13,
+  ...part14,
   ...extra,
 }

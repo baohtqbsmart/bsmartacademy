@@ -403,6 +403,37 @@ export type Database = {
         }
         Relationships: []
       }
+      content_comments: {
+        Row: {
+          id: string
+          lesson_id: string | null
+          article_id: string | null
+          author_id: string | null
+          author_name: string
+          body: string
+          hidden_at: string | null
+          created_at: string
+        }
+        Insert: { lesson_id?: string | null; article_id?: string | null; body: string }
+        Update: { hidden_at?: string | null }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          id: number
+          occurred_at: string
+          actor_id: string | null
+          actor_name: string
+          action: string
+          entity: string
+          entity_id: string | null
+          summary: string
+          details: Json
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       testimonials: {
         Row: {
           id: string
@@ -3010,6 +3041,22 @@ export type Database = {
       transfer_enrollment: {
         Args: { target_enrollment_id: string; new_class_id: string }
         Returns: string
+      }
+      dictionary_search: {
+        Args: { query: string; max_rows?: number }
+        Returns: {
+          id: string
+          word: string
+          ipa: string | null
+          part_of_speech: Database["public"]["Enums"]["part_of_speech"]
+          meaning_vi: string
+          definition_en: string | null
+          example: string | null
+          cefr_level: Database["public"]["Enums"]["cefr_level"] | null
+          topic: string | null
+          synonyms: string[]
+          antonyms: string[]
+        }[]
       }
       public_lessons: {
         Args: never
