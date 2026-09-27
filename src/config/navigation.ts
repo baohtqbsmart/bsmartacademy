@@ -35,6 +35,7 @@ import {
   UsersRoundIcon,
   BellIcon,
   GlobeIcon,
+  NewspaperIcon,
   SettingsIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -127,6 +128,7 @@ export const navigation: NavSection[] = [
     items: [
       { title: "Users & roles", href: routes.users, icon: ShieldCheckIcon },
       { title: "Website", href: routes.website, icon: GlobeIcon },
+      { title: "Articles", href: routes.adminArticles, icon: NewspaperIcon },
     ],
   },
   {

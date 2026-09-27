@@ -21,6 +21,7 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { createClient } from "@/lib/supabase/server"
 import { formatFileSize } from "@/lib/uploads"
+import { MaterialPublishCard } from "@/features/site/components/publish-card"
 import { getT } from "@/i18n/server"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -163,6 +164,10 @@ export default async function MaterialPage({ params }: PageProps<"/library/[id]"
                 )}
               </CardContent>
             </Card>
+          )}
+
+          {can(user.permissions, "site.write") && (
+            <MaterialPublishCard materialId={m.id} initialAccess={m.public_access} archived={Boolean(m.archived_at)} />
           )}
 
           {canManage && (

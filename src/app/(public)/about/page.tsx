@@ -3,7 +3,12 @@ import type { Metadata } from "next"
 
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal"
 import { routes } from "@/config/routes"
+import { UserAvatar } from "@/components/shared/user-avatar"
+import { Badge } from "@/components/ui/badge"
 import { CallToAction, USPS } from "@/features/site/components/home-sections"
+import { listPublicTeachers } from "@/features/site/server/content-service"
+import { publicMediaUrl } from "@/lib/public-media"
+import { createClient } from "@/lib/supabase/server"
 import { getT } from "@/i18n/server"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,6 +29,7 @@ const STEPS: { title: string; text: string; icon: LucideIcon }[] = [
 
 export default async function AboutPage() {
   const t = await getT()
+  const teachers = await listPublicTeachers(await createClient())
   return (
     <div className="grid gap-20 pb-20">
       <section className="mx-auto grid max-w-4xl gap-5 px-4 pt-10 text-center sm:px-6">
@@ -53,6 +59,47 @@ export default async function AboutPage() {
           ))}
         </Stagger>
       </section>
+
+      {teachers.length > 0 && (
+        <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 sm:px-6" aria-labelledby="teachers">
+          <Reveal className="grid gap-2">
+            <h2 id="teachers" className="text-3xl font-semibold">
+              {t("Our teachers")}
+            </h2>
+            <p className="text-muted-foreground">{t("The people who will teach you.")}</p>
+          </Reveal>
+          <Stagger inView className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {teachers.map((teacher) => (
+              <StaggerItem key={teacher.id} className="bg-card grid content-start gap-4 rounded-2xl border p-6">
+                <div className="flex items-center gap-4">
+                  <UserAvatar name={teacher.full_name} avatarUrl={publicMediaUrl(teacher.photo_path)} className="size-16 text-lg" />
+                  <div className="grid gap-1">
+                    <h3 className="font-heading text-lg font-semibold">{teacher.full_name}</h3>
+                    <div className="flex flex-wrap gap-1">
+                      {teacher.subjects.map((subject) => (
+                        <Badge key={subject} variant="secondary">
+                          {subject}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {teacher.bio && <p className="text-muted-foreground text-sm leading-relaxed">{teacher.bio}</p>}
+                {teacher.qualifications.length > 0 && (
+                  <ul className="grid gap-1 text-sm">
+                    {teacher.qualifications.map((q) => (
+                      <li key={q} className="flex gap-2">
+                        <span aria-hidden className="text-primary">•</span>
+                        {q}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </section>
+      )}
 
       <section className="bg-brand-cream/60 dark:bg-card/40 py-16">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6">

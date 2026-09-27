@@ -6,6 +6,8 @@ import { Reveal } from "@/components/motion/reveal"
 import { routes } from "@/config/routes"
 import { Hero } from "@/features/site/components/hero"
 import { CallToAction, SubjectCards, Testimonials, UspStrip, WhySection } from "@/features/site/components/home-sections"
+import { LessonCards } from "@/features/site/components/resource-cards"
+import { listPublicLessons } from "@/features/site/server/content-service"
 import { getSiteSettings, listPublishedTestimonials, listWebsiteSubjects } from "@/features/site/server/site-service"
 import { getT } from "@/i18n/server"
 import { publicMediaUrl } from "@/lib/public-media"
@@ -22,7 +24,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function HomePage() {
   const t = await getT()
   const db = await createClient()
-  const [settings, subjects, testimonials] = await Promise.all([getSiteSettings(db), listWebsiteSubjects(db), listPublishedTestimonials(db)])
+  const [settings, subjects, testimonials, lessons] = await Promise.all([
+    getSiteSettings(db),
+    listWebsiteSubjects(db),
+    listPublishedTestimonials(db),
+    listPublicLessons(db),
+  ])
 
   return (
     <div className="grid gap-20 pb-20 sm:gap-24">
@@ -43,6 +50,21 @@ export default async function HomePage() {
         </Reveal>
         <SubjectCards subjects={subjects} />
       </section>
+
+      {lessons.length > 0 && (
+        <section className="mx-auto grid w-full max-w-7xl gap-8 px-4 sm:px-6">
+          <Reveal className="flex flex-wrap items-end justify-between gap-4">
+            <div className="grid gap-2">
+              <h2 className="text-3xl font-semibold sm:text-4xl">{t("Try a free lesson")}</h2>
+              <p className="text-muted-foreground">{t("Sample lessons you can open right now, no account needed.")}</p>
+            </div>
+            <Link href={routes.resources} className="text-primary inline-flex items-center gap-1 text-sm font-semibold hover:underline">
+              {t("All resources")} <ArrowRightIcon className="size-4" aria-hidden />
+            </Link>
+          </Reveal>
+          <LessonCards lessons={lessons.slice(0, 3)} />
+        </section>
+      )}
 
       <WhySection />
       <Testimonials items={testimonials} />

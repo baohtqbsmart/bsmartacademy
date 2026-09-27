@@ -105,6 +105,14 @@ export const routes = {
   program: "/programs/[code]",
   about: "/about",
   contact: "/contact",
+  resources: "/resources",
+  resource: "/resources/[id]",
+  publicLesson: "/lessons/[slug]",
+  articles: "/articles",
+  article: "/articles/[slug]",
+  adminArticles: "/admin/articles",
+  adminArticleNew: "/admin/articles/new",
+  adminArticleEdit: "/admin/articles/[id]",
   profile: "/settings/profile",
 } as const
 
@@ -161,6 +169,10 @@ export const reportPath = (key: string) => `/reports/${key}`
 export const aiDraftPath = (id: string) => `/ai/${id}`
 export const invoicePath = (id: string) => `/tuition/invoices/${id}`
 export const receiptPath = (id: string) => `/tuition/payments/${id}/receipt`
+export const resourcePath = (id: string) => `/resources/${id}`
+export const publicLessonPath = (slug: string) => `/lessons/${slug}`
+export const articlePath = (slug: string) => `/articles/${slug}`
+export const adminArticlePath = (id: string) => `/admin/articles/${id}`
 export const programPath = (code: string) => `/programs/${encodeURIComponent(code)}`
 
 /** Routes reachable without a session. Everything else requires sign-in. */
@@ -168,6 +180,9 @@ export const publicRoutes: readonly string[] = [
   routes.programs,
   routes.about,
   routes.contact,
+  routes.resources,
+  "/lessons",
+  routes.articles,
   routes.login,
   routes.forgotPassword,
   routes.authConfirm,

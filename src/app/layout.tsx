@@ -4,6 +4,7 @@ import { Geist_Mono, Inter, Playfair_Display } from "next/font/google"
 import { Providers } from "@/components/providers"
 import { siteConfig } from "@/config/site"
 import { getLocale, getT } from "@/i18n/server"
+import { getPublicEnv } from "@/lib/env"
 
 import "./globals.css"
 
@@ -27,6 +28,8 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT()
   return {
+    // Absolute URLs for Open Graph images and canonical links.
+    metadataBase: new URL(getPublicEnv().NEXT_PUBLIC_SITE_URL),
     title: { default: siteConfig.name, template: `%s | ${siteConfig.name}` },
     description: t(siteConfig.description),
     // A private school system: keep every page out of search engines.

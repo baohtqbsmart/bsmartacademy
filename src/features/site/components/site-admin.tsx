@@ -24,6 +24,7 @@ import {
   deleteTestimonialAction,
   saveSiteSettingsAction,
   saveSubjectWebsiteAction,
+  saveTeacherWebsiteAction,
   saveTestimonialAction,
   setHeroImageAction,
 } from "@/features/site/actions"
@@ -352,5 +353,61 @@ function TestimonialDialog({ item, trigger }: { item?: Testimonial; trigger: Rea
         </Form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// ---- Teachers on the website --------------------------------------------------
+
+type TeacherRow = { id: string; teacher_code: string; full_name: string; public_bio: string; public_photo_path: string | null; show_on_website: boolean }
+
+export function TeacherWebsiteCard({ teacher }: { teacher: TeacherRow }) {
+  const t = useT()
+  const [isPending, startTransition] = useTransition()
+  const [bio, setBio] = useState(teacher.public_bio)
+  const [show, setShow] = useState(teacher.show_on_website)
+  const dirty = bio !== teacher.public_bio || show !== teacher.show_on_website
+  const save = (photoPath: string | null) => saveTeacherWebsiteAction({ teacherId: teacher.id, bio, photoPath, showOnWebsite: show })
+
+  return (
+    <div className="bg-card grid gap-4 rounded-xl border p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="grid">
+          <h3 className="font-heading text-lg font-semibold">{teacher.full_name}</h3>
+          <span className="text-muted-foreground font-mono text-xs">{teacher.teacher_code}</span>
+        </div>
+        <Badge variant={show ? "default" : "outline"}>{show ? t("On the website") : t("Hidden")}</Badge>
+      </div>
+      <SiteImageField
+        folder="teachers"
+        path={teacher.public_photo_path}
+        onSave={save}
+        fallback={<div className="text-muted-foreground flex size-full items-center justify-center text-sm">{t("No photo")}</div>}
+      />
+      <div className="grid gap-1.5">
+        <Label htmlFor={`bio-${teacher.id}`}>{t("Introduction for the website")}</Label>
+        <Textarea id={`bio-${teacher.id}`} rows={4} maxLength={1000} value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t("Experience, teaching style, what learners can expect…")} />
+      </div>
+      <Label className="flex items-center gap-2 font-normal">
+        <Checkbox checked={show} onCheckedChange={(v) => setShow(v === true)} />
+        {t("Show this teacher on the About page")}
+      </Label>
+      <p className="text-muted-foreground text-xs">{t("Only the name, subjects, qualifications, photo and this introduction are shown — never contact details.")}</p>
+      <div>
+        <Button
+          type="button"
+          size="sm"
+          disabled={!dirty || isPending}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await save(teacher.public_photo_path)
+              if (result.ok) toast.success(t("Changes saved."))
+              else toast.error(result.error.message)
+            })
+          }
+        >
+          {t("Save changes")}
+        </Button>
+      </div>
+    </div>
   )
 }

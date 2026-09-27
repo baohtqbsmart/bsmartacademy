@@ -941,3 +941,30 @@ Vietnamese entry, or when a translation uses a placeholder the English text does
 **Tests:** `tests/db/site.test.ts` (visitors read only the catalogue functions, settings and
 published testimonials; only `site.write` edits), `tests/db/idor.test.ts` (anonymous callers
 read no table except `site_settings`), `src/config/routes.test.ts` (public routes).
+
+## 33. Public learning content, articles and sharing
+
+- **Access levels** (`public_access`: members / preview / public) on English lessons and library
+  materials. *members* is the default (signed-in users, as before). *preview*: visitors see the
+  beginning of a lesson (about 700 characters of the body, two examples, no form/usage/mistakes)
+  or only the description of a material. *public*: the whole lesson / the material's file.
+- **Where the rule lives:** visitors call `public_lessons()`, `public_lesson(slug)`,
+  `public_materials()`, `public_material(id)` (security definer). Locked parts are never selected,
+  so they cannot leak through the page. Storage lets `anon` sign URLs only for objects that
+  `private.is_public_object()` approves (media of published open lessons, files of public
+  materials). `anon` can execute no other private function (tested).
+- **Publishing:** only `site.write` (administrators) — the "On the website" card on a lesson or
+  material page (`set_lesson_public`, `set_material_public`). Lessons get a web address
+  (`/lessons/<slug>`, unique, lower-case with dashes; `slugify` handles Vietnamese).
+- **Articles** (`articles`, `/articles/<slug>`, Administration → Articles): drafts are visible
+  to site editors only; publishing stamps `published_at`. Bodies are plain text rendered by
+  `Prose` (paragraphs, `##` headings, `-` lists) — no HTML is parsed.
+- **Teachers** appear in "Our teachers" (About) when an administrator turns them on in Website:
+  name, subjects, qualifications, photo and a public introduction — never contact details.
+- **Pages:** `/resources` (tabs: sample lessons, free materials, articles), `/lessons/[slug]`,
+  `/resources/[id]`, `/articles/[slug]`; each has canonical/Open Graph metadata (default image
+  `public/brand/og-default.png`), share buttons (Facebook, the phone share sheet for
+  Zalo/Messenger, copy link) and, where content is locked, `UnlockCta`: sign in to continue
+  (then the full version inside the platform) or enrol to unlock.
+
+**Tests:** `tests/db/public-content.test.ts`.

@@ -79,7 +79,7 @@ export async function getMaterial(db: DbClient, id: string, userId: string) {
       .from("library_materials")
       .select(
         `id, scope, owner_id, owner_name, title, description, topic, tags, visibility, file_kind, file_name, mime_type, size_bytes, object_path,
-         archived_at, created_at, updated_at, folder_id, subject_id, level_id, skill,
+         archived_at, created_at, updated_at, folder_id, subject_id, level_id, skill, public_access,
          subject:subjects(id, name), level:levels(id, name), folder:library_folders(id, name), library_favorites(user_id)`
       )
       .eq("id", id)

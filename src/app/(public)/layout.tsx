@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("BSmart Academy accompanies you on the journey to master knowledge and develop your skills."),
     // The public website is meant to be found (the platform itself stays noindex).
     robots: { index: true, follow: true },
-    openGraph: { siteName: "BSmart Academy", type: "website", images: ["/brand/logo-full.png"] },
+    openGraph: { siteName: "BSmart Academy", type: "website", locale: "vi_VN", images: [{ url: "/brand/og-default.png", width: 1200, height: 630 }] },
   }
 }
 

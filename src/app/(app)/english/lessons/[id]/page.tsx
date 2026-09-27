@@ -32,6 +32,7 @@ import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { uuidParam } from "@/lib/search-params"
 import { createClient } from "@/lib/supabase/server"
+import { LessonPublishCard } from "@/features/site/components/publish-card"
 import { getT } from "@/i18n/server"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -71,6 +72,15 @@ export default async function LessonPage({ params, searchParams }: PageProps<"/e
         }
       />
       {canEdit && <EditorBar lesson={lesson} />}
+      {can(user.permissions, "site.write") && (
+        <LessonPublishCard
+          lessonId={lesson.id}
+          title={lesson.title}
+          published={lesson.status === "published"}
+          initialAccess={lesson.public_access}
+          initialSlug={lesson.slug}
+        />
+      )}
 
       <LessonContent lesson={lesson} />
 

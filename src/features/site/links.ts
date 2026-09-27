@@ -4,6 +4,7 @@ import { routes } from "@/config/routes"
 export const PUBLIC_LINKS = [
   { title: "Home", href: routes.home },
   { title: "Courses", href: routes.programs },
+  { title: "Resources", href: routes.resources },
   { title: "About us", href: routes.about },
   { title: "Contact", href: routes.contact },
 ] as const

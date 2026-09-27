@@ -339,6 +339,9 @@ describe("direct URL access per role", () => {
     routes.subjectDetail,
     routes.users,
     routes.website,
+    routes.adminArticles,
+    routes.adminArticleNew,
+    routes.adminArticleEdit,
     // Finance
     routes.tuition,
     routes.receipt,

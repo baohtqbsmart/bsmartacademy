@@ -30,11 +30,11 @@ describe("safeRedirectPath", () => {
 })
 
 describe("isPublicRoute", () => {
-  it.each([routes.home, routes.programs, "/programs/ANH", routes.about, routes.contact, routes.login, routes.forgotPassword, routes.authConfirm, routes.signOut])("%s is public", (route) => {
+  it.each([routes.home, routes.programs, "/programs/ANH", routes.about, routes.contact, routes.resources, "/resources/abc", "/lessons/present-simple", routes.articles, "/articles/tips", routes.login, routes.forgotPassword, routes.authConfirm, routes.signOut])("%s is public", (route) => {
     expect(isPublicRoute(route)).toBe(true)
   })
 
-  it.each([routes.dashboard, routes.students, routes.users, routes.website, routes.setPassword, "/login-evil", "/programs-evil", "/aboutx"])(
+  it.each([routes.dashboard, routes.students, routes.users, routes.website, routes.setPassword, "/login-evil", "/programs-evil", "/aboutx", routes.adminArticles, "/lessonsx", routes.lessons])(
     "%s requires a session",
     (route) => {
       expect(isPublicRoute(route)).toBe(false)

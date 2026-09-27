@@ -24,7 +24,7 @@ export function SiteImageField({
   onSave,
   fallback,
 }: {
-  folder: "hero" | "subjects"
+  folder: "hero" | "subjects" | "teachers" | "articles"
   path: string | null
   onSave: (path: string | null) => Promise<ActionResult<unknown>>
   /** Shown when no picture is set (the default illustration). */

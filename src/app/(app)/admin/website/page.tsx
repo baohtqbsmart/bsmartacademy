@@ -6,7 +6,8 @@ import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { routes } from "@/config/routes"
-import { HeroImageEditor, SiteSettingsForm, SubjectWebsiteCard, TestimonialList } from "@/features/site/components/site-admin"
+import { HeroImageEditor, SiteSettingsForm, SubjectWebsiteCard, TeacherWebsiteCard, TestimonialList } from "@/features/site/components/site-admin"
+import { listTeachersForWebsite } from "@/features/site/server/content-service"
 import { getSiteSettings, listSubjectsForWebsite, listTestimonials } from "@/features/site/server/site-service"
 import { getT } from "@/i18n/server"
 import { requireRouteAccess } from "@/lib/auth/session"
@@ -21,7 +22,12 @@ export default async function WebsiteSettingsPage() {
   const t = await getT()
   await requireRouteAccess(routes.website)
   const db = await createClient()
-  const [settings, subjects, testimonials] = await Promise.all([getSiteSettings(db), listSubjectsForWebsite(db), listTestimonials(db)])
+  const [settings, subjects, testimonials, teachers] = await Promise.all([
+    getSiteSettings(db),
+    listSubjectsForWebsite(db),
+    listTestimonials(db),
+    listTeachersForWebsite(db),
+  ])
 
   return (
     <>
@@ -78,6 +84,22 @@ export default async function WebsiteSettingsPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {subjects.map((subject) => (
               <SubjectWebsiteCard key={subject.id} subject={subject} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="grid gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">{t("Teachers on the website")}</h2>
+          <p className="text-muted-foreground text-sm">{t("Choose who appears in “Our teachers” on the About page. Subjects and qualifications come from each teacher's profile.")}</p>
+        </div>
+        {teachers.length === 0 ? (
+          <p className="text-muted-foreground text-sm">{t("No teachers to show")}</p>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {teachers.map((teacher) => (
+              <TeacherWebsiteCard key={teacher.id} teacher={teacher} />
             ))}
           </div>
         )}

@@ -9,7 +9,7 @@ import { getPublicEnv } from "@/lib/env"
  */
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: ["/$", `${routes.programs}`, routes.about, routes.contact], disallow: "/" },
+    rules: { userAgent: "*", allow: ["/$", routes.programs, routes.resources, "/lessons/", routes.articles, routes.about, routes.contact], disallow: "/" },
     sitemap: new URL("/sitemap.xml", getPublicEnv().NEXT_PUBLIC_SITE_URL).toString(),
   }
 }

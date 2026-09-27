@@ -61,3 +61,60 @@ export const subjectWebsiteSchema = z.object({
   showOnWebsite: z.boolean(),
 })
 export type SubjectWebsiteInput = z.input<typeof subjectWebsiteSchema>
+
+// ---- Public learning content (phase 2) ----------------------------------------
+
+export const PUBLIC_ACCESS = ["members", "preview", "public"] as const
+
+/** Lower-case words joined by dashes: "english-present-simple". */
+export const slugSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1, "Give it a web address.")
+  .max(120, "Use at most 120 characters.")
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lower-case letters, digits and dashes only, e.g. english-present-simple.")
+
+export const lessonPublicSchema = z
+  .object({
+    lessonId: z.uuid(),
+    access: z.enum(PUBLIC_ACCESS),
+    slug: z.string().trim().toLowerCase(),
+  })
+  .transform((value, ctx) => {
+    if (value.access === "members" && value.slug === "") return { ...value, slug: null }
+    const slug = slugSchema.safeParse(value.slug)
+    if (!slug.success) {
+      ctx.addIssue({ code: "custom", message: slug.error.issues[0].message, path: ["slug"] })
+      return z.NEVER
+    }
+    return { ...value, slug: slug.data }
+  })
+
+export const materialPublicSchema = z.object({ materialId: z.uuid(), access: z.enum(PUBLIC_ACCESS) })
+
+export const teacherWebsiteSchema = z.object({
+  teacherId: z.uuid(),
+  bio: z.string().trim().max(1000, "Use at most 1000 characters."),
+  photoPath: z
+    .string()
+    .regex(/^teachers\/[0-9a-f-]{36}\.(png|jpe?g|webp)$/, "The uploaded file was not found.")
+    .nullable(),
+  showOnWebsite: z.boolean(),
+})
+
+export const articleSchema = z.object({
+  id: z.uuid().optional(),
+  slug: slugSchema,
+  title: z.string().trim().min(1, "Enter a title.").max(200, "Use at most 200 characters."),
+  excerpt: z.string().trim().max(500, "Use at most 500 characters."),
+  body: z.string().trim().max(50000, "Use at most 50000 characters."),
+  coverImagePath: z
+    .string()
+    .regex(/^articles\/[0-9a-f-]{36}\.(png|jpe?g|webp)$/, "The uploaded file was not found.")
+    .nullable(),
+  status: z.enum(["draft", "published"]),
+})
+export type ArticleInput = z.input<typeof articleSchema>
+
+export const articleIdSchema = z.object({ id: z.uuid() })

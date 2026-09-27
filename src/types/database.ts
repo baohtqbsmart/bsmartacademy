@@ -245,6 +245,9 @@ export type Database = {
           status: Database["public"]["Enums"]["staff_status"]
           notes: string | null
           deleted_at: string | null
+          public_bio: string
+          public_photo_path: string | null
+          show_on_website: boolean
         } & Timestamps
         Insert: {
           id?: string
@@ -365,6 +368,38 @@ export type Database = {
           zalo_url?: string | null
           hero_image_path?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      articles: {
+        Row: {
+          id: string
+          slug: string
+          title: string
+          excerpt: string
+          body: string
+          cover_image_path: string | null
+          status: Database["public"]["Enums"]["article_status"]
+          published_at: string | null
+          author_id: string | null
+          author_name: string
+        } & Timestamps
+        Insert: {
+          id?: string
+          slug: string
+          title: string
+          excerpt?: string
+          body?: string
+          cover_image_path?: string | null
+          status?: Database["public"]["Enums"]["article_status"]
+        }
+        Update: {
+          slug?: string
+          title?: string
+          excerpt?: string
+          body?: string
+          cover_image_path?: string | null
+          status?: Database["public"]["Enums"]["article_status"]
         }
         Relationships: []
       }
@@ -1787,6 +1822,8 @@ export type Database = {
           max_score: number
           status: Database["public"]["Enums"]["content_status"]
           published_at: string | null
+          slug: string | null
+          public_access: Database["public"]["Enums"]["public_access"]
         } & { created_by: string | null; created_by_name: string; created_at: string; updated_at: string }
         Insert: {
           skill: Database["public"]["Enums"]["english_skill"]
@@ -2421,6 +2458,7 @@ export type Database = {
           size_bytes: number
           file_kind: string
           archived_at: string | null
+          public_access: Database["public"]["Enums"]["public_access"]
           created_at: string
           updated_at: string
         }
@@ -2973,6 +3011,90 @@ export type Database = {
         Args: { target_enrollment_id: string; new_class_id: string }
         Returns: string
       }
+      public_lessons: {
+        Args: never
+        Returns: {
+          slug: string
+          title: string
+          skill: Database["public"]["Enums"]["english_skill"]
+          cefr_level: Database["public"]["Enums"]["cefr_level"] | null
+          topic: string | null
+          summary: string | null
+          access: Database["public"]["Enums"]["public_access"]
+          has_media: boolean
+          published_at: string | null
+        }[]
+      }
+      public_lesson: {
+        Args: { target_slug: string }
+        Returns: {
+          id: string
+          slug: string
+          title: string
+          skill: Database["public"]["Enums"]["english_skill"]
+          cefr_level: Database["public"]["Enums"]["cefr_level"] | null
+          topic: string | null
+          summary: string | null
+          access: Database["public"]["Enums"]["public_access"]
+          body: string | null
+          body_truncated: boolean
+          form: string | null
+          usage: string | null
+          examples: string[]
+          common_mistakes: Json
+          media_path: string | null
+          author_name: string
+          published_at: string | null
+          updated_at: string
+        }[]
+      }
+      public_materials: {
+        Args: never
+        Returns: {
+          id: string
+          title: string
+          description: string
+          subject_name: string | null
+          topic: string | null
+          file_kind: string
+          size_bytes: number
+          access: Database["public"]["Enums"]["public_access"]
+          updated_at: string
+        }[]
+      }
+      public_material: {
+        Args: { target_material: string }
+        Returns: {
+          id: string
+          title: string
+          description: string
+          subject_name: string | null
+          topic: string | null
+          file_kind: string
+          mime_type: string
+          size_bytes: number
+          access: Database["public"]["Enums"]["public_access"]
+          object_path: string | null
+          file_name: string | null
+          updated_at: string
+        }[]
+      }
+      public_teachers: {
+        Args: never
+        Returns: { id: string; full_name: string; bio: string; photo_path: string | null; subjects: string[]; qualifications: string[] }[]
+      }
+      set_lesson_public: {
+        Args: { target_lesson: string; new_access: Database["public"]["Enums"]["public_access"]; new_slug: string | null }
+        Returns: undefined
+      }
+      set_material_public: {
+        Args: { target_material: string; new_access: Database["public"]["Enums"]["public_access"] }
+        Returns: undefined
+      }
+      set_teacher_website: {
+        Args: { target_teacher: string; new_bio: string; new_photo_path: string | null; new_show: boolean }
+        Returns: undefined
+      }
       website_subjects: {
         Args: never
         Returns: {
@@ -3022,6 +3144,8 @@ export type Database = {
       }
     }
     Enums: {
+      public_access: "members" | "preview" | "public"
+      article_status: "draft" | "published"
       ai_task: "lesson" | "worksheet" | "vocabulary" | "grammar" | "reading" | "listening" | "speaking" | "writing" | "differentiated" | "homework"
       ai_draft_status: "draft" | "approved" | "discarded"
       ai_request_status: "started" | "succeeded" | "failed"

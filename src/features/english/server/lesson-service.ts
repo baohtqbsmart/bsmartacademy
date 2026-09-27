@@ -37,7 +37,7 @@ export async function getLesson(db: DbClient, id: string) {
     db
       .from("lessons")
       .select(
-        "id, skill, title, cefr_level, topic, summary, body, form, usage, examples, common_mistakes, media_path, response_mode, min_words, max_words, rubric, max_score, status, published_at, created_by, created_by_name, updated_at"
+        "id, skill, title, cefr_level, topic, summary, body, form, usage, examples, common_mistakes, media_path, response_mode, min_words, max_words, rubric, max_score, status, published_at, created_by, created_by_name, updated_at, slug, public_access"
       )
       .eq("id", id)
       .maybeSingle(),

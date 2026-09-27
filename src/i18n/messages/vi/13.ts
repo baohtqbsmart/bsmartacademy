@@ -1,0 +1,106 @@
+/** Public learning content, articles and teachers on the website (phase 2). */
+export default {
+  // Resources hub and cards
+  "Resources": "Tài liệu",
+  "Learn something today": "Học điều mới ngay hôm nay",
+  "Try sample lessons, open free materials and read tips from our teachers. Sign in to do exercises, save your progress and open premium content.":
+    "Học thử bài mẫu, xem tài liệu miễn phí và đọc chia sẻ từ giáo viên. Đăng nhập để làm bài tập, lưu tiến độ và mở nội dung dành cho học viên.",
+  "Sample lessons, free materials and articles from BSmart Academy teachers.": "Bài học mẫu, tài liệu miễn phí và bài viết từ giáo viên BSmart Academy.",
+  "Sample lessons": "Bài học mẫu",
+  "Free materials": "Tài liệu miễn phí",
+  "Articles": "Bài viết",
+  "Free": "Miễn phí",
+  "Preview": "Xem trước",
+  "Members": "Dành cho học viên",
+  "Includes media": "Có video hoặc âm thanh",
+  "Start learning": "Vào học",
+  "Read the article": "Đọc bài viết",
+  "Sample lessons will be published here soon.": "Bài học mẫu sẽ sớm được đăng tại đây.",
+  "Free materials will be published here soon.": "Tài liệu miễn phí sẽ sớm được đăng tại đây.",
+  "Articles will be published here soon.": "Bài viết sẽ sớm được đăng tại đây.",
+  "Try a free lesson": "Học thử miễn phí",
+  "Sample lessons you can open right now, no account needed.": "Bài học mẫu bạn có thể mở ngay, không cần tài khoản.",
+  "All resources": "Xem tất cả tài liệu",
+
+  // Public lesson, material and article pages
+  "A sample lesson from BSmart Academy.": "Bài học mẫu từ BSmart Academy.",
+  "A learning material from BSmart Academy.": "Tài liệu học tập từ BSmart Academy.",
+  "Structure": "Cấu trúc",
+  "Usage": "Cách dùng",
+  "Practise this lesson": "Luyện tập bài học này",
+  "Sign in to do the exercises, get feedback and keep your progress.": "Đăng nhập để làm bài luyện, nhận nhận xét và lưu tiến độ học tập.",
+  "Sign in to continue learning": "Đăng nhập để tiếp tục học",
+  "The full lesson, exercises, scores and your progress are for BSmart Academy learners.":
+    "Toàn bộ bài học, bài luyện, điểm số và tiến độ học tập dành cho học viên BSmart Academy.",
+  "Not a learner yet? Contact us to enrol": "Chưa là học viên? Liên hệ để đăng ký",
+  "Continue in your learning space": "Tiếp tục trong không gian học tập của bạn",
+  "Open the full version": "Mở bản đầy đủ",
+  "Enrol in a course to unlock this content": "Đăng ký khóa học để mở khóa nội dung",
+  "Talk to us to join a course that includes it.": "Liên hệ với chúng tôi để tham gia khóa học có nội dung này.",
+  "Sign in to open this material": "Đăng nhập để xem tài liệu",
+  "Premium materials are for BSmart Academy learners.": "Tài liệu premium dành cho học viên BSmart Academy.",
+  "Open in a new tab": "Mở trong thẻ mới",
+  "More articles": "Bài viết khác",
+  "Share": "Chia sẻ",
+  "Zalo, Messenger…": "Zalo, Messenger…",
+
+  // About: teachers
+  "Our teachers": "Đội ngũ giáo viên",
+  "The people who will teach you.": "Những người sẽ đồng hành cùng bạn.",
+
+  // Publishing controls
+  "On the website": "Trên website",
+  "Share this lesson on the public website with its own web address.": "Chia sẻ bài học này lên website công khai với địa chỉ riêng.",
+  "Who can see it": "Ai được xem",
+  "Members only": "Chỉ học viên",
+  "Only signed-in users see it (as before).": "Chỉ người đã đăng nhập xem được (như trước đây).",
+  "Public preview": "Xem trước công khai",
+  "Visitors see the beginning, then are asked to sign in.": "Khách xem được phần đầu, sau đó được mời đăng nhập.",
+  "Free for everyone": "Miễn phí cho mọi người",
+  "Visitors see all of it, without signing in.": "Khách xem được toàn bộ, không cần đăng nhập.",
+  "Listed on the website; visitors must sign in to open the file.": "Hiển thị trên website; khách phải đăng nhập mới mở được tệp.",
+  "Anyone can open the file from the website.": "Ai cũng mở được tệp từ website.",
+  "Web address": "Địa chỉ web",
+  "From the title": "Tạo từ tiêu đề",
+  "Visitors see it once the lesson is published.": "Khách sẽ thấy khi bài học được xuất bản.",
+  "View on the website": "Xem trên website",
+  "Archived materials are not shown on the website.": "Tài liệu đã lưu trữ không hiển thị trên website.",
+  "Give the lesson a web address.": "Hãy đặt địa chỉ web cho bài học.",
+  "This web address is already used by another lesson.": "Địa chỉ web này đã được một bài học khác sử dụng.",
+  "Give it a web address.": "Hãy đặt địa chỉ web.",
+  "Use lower-case letters, digits and dashes only, e.g. english-present-simple.":
+    "Chỉ dùng chữ thường không dấu, chữ số và dấu gạch ngang, ví dụ: english-present-simple.",
+
+  // Teachers on the website
+  "Teachers on the website": "Giáo viên trên website",
+  "Choose who appears in “Our teachers” on the About page. Subjects and qualifications come from each teacher's profile.":
+    "Chọn giáo viên hiển thị ở mục “Đội ngũ giáo viên” trên trang Về chúng tôi. Môn dạy và bằng cấp lấy từ hồ sơ của từng giáo viên.",
+  "No photo": "Chưa có ảnh",
+  "Introduction for the website": "Giới thiệu trên website",
+  "Experience, teaching style, what learners can expect…": "Kinh nghiệm, phong cách giảng dạy, điều học viên có thể mong đợi…",
+  "Show this teacher on the About page": "Hiển thị giáo viên này trên trang Về chúng tôi",
+  "Only the name, subjects, qualifications, photo and this introduction are shown — never contact details.":
+    "Chỉ hiển thị họ tên, môn dạy, bằng cấp, ảnh và phần giới thiệu này — không bao giờ hiển thị thông tin liên hệ.",
+
+  // Articles administration
+  "Knowledge and tips shared on the public website.": "Kiến thức và mẹo học tập chia sẻ trên website công khai.",
+  "New article": "Bài viết mới",
+  "No articles yet": "Chưa có bài viết",
+  "Write the first one to share tips with learners and parents.": "Viết bài đầu tiên để chia sẻ với học viên và phụ huynh.",
+  "Saved as a draft until you publish it.": "Được lưu dạng bản nháp cho đến khi bạn đăng.",
+  "Edit article": "Sửa bài viết",
+  "Delete this article?": "Xóa bài viết này?",
+  "It is removed from the website and cannot be restored.": "Bài viết sẽ bị gỡ khỏi website và không thể khôi phục.",
+  "Article deleted.": "Đã xóa bài viết.",
+  "Article published.": "Đã đăng bài viết.",
+  "Saved as a draft.": "Đã lưu dạng bản nháp.",
+  "Article not found.": "Không tìm thấy bài viết.",
+  "Short summary": "Tóm tắt ngắn",
+  "Shown on cards and when the article is shared.": "Hiển thị trên thẻ bài viết và khi bài viết được chia sẻ.",
+  "Leave a blank line between paragraphs. Start a line with ## for a heading, or - for a list item.":
+    "Để một dòng trống giữa các đoạn. Bắt đầu dòng bằng ## để tạo tiêu đề, hoặc - để tạo mục danh sách.",
+  "Cover picture": "Ảnh bìa",
+  "Draft (only administrators see it)": "Bản nháp (chỉ quản trị viên thấy)",
+  "Published on the website": "Đã đăng trên website",
+  "Use at most {#0} characters.": "Dùng tối đa {#0} ký tự.",
+} satisfies Record<string, string>
