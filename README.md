@@ -1,5 +1,7 @@
 # BSmart Academy
 
+Trang Web của Cơ sở luyện thi BSmart.
+
 ## 1. Project overview
 
 Education management and online teaching platform for BSmart Academy (Vietnam). One app for
