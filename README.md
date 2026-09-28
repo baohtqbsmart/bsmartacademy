@@ -29,7 +29,7 @@ Further reading: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (structure and con
 | Backend | Supabase: PostgreSQL 17 with RLS, Auth (e-mail, invite-only), Storage (private buckets) |
 | AI | Provider abstraction in `src/lib/ai` (Anthropic implemented), server-side only |
 | Tests | Vitest; database tests run the real migrations in PGlite (in-process Postgres) |
-| Hosting | Vercel (region `sin1`) + Supabase (region Singapore) |
+| Hosting | Vercel (region `icn1`) + Supabase (region Seoul) |
 
 ## 3. Installation
 

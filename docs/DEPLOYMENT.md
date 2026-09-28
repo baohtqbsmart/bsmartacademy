@@ -1,6 +1,6 @@
 # Deployment and operations
 
-Target: **Vercel** (Next.js app, region `sin1` Singapore) + **Supabase** (Postgres, Auth,
+Target: **Vercel** (Next.js app, region `icn1` Seoul) + **Supabase** (Postgres, Auth,
 Storage, region `ap-southeast-1` Singapore) — the closest regions to Vietnam, and the pair the
 app is built for (`@supabase/ssr`, RLS, Storage signed URLs). Nothing else needs to be hosted.
 
@@ -66,7 +66,7 @@ redeploy. CI fails the build if a secret-looking string appears in `.next/static
 
 ## 4. Vercel setup
 
-1. Import the repository; framework Next.js (`vercel.json` pins region `sin1`, `npm ci`,
+1. Import the repository; framework Next.js (`vercel.json` pins region `icn1`, `npm ci`,
    `npm run build`).
 2. Add the environment variables above for Production and for Preview (Preview → staging project).
 3. Add the domain; Vercel provides HTTPS. HSTS is sent by the app in production.
