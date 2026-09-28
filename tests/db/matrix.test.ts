@@ -69,6 +69,7 @@ describe("permission matrix", () => {
           "attendance.read": "all",
           "attendance.write": "all",
           "audit.read": "all",
+          "certificates.write": "all",
           "classes.read": "all",
           "classes.write": "all",
           "comments.write": "all",
@@ -173,6 +174,7 @@ describe("permission matrix", () => {
           "attendance.read": "all",
           "attendance.write": "all",
           "audit.read": "all",
+          "certificates.write": "all",
           "classes.delete": "all",
           "classes.read": "all",
           "classes.write": "all",
@@ -269,6 +271,9 @@ describe("direct URL access per role", () => {
     // Every signed-in role, website members included, has the dictionary.
     routes.dictionary,
     routes.studentDetail,
+    // Certificates: RLS limits rows to own / children / taught students.
+    routes.certificates,
+    routes.certificate,
     routes.teachers,
     routes.teacherDetail,
     routes.classes,

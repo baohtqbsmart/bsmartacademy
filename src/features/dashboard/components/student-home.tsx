@@ -20,6 +20,7 @@ import { assignmentPath, classPath, onlineSessionPath, routes } from "@/config/r
 import { SKILL_NAMES } from "@/features/analytics/metrics"
 import { courseProgress, type StudentDashboard } from "@/features/dashboard/server/student-dashboard"
 import { translateNotificationTitle } from "@/features/communication/notification-text"
+import { StreakCard } from "@/features/progress/components/learning-path"
 import { getT } from "@/i18n/server"
 import { formatTime } from "@/lib/dates"
 import { formatDateTime } from "@/lib/format"
@@ -129,32 +130,35 @@ export async function StudentHome({ data }: { data: StudentDashboard }) {
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>{t("Learning progress")}</CardTitle>
-            <SeeAll href={routes.analytics} label={t("Progress")} />
-          </CardHeader>
-          <CardContent>
-            <ul className="grid gap-3">
-              {HOME_SKILLS.map((skill) => {
-                const summary = data.skills.find((s) => s.skill === skill)
-                const value = summary?.averagePercent ?? null
-                return (
-                  <li key={skill} className="grid gap-1">
-                    <span className="flex items-center justify-between text-sm">
-                      {t(SKILL_NAMES[skill])}
-                      <span className="text-muted-foreground tabular-nums">{value === null ? "—" : `${value}%`}</span>
-                    </span>
-                    <span className="bg-muted block h-2 overflow-hidden rounded-full" aria-hidden>
-                      {value !== null && <ProgressFill value={value} className="bg-success rounded-full" />}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-            <p className="text-muted-foreground mt-3 text-xs">{t("Published results of the last {days} days; “—” means no results yet.", { days: data.resultsDays })}</p>
-          </CardContent>
-        </Card>
+        <div className="grid content-start gap-6 lg:col-span-2">
+          <StreakCard streak={data.streak} />
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>{t("Learning progress")}</CardTitle>
+              <SeeAll href={routes.analytics} label={t("Progress")} />
+            </CardHeader>
+            <CardContent>
+              <ul className="grid gap-3">
+                {HOME_SKILLS.map((skill) => {
+                  const summary = data.skills.find((s) => s.skill === skill)
+                  const value = summary?.averagePercent ?? null
+                  return (
+                    <li key={skill} className="grid gap-1">
+                      <span className="flex items-center justify-between text-sm">
+                        {t(SKILL_NAMES[skill])}
+                        <span className="text-muted-foreground tabular-nums">{value === null ? "—" : `${value}%`}</span>
+                      </span>
+                      <span className="bg-muted block h-2 overflow-hidden rounded-full" aria-hidden>
+                        {value !== null && <ProgressFill value={value} className="bg-success rounded-full" />}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="text-muted-foreground mt-3 text-xs">{t("Published results of the last {days} days; “—” means no results yet.", { days: data.resultsDays })}</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -195,7 +199,8 @@ export async function StudentHome({ data }: { data: StudentDashboard }) {
             ) : (
               <ul className="grid gap-3">
                 {data.classes.slice(0, 4).map((klass) => {
-                  const progress = courseProgress(klass.start_date, klass.end_date, data.today)
+                  const completed = data.completion.get(klass.id) ?? null
+                  const progress = completed ?? courseProgress(klass.start_date, klass.end_date, data.today)
                   const lead = klass.class_members.find((m) => m.member_role === "lead_teacher")?.teacher?.full_name
                   return (
                     <li key={klass.id}>
@@ -208,9 +213,13 @@ export async function StudentHome({ data }: { data: StudentDashboard }) {
                         {progress !== null && (
                           <span className="grid gap-1">
                             <span className="bg-muted block h-1.5 overflow-hidden rounded-full" aria-hidden>
-                              <ProgressFill value={progress} className="bg-primary rounded-full" />
+                              <ProgressFill value={progress} className={cn("rounded-full", completed !== null ? "bg-success" : "bg-primary")} />
                             </span>
-                            <span className="text-muted-foreground text-[11px]">{t("{value}% of the course calendar", { value: progress })}</span>
+                            <span className="text-muted-foreground text-[11px]">
+                              {completed !== null
+                                ? t("{value}% of the learning path completed", { value: progress })
+                                : t("{value}% of the course calendar", { value: progress })}
+                            </span>
                           </span>
                         )}
                       </Link>

@@ -995,3 +995,32 @@ read no table except `site_settings`), `src/config/routes.test.ts` (public route
   settings. Nobody (administrators included) can insert, edit or delete entries directly.
 
 **Tests:** `tests/db/members.test.ts`, `src/lib/supabase/session-cookies.test.ts`.
+
+## 35. Learning path, completion, streaks and certificates
+
+- **Course → Module → Lesson:** modules are the existing `course_units`; `unit_lessons` links
+  lessons to a module in order (Course page → book icon on a module, `courses.write`). A class's
+  assignments and tests carry an optional `unit_id` (Module selector on their pages); the
+  `check_unit_of_class` trigger only accepts a module of the class's own course.
+- **Completion** (`features/progress`): the learning path of a class is the course's published
+  module lessons plus the class's released (published/closed) assignments and tests; work not
+  in a module goes under "Other work". Done means real work — an assignment handed in
+  (submitted/graded/returned), a test attempt finished, a lesson practised or submitted. It is
+  shown on the class page (students and parents), course cards and the student home; staff see
+  every student's % in the class's student table. With nothing to do yet, cards fall back to
+  the course-calendar %.
+- **Learning streak:** `learning_days(student, since)` (security invoker, so RLS applies) lists
+  the academy-time days with activity: hand-ins, test attempts, lesson practice and
+  submissions, writing/speaking submissions, vocabulary practice and attendance (present/late).
+  `summarizeStreak` gives the current streak (still alive if the student learnt yesterday), the
+  best streak in the last 180 days and the last 14 days.
+- **Certificates** (`certificates`, `certificates.write` = administrators): issued from a class
+  page to an enrolled (active/completed) student, once per class unless revoked. The database
+  fills the number (`BSA-YYYY-00001`), a random verification code, the names and the issuer;
+  rows can only be revoked (with a reason), never edited or deleted, and both actions are in
+  the audit log. Students, parents and teachers see the certificates of students they can see
+  (`/certificates`); the certificate page prints as one A4 landscape page with the logo
+  unchanged. Anyone can check a printed code at `/verify/[code]` (`verify_certificate`, not
+  indexed by search engines); the table itself is closed to anonymous visitors.
+
+**Tests:** `tests/db/progress.test.ts`, `src/features/progress/streak.test.ts`.

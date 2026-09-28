@@ -10,6 +10,7 @@ import {
   courseSchema,
   moveUnitSchema,
   unitIdSchema,
+  unitLessonsSchema,
   unitSchema,
 } from "@/features/courses/schemas"
 import {
@@ -17,6 +18,7 @@ import {
   deleteUnit,
   moveUnit,
   saveUnit,
+  setUnitLessons,
   setCourseArchived,
   updateCourse,
 } from "@/features/courses/server/course-service"
@@ -79,6 +81,14 @@ export async function moveUnitAction(input: unknown) {
   return runAction(moveUnitSchema, input, async ({ unitId, direction }) => {
     await requirePermission("courses.write")
     await moveUnit(await createClient(), unitId, direction)
+    refresh()
+  })
+}
+
+export async function setUnitLessonsAction(input: unknown) {
+  return runAction(unitLessonsSchema, input, async ({ unitId, lessonIds }) => {
+    await requirePermission("courses.write")
+    await setUnitLessons(await createClient(), unitId, lessonIds)
     refresh()
   })
 }

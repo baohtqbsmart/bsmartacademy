@@ -44,7 +44,7 @@ export async function getCourse(db: DbClient, courseId: string) {
     .select(
       `id, code, name, description, status, subject_id, level_id, session_count, session_minutes, duration_weeks, deleted_at,
        subject:subjects(id, name), level:levels(id, name),
-       course_units(id, position, title, description, session_count),
+       course_units(id, position, title, description, session_count, unit_lessons(position, lesson:lessons(id, title, status))),
        classes(id, code, name, status, start_date, end_date, deleted_at)`
     )
     .eq("id", courseId)
@@ -117,5 +117,18 @@ export async function deleteUnit(db: DbClient, unitId: string) {
 
 export async function moveUnit(db: DbClient, unitId: string, direction: "up" | "down") {
   const { error } = await db.rpc("move_course_unit", { target_unit_id: unitId, direction })
+  if (error) throw fromPostgrestError(error)
+}
+
+/** Replace a module's lessons: upsert the new order, then drop the rest. */
+export async function setUnitLessons(db: DbClient, unitId: string, lessonIds: string[]) {
+  const unique = [...new Set(lessonIds)]
+  if (unique.length) {
+    const { error } = await db.from("unit_lessons").upsert(unique.map((lessonId, i) => ({ unit_id: unitId, lesson_id: lessonId, position: i + 1 })))
+    if (error) throw fromPostgrestError(error)
+  }
+  let query = db.from("unit_lessons").delete().eq("unit_id", unitId)
+  if (unique.length) query = query.not("lesson_id", "in", `(${unique.join(",")})`)
+  const { error } = await query
   if (error) throw fromPostgrestError(error)
 }

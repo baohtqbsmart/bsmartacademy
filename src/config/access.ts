@@ -16,6 +16,9 @@ export const routeAccess = {
   [routes.website]: { permission: "site.write" },
   [routes.audit]: { permission: "audit.read" },
   [routes.dictionary]: { permission: "dictionary.read" },
+  // Certificates follow the student: own, children, taught students, everyone for staff.
+  [routes.certificates]: { permission: "students.read" },
+  [routes.certificate]: { permission: "students.read" },
   [routes.adminArticles]: { permission: "site.write" },
   [routes.adminArticleNew]: { permission: "site.write" },
   [routes.adminArticleEdit]: { permission: "site.write" },

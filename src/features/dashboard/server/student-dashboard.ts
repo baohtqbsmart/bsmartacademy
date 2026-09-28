@@ -6,6 +6,7 @@ import { listStudentAssignments } from "@/features/assignments/server/assignment
 import { listClasses } from "@/features/classes/server/class-service"
 import { listNotifications } from "@/features/communication/server/communication-service"
 import { listSessions } from "@/features/online/server/session-service"
+import { loadCompletionByClass, loadStreak } from "@/features/progress/server/progress-service"
 import { listTimetableEntries } from "@/features/timetable/server/timetable-service"
 import { addDays, isoWeekday, isWithin, todayInAcademy } from "@/lib/dates"
 import type { DbClient } from "@/lib/supabase/types"
@@ -37,6 +38,8 @@ export async function loadStudentDashboard(db: DbClient, studentId: string, now:
     .filter((row) => OPEN.has(row.status) && (!row.assignment.due_at || new Date(row.assignment.due_at) >= now))
     .sort((a, b) => (a.assignment.due_at ?? "9999").localeCompare(b.assignment.due_at ?? "9999"))
 
+  const [completion, streak] = await Promise.all([loadCompletionByClass(db, classes, studentId), loadStreak(db, studentId, today)])
+
   const weekday = isoWeekday(today)
   const todaySlots = slots
     .filter((s) => s.weekday === weekday && isWithin(today, s.start_date, s.end_date))
@@ -46,6 +49,8 @@ export async function loadStudentDashboard(db: DbClient, studentId: string, now:
   return {
     today,
     classes,
+    completion,
+    streak,
     open,
     overall: summarize(scored),
     skills: skillSummaries(scored),

@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDownIcon, ArrowUpIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import { ArrowDownIcon, ArrowUpIcon, BookOpenIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -8,9 +8,10 @@ import { ActionDialog } from "@/components/shared/action-dialog"
 import { ConfirmActionButton } from "@/components/shared/confirm-action-button"
 import { Field } from "@/components/shared/option-select"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { deleteUnitAction, moveUnitAction, saveUnitAction } from "@/features/courses/actions"
+import { deleteUnitAction, moveUnitAction, saveUnitAction, setUnitLessonsAction } from "@/features/courses/actions"
 import { useT } from "@/i18n/client"
 
 type UnitValues = { unitId?: string; title: string; description: string; sessionCount: string }
@@ -109,5 +110,66 @@ export function UnitControls({
         <Trash2Icon />
       </ConfirmActionButton>
     </div>
+  )
+}
+
+/** Choose the lessons of a module; ticking order is the order students see. */
+export function UnitLessonsDialog({
+  unitId,
+  unitTitle,
+  lessons,
+  selected,
+}: {
+  unitId: string
+  unitTitle: string
+  lessons: { id: string; title: string; hint: string }[]
+  selected: string[]
+}) {
+  const t = useT()
+  const [chosen, setChosen] = useState<string[]>(selected)
+  const [query, setQuery] = useState("")
+  const needle = query.trim().toLocaleLowerCase("vi")
+  const shown = needle ? lessons.filter((l) => l.title.toLocaleLowerCase("vi").includes(needle)) : lessons
+  const toggle = (id: string, on: boolean) => setChosen((current) => (on ? [...current, id] : current.filter((c) => c !== id)))
+
+  return (
+    <ActionDialog
+      trigger={
+        <Button variant="ghost" size="icon" aria-label={t("Lessons of {title}", { title: unitTitle })}>
+          <BookOpenIcon />
+        </Button>
+      }
+      title={t("Lessons of {title}", { title: unitTitle })}
+      description={t("Students see the lessons in the order you tick them. Only published lessons appear in the learning path.")}
+      submitLabel={t("Save")}
+      successMessage={t("Module lessons saved.")}
+      onOpen={() => {
+        setChosen(selected)
+        setQuery("")
+      }}
+      onSubmit={() => setUnitLessonsAction({ unitId, lessonIds: chosen })}
+    >
+      {lessons.length === 0 ? (
+        <p className="text-muted-foreground text-sm">{t("No lessons yet. Create lessons in English → Lessons first.")}</p>
+      ) : (
+        <>
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Search lessons")} aria-label={t("Search lessons")} />
+          <ul className="grid max-h-72 gap-1 overflow-y-auto">
+            {shown.map((lesson) => {
+              const position = chosen.indexOf(lesson.id)
+              return (
+                <li key={lesson.id}>
+                  <label className="hover:bg-muted/60 flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm">
+                    <Checkbox checked={position >= 0} onCheckedChange={(on) => toggle(lesson.id, on === true)} />
+                    <span className="min-w-0 flex-1 truncate">{lesson.title}</span>
+                    <span className="text-muted-foreground text-xs">{position >= 0 ? `#${position + 1}` : lesson.hint}</span>
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+    </ActionDialog>
   )
 }

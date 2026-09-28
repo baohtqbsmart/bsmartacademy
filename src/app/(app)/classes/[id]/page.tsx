@@ -12,8 +12,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CLASS_MEMBER_ROLE_LABELS, CLASS_STATUS, DELIVERY_MODE_LABELS, ENROLLMENT_STATUS } from "@/config/labels"
-import { classAttendancePath, classEditPath, coursePath, routes, studentPath, teacherPath } from "@/config/routes"
+import { certificatePath, classAttendancePath, classEditPath, coursePath, routes, studentPath, teacherPath } from "@/config/routes"
 import { listClassRegisters } from "@/features/attendance/server/attendance-service"
+import { IssueCertificateButton } from "@/features/certificates/components/certificate-actions"
+import { listCertificates } from "@/features/certificates/server/certificate-service"
+import { LearningPathCard } from "@/features/progress/components/learning-path"
+import { loadClassCompletion, loadLearningPath } from "@/features/progress/server/progress-service"
 import { formatRate } from "@/features/attendance/summary"
 import {
   archiveClassAction,
@@ -73,6 +77,19 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
   const seatedIds = new Set(seated.map((e) => e.student?.id))
   const slots = sortSlots(klass.class_schedule_slots)
   const assignedIds = new Set(members.map((m) => m.teacher?.id))
+
+  // Staff see every student's completion; students and parents see the
+  // learning path of the enrolments RLS shows them (their own / children's).
+  const isStaff = can(user.permissions, "students.read", ["all", "assigned"])
+  const canCertify = can(user.permissions, "certificates.write")
+  const courseId = klass.course?.id ?? null
+  const progressIds = enrollments.filter((e) => e.status === "active" || e.status === "completed").flatMap((e) => (e.student ? [e.student] : []))
+  const [completion, certificates, paths] = await Promise.all([
+    isStaff ? loadClassCompletion(db, klass.id, courseId, progressIds.map((s) => s.id)) : null,
+    listCertificates(db, { classId: klass.id }),
+    isStaff ? [] : Promise.all(progressIds.map(async (s) => ({ student: s, path: await loadLearningPath(db, klass.id, courseId, s.id) }))),
+  ])
+  const certified = new Map(certificates.filter((c) => !c.revoked_at).map((c) => [c.student_id, c.id]))
 
   return (
     <>
@@ -150,6 +167,17 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
           )}
         </CardContent>
       </Card>
+
+      {paths.map(({ student, path }) => (
+        <div key={student.id} className="grid gap-2">
+          <LearningPathCard path={path} title={paths.length > 1 ? tr("Learning path of {full_name}", { full_name: student.full_name }) : undefined} />
+          {certified.has(student.id) && (
+            <Button variant="outline" size="sm" className="justify-self-start" asChild>
+              <Link href={certificatePath(certified.get(student.id)!)}>{tr("View certificate")}</Link>
+            </Button>
+          )}
+        </div>
+      ))}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -316,14 +344,28 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
       <section className="grid gap-2">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">{tr("Students")}</h2>
-          {canEnroll && (
-            <EnrollDialog
-              classId={klass.id}
-              students={studentOptions
-                .filter((s) => !seatedIds.has(s.id))
-                .map((s) => ({ id: s.id, label: `${s.full_name} (${s.student_code})` }))}
-            />
-          )}
+          <div className="flex flex-wrap gap-2">
+            {canCertify && progressIds.length > 0 && (
+              <IssueCertificateButton
+                classId={klass.id}
+                students={progressIds.map((s) => ({
+                  id: s.id,
+                  full_name: s.full_name,
+                  student_code: s.student_code,
+                  percent: completion?.get(s.id)?.percent ?? null,
+                  certified: certified.has(s.id),
+                }))}
+              />
+            )}
+            {canEnroll && (
+              <EnrollDialog
+                classId={klass.id}
+                students={studentOptions
+                  .filter((s) => !seatedIds.has(s.id))
+                  .map((s) => ({ id: s.id, label: `${s.full_name} (${s.student_code})` }))}
+              />
+            )}
+          </div>
         </div>
         <SimpleTable
           rows={enrollments}
@@ -343,6 +385,28 @@ export default async function ClassPage({ params }: PageProps<"/classes/[id]">) 
             },
             { header: "Student ID", cell: (e) => <span className="font-mono text-xs">{e.student?.student_code}</span> },
             { header: "Dates", cell: (e) => formatDateRange(e.enrolled_on, e.ended_on) },
+            ...(completion
+              ? [
+                  {
+                    header: "Completed",
+                    key: "completed",
+                    cell: (e: (typeof enrollments)[number]) => {
+                      const c = e.student ? completion.get(e.student.id) : undefined
+                      const certificateId = e.student ? certified.get(e.student.id) : undefined
+                      return (
+                        <span className="flex items-center gap-2">
+                          <span className="tabular-nums">{c?.percent == null ? "—" : `${c.percent}%`}</span>
+                          {certificateId && (
+                            <Link href={certificatePath(certificateId)}>
+                              <Badge variant="secondary">{tr("Certified")}</Badge>
+                            </Link>
+                          )}
+                        </span>
+                      )
+                    },
+                  },
+                ]
+              : []),
             {
               header: canEnroll ? "Status / move" : "Status",
               key: "status",

@@ -38,8 +38,8 @@ export async function getTest(db: DbClient, testId: string) {
     .from("tests")
     .select(
       `id, class_id, title, description, instructions, status, available_from, available_until, time_limit_minutes, max_attempts,
-       shuffle_questions, shuffle_options, total_score, review_policy, published_at, closed_at, archived_at, created_by_name,
-       class:classes(id, name, status, course:courses(name))`
+       shuffle_questions, shuffle_options, total_score, review_policy, published_at, closed_at, archived_at, created_by_name, unit_id,
+       class:classes(id, name, status, course:courses(id, name))`
     )
     .eq("id", testId)
     .maybeSingle()

@@ -34,6 +34,8 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { uuidParam } from "@/lib/search-params"
+import { ModuleSelect } from "@/features/progress/components/module-select"
+import { listCourseUnits } from "@/features/progress/server/progress-service"
 import { createClient } from "@/lib/supabase/server"
 import { UPLOAD_RULES } from "@/lib/uploads"
 import { getT } from "@/i18n/server"
@@ -58,6 +60,8 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
   // (teachers only see their own classes).
   const isEditor = can(user.permissions, "assignments.write")
   const isStudent = can(user.permissions, "submissions.write", ["own"])
+  const courseId = assignment.class?.course?.id
+  const units = isEditor && courseId ? await listCourseUnits(db, courseId) : []
 
   return (
     <>
@@ -89,6 +93,9 @@ export default async function AssignmentPage({ params, searchParams }: PageProps
             publishAt={assignment.publish_at}
             canDelete={assignment.state === "draft" && assignment.published_at === null}
           />
+          {units.length > 0 && assignment.state !== "archived" && (
+            <ModuleSelect kind="assignment" id={assignment.id} unitId={assignment.unit_id} units={units} />
+          )}
           {assignment.state === "scheduled" && (
             <p className="text-muted-foreground text-sm">{t("Students will see it from {dateTime}.", { dateTime: formatDateTime(assignment.publish_at) })}</p>
           )}

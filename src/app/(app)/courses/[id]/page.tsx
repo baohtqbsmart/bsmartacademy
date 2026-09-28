@@ -14,8 +14,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { CLASS_STATUS, COURSE_STATUS } from "@/config/labels"
 import { classPath, courseEditPath, routes } from "@/config/routes"
 import { archiveCourseAction, restoreCourseAction } from "@/features/courses/actions"
-import { UnitControls, UnitDialog } from "@/features/courses/components/course-units"
+import { UnitControls, UnitDialog, UnitLessonsDialog } from "@/features/courses/components/course-units"
 import { getCourse } from "@/features/courses/server/course-service"
+import { listLessons } from "@/features/english/server/lesson-service"
+import { SKILL_LABELS } from "@/features/english/skills"
 import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateRange } from "@/lib/format"
@@ -32,10 +34,12 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
   const user = await requireRouteAccess(routes.courseDetail)
   const { id } = await params
   if (!z.uuid().safeParse(id).success) notFound()
-  const course = await getCourse(await createClient(), id)
+  const db = await createClient()
+  const course = await getCourse(db, id)
   if (!course) notFound()
 
   const canWrite = can(user.permissions, "courses.write")
+  const lessons = canWrite ? await listLessons(db) : []
   const units = course.course_units
   const plannedSessions = units.reduce((sum, u) => sum + (u.session_count ?? 0), 0)
   // RLS limits the class list to classes the viewer may see.
@@ -118,6 +122,15 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
                 <div className="grid">
                   <span className="font-medium">{u.title}</span>
                   {u.description && <span className="text-muted-foreground text-xs whitespace-normal">{u.description}</span>}
+                  {u.unit_lessons.length > 0 && (
+                    <span className="text-muted-foreground mt-1 text-xs whitespace-normal">
+                      {t("Lessons:")}{" "}
+                      {[...u.unit_lessons]
+                        .sort((a, b) => a.position - b.position)
+                        .flatMap((ul) => (ul.lesson ? [ul.lesson.title] : []))
+                        .join(" · ")}
+                    </span>
+                  )}
                 </div>
               ),
             },
@@ -129,12 +142,24 @@ export default async function CoursePage({ params }: PageProps<"/courses/[id]">)
                     key: "actions",
                     className: "text-right",
                     cell: (u: (typeof units)[number]) => (
-                      <UnitControls
-                        courseId={course.id}
-                        unit={u}
-                        isFirst={units.indexOf(u) === 0}
-                        isLast={units.indexOf(u) === units.length - 1}
-                      />
+                      <span className="inline-flex items-center">
+                        <UnitLessonsDialog
+                          unitId={u.id}
+                          unitTitle={u.title}
+                          lessons={lessons.map((l) => ({
+                            id: l.id,
+                            title: l.title,
+                            hint: [t(SKILL_LABELS[l.skill]), l.status === "published" ? "" : t("draft")].filter(Boolean).join(" · "),
+                          }))}
+                          selected={[...u.unit_lessons].sort((a, b) => a.position - b.position).flatMap((ul) => (ul.lesson ? [ul.lesson.id] : []))}
+                        />
+                        <UnitControls
+                          courseId={course.id}
+                          unit={u}
+                          isFirst={units.indexOf(u) === 0}
+                          isLast={units.indexOf(u) === units.length - 1}
+                        />
+                      </span>
                     ),
                   },
                 ]

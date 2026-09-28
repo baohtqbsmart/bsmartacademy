@@ -98,7 +98,7 @@ export async function getAssignment(db: DbClient, assignmentId: string) {
     .from("assignments")
     .select(
       `id, class_id, title, assignment_type, skill, description, instructions, status, publish_at, published_at, due_at,
-       time_limit_minutes, max_score, allow_late, requires_file, closed_at, archived_at, created_by_name, created_at,
+       time_limit_minutes, max_score, allow_late, requires_file, closed_at, archived_at, created_by_name, created_at, unit_id,
        class:classes(id, name, code, status, course:courses(id, name, level:levels(name))),
        assignment_questions(id, position, kind, prompt, options, points),
        assignment_attachments(id, object_path, file_name, mime_type, size_bytes, created_at)`

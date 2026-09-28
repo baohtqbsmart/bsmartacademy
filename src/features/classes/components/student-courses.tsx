@@ -16,7 +16,17 @@ import { publicMediaUrl } from "@/lib/public-media"
 type ClassRow = Awaited<ReturnType<typeof listClasses>>[number]
 
 /** A student's own classes as course cards, filterable by subject. */
-export async function StudentCourses({ classes, subjectId, today }: { classes: ClassRow[]; subjectId?: string; today: string }) {
+export async function StudentCourses({
+  classes,
+  completion,
+  subjectId,
+  today,
+}: {
+  classes: ClassRow[]
+  completion: Map<string, number | null>
+  subjectId?: string
+  today: string
+}) {
   const t = await getT()
   const subjects = [...new Map(classes.flatMap((c) => (c.course?.subject ? [[c.course.subject.id, c.course.subject.name] as const] : []))).entries()]
   const shown = subjectId ? classes.filter((c) => c.course?.subject?.id === subjectId) : classes
@@ -39,7 +49,8 @@ export async function StudentCourses({ classes, subjectId, today }: { classes: C
           {shown.map((klass) => {
             const subject = klass.course?.subject
             const lead = klass.class_members.find((m) => m.member_role === "lead_teacher")?.teacher?.full_name
-            const progress = courseProgress(klass.start_date, klass.end_date, today)
+            const completed = completion.get(klass.id) ?? null
+            const progress = completed ?? courseProgress(klass.start_date, klass.end_date, today)
             return (
               <StaggerItem key={klass.id}>
                 <Link href={classPath(klass.id)} className="lift group bg-card flex h-full flex-col overflow-hidden rounded-xl border">
@@ -58,11 +69,11 @@ export async function StudentCourses({ classes, subjectId, today }: { classes: C
                     {progress !== null && (
                       <div className="mt-auto grid gap-1 pt-2">
                         <span className="text-muted-foreground flex justify-between text-xs">
-                          {t("Course calendar")}
+                          {completed !== null ? t("Completed") : t("Course calendar")}
                           <span className="tabular-nums">{progress}%</span>
                         </span>
                         <span className="bg-muted block h-1.5 overflow-hidden rounded-full" aria-hidden>
-                          <ProgressFill value={progress} className="bg-primary rounded-full" />
+                          <ProgressFill value={progress} className={completed !== null ? "bg-success rounded-full" : "bg-primary rounded-full"} />
                         </span>
                       </div>
                     )}

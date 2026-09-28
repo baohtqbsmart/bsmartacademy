@@ -104,6 +104,9 @@ export const routes = {
   website: "/admin/website",
   audit: "/admin/audit",
   dictionary: "/dictionary",
+  certificates: "/certificates",
+  certificate: "/certificates/[id]",
+  verify: "/verify/[code]",
   programs: "/programs",
   program: "/programs/[code]",
   about: "/about",
@@ -172,6 +175,8 @@ export const reportPath = (key: string) => `/reports/${key}`
 export const aiDraftPath = (id: string) => `/ai/${id}`
 export const invoicePath = (id: string) => `/tuition/invoices/${id}`
 export const receiptPath = (id: string) => `/tuition/payments/${id}/receipt`
+export const certificatePath = (id: string) => `/certificates/${id}`
+export const verifyPath = (code: string) => `/verify/${code}`
 export const resourcePath = (id: string) => `/resources/${id}`
 export const publicLessonPath = (slug: string) => `/lessons/${slug}`
 export const articlePath = (slug: string) => `/articles/${slug}`
@@ -186,6 +191,7 @@ export const publicRoutes: readonly string[] = [
   routes.resources,
   "/lessons",
   routes.articles,
+  "/verify",
   routes.login,
   routes.register,
   routes.forgotPassword,

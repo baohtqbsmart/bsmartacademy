@@ -434,6 +434,66 @@ export type Database = {
         Update: never
         Relationships: []
       }
+      unit_lessons: {
+        Row: { unit_id: string; lesson_id: string; position: number; created_at: string }
+        Insert: { unit_id: string; lesson_id: string; position?: number }
+        Update: { position?: number }
+        Relationships: [
+          {
+            foreignKeyName: "unit_lessons_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "course_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_lessons_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certificates: {
+        Row: {
+          id: string
+          certificate_no: string
+          verify_code: string
+          student_id: string
+          class_id: string
+          course_id: string | null
+          student_name: string
+          course_name: string
+          class_name: string
+          completion_percent: number | null
+          note: string | null
+          issued_on: string
+          issued_by: string | null
+          issued_by_name: string
+          revoked_at: string | null
+          revoke_reason: string | null
+          created_at: string
+        }
+        Insert: { student_id: string; class_id: string; completion_percent?: number | null; note?: string | null }
+        Update: { revoked_at?: string | null; revoke_reason?: string | null }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonials: {
         Row: {
           id: string
@@ -1232,6 +1292,7 @@ export type Database = {
         Row: {
           id: string
           class_id: string
+          unit_id: string | null
           title: string
           assignment_type: Database["public"]["Enums"]["assignment_type"]
           skill: Database["public"]["Enums"]["assignment_skill"] | null
@@ -1269,6 +1330,7 @@ export type Database = {
           requires_file?: boolean
         }
         Update: {
+          unit_id?: string | null
           class_id?: string
           title?: string
           assignment_type?: Database["public"]["Enums"]["assignment_type"]
@@ -1538,6 +1600,7 @@ export type Database = {
         Row: {
           id: string
           class_id: string
+          unit_id: string | null
           title: string
           description: string | null
           instructions: string | null
@@ -1574,6 +1637,7 @@ export type Database = {
           review_policy?: Database["public"]["Enums"]["test_review_policy"]
         }
         Update: {
+          unit_id?: string | null
           class_id?: string
           title?: string
           description?: string | null
@@ -3041,6 +3105,14 @@ export type Database = {
       transfer_enrollment: {
         Args: { target_enrollment_id: string; new_class_id: string }
         Returns: string
+      }
+      learning_days: {
+        Args: { target_student: string; since: string }
+        Returns: { day: string }[]
+      }
+      verify_certificate: {
+        Args: { code: string }
+        Returns: { certificate_no: string; student_name: string; course_name: string; class_name: string; issued_on: string; revoked: boolean }[]
       }
       dictionary_search: {
         Args: { query: string; max_rows?: number }

@@ -32,3 +32,6 @@ export const unitSchema = z.object({
 export const unitIdSchema = z.object({ unitId: z.uuid() })
 
 export const moveUnitSchema = z.object({ unitId: z.uuid(), direction: z.enum(["up", "down"]) })
+
+/** The lessons of a module, in order (replaces the module's current list). */
+export const unitLessonsSchema = z.object({ unitId: z.uuid(), lessonIds: z.array(z.uuid()).max(100) })

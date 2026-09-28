@@ -40,6 +40,8 @@ import { can } from "@/lib/auth/permissions"
 import { requireRouteAccess } from "@/lib/auth/session"
 import { formatDateTime } from "@/lib/format"
 import { enumParam } from "@/lib/search-params"
+import { ModuleSelect } from "@/features/progress/components/module-select"
+import { listCourseUnits } from "@/features/progress/server/progress-service"
 import { createClient } from "@/lib/supabase/server"
 import { getT } from "@/i18n/server"
 
@@ -65,6 +67,8 @@ export default async function TestPage({ params, searchParams }: PageProps<"/tes
   const isEditor = can(user.permissions, "tests.write")
   const isStaff = isEditor || can(user.permissions, "tests.read", ["all", "assigned"])
   const view = enumParam(await searchParams, "view", VIEWS) ?? "questions"
+  const courseId = test.class?.course?.id
+  const units = isEditor && courseId ? await listCourseUnits(db, courseId) : []
 
   return (
     <>
@@ -88,6 +92,7 @@ export default async function TestPage({ params, searchParams }: PageProps<"/tes
         }
       />
       <Settings test={test} />
+      {units.length > 0 && test.status !== "archived" && <ModuleSelect kind="test" id={test.id} unitId={test.unit_id} units={units} />}
 
       {isStaff ? (
         <>

@@ -67,6 +67,7 @@ export const PERMISSIONS = [
   "dictionary.read",
   "comments.write",
   "audit.read",
+  "certificates.write",
 ] as const
 
 export type Permission = (typeof PERMISSIONS)[number]

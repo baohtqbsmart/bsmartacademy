@@ -33,6 +33,7 @@ import {
   ShieldCheckIcon,
   UsersIcon,
   UsersRoundIcon,
+  AwardIcon,
   BellIcon,
   BookMarkedIcon,
   ScrollTextIcon,
@@ -70,6 +71,7 @@ export const navigation: NavSection[] = [
       { title: "Reports", href: routes.reports, icon: FileBarChartIcon },
       { title: "My family", href: routes.family, icon: HeartHandshakeIcon },
       { title: "Progress", href: routes.analytics, icon: TrendingUpIcon },
+      { title: "Certificates", href: routes.certificates, icon: AwardIcon },
     ],
   },
   {
@@ -175,6 +177,7 @@ export const learnerNavigation: NavSection[] = [
     label: "My progress",
     items: [
       { title: "Learning progress", href: routes.analytics, icon: TrendingUpIcon },
+      { title: "Certificates", href: routes.certificates, icon: AwardIcon },
       { title: "Attendance", href: routes.attendance, icon: CalendarCheckIcon },
       { title: "Tuition", href: routes.tuition, icon: WalletIcon },
       { title: "Announcements", href: routes.announcements, icon: MegaphoneIcon },

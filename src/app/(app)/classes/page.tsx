@@ -14,6 +14,8 @@ import { StudentCourses } from "@/features/classes/components/student-courses"
 import { CLASS_STATUSES } from "@/features/classes/schemas"
 import { listClasses, type ClassStatusFilter } from "@/features/classes/server/class-service"
 import { listCourses } from "@/features/courses/server/course-service"
+import { loadCompletionByClass } from "@/features/progress/server/progress-service"
+import { getOwnStudentId } from "@/features/students/server/student-service"
 import { listAssignableTeachers } from "@/features/teachers/server/teacher-service"
 import { WeeklySlots } from "@/features/timetable/components/weekly-slots"
 import { can } from "@/lib/auth/permissions"
@@ -37,11 +39,13 @@ export default async function ClassesPage({ searchParams }: PageProps<"/classes"
   if (user.roleCode === "student") {
     // Students see their own classes as course cards.
     const subject = uuidParam(await searchParams, "subject")
-    const classes = await listClasses(await createClient(), { status: "current" })
+    const db = await createClient()
+    const [classes, studentId] = await Promise.all([listClasses(db, { status: "current" }), getOwnStudentId(db, user.id)])
+    const completion = studentId ? await loadCompletionByClass(db, classes, studentId) : new Map<string, number | null>()
     return (
       <>
         <PageHeader title={tr("My courses")} description={tr("The courses you are enrolled in, with your class, teacher and calendar.")} />
-        <StudentCourses classes={classes} subjectId={subject} today={todayInAcademy()} />
+        <StudentCourses classes={classes} completion={completion} subjectId={subject} today={todayInAcademy()} />
       </>
     )
   }
