@@ -1,7 +1,7 @@
 # Deployment and operations
 
 Target: **Vercel** (Next.js app, region `icn1` Seoul) + **Supabase** (Postgres, Auth,
-Storage, region `ap-southeast-1` Singapore) — the closest regions to Vietnam, and the pair the
+Storage, region `ap-northeast-2` Seoul) — app and database in the same region, and the pair the
 app is built for (`@supabase/ssr`, RLS, Storage signed URLs). Nothing else needs to be hosted.
 
 ## 1. Environments
@@ -41,7 +41,7 @@ redeploy. CI fails the build if a secret-looking string appears in `.next/static
 
 ## 3. Supabase project setup (once per environment)
 
-1. Create the project (region Singapore, Pro plan for production: daily backups, PITR option).
+1. Create the project (region Seoul `ap-northeast-2`; keep Vercel in the same region, Pro plan for production: daily backups, PITR option).
 2. **Database:** from a machine with the Supabase CLI (or the `migrate.yml` workflow):
    `supabase link --project-ref <ref>` then `supabase db push`. This applies
    `supabase/migrations/*` in order and **never** runs `seed.sql`.
