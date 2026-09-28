@@ -48,3 +48,8 @@ next-env.d.ts
 .vercel
 .env*
 !.env.example
+
+# Academy data files (personal data) never go to Git
+*.xlsx
+*.xls
+*.csv
